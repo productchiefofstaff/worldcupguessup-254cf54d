@@ -40,11 +40,11 @@ function kickoffLabel(iso: string) {
 export function FixtureCard({
   fixture,
   prediction,
-  playerId,
+  userId,
 }: {
   fixture: Fixture;
   prediction: Prediction | null;
-  playerId: string;
+  userId: string;
 }) {
   const queryClient = useQueryClient();
   const [home, setHome] = useState<string>(prediction ? String(prediction.home_score) : "");
@@ -72,8 +72,8 @@ export function FixtureCard({
     const { error } = await supabase
       .from("predictions")
       .upsert(
-        { player_id: playerId, fixture_id: fixture.id, home_score: h, away_score: a },
-        { onConflict: "player_id,fixture_id" },
+        { user_id: userId, fixture_id: fixture.id, home_score: h, away_score: a },
+        { onConflict: "user_id,fixture_id" },
       );
     setBusy(false);
     if (error) {
@@ -81,7 +81,7 @@ export function FixtureCard({
       return;
     }
     toast.success("Prediction saved");
-    queryClient.invalidateQueries({ queryKey: ["predictions", playerId] });
+    queryClient.invalidateQueries({ queryKey: ["predictions", userId] });
   }
 
   return (
