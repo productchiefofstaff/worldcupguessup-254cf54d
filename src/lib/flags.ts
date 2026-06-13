@@ -21,6 +21,8 @@ const ISO: Record<string, string> = {
   "Portugal": "PT",
   "Netherlands": "NL",
   "Belgium": "BE",
+  "Bosnia and Herzegovina": "BA",
+  "Bosnia-Herzegovina": "BA",
   "Italy": "IT",
   "Croatia": "HR",
   "Switzerland": "CH",
