@@ -86,6 +86,7 @@ function FixturesPage() {
     });
     const entries = Array.from(map.entries());
     if (tab === "Completed") {
+      entries.forEach(([, arr]) => arr.reverse());
       entries.reverse();
     }
     return entries;
