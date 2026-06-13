@@ -40,7 +40,8 @@ function FixturesPage() {
       const { data, error } = await supabase
         .from("fixtures")
         .select("*")
-        .order("match_number");
+        .order("kickoff_at", { ascending: true })
+        .order("match_number", { ascending: true });
       if (error) throw error;
       return data as Fixture[];
     },
