@@ -107,13 +107,13 @@ function FixturesPage() {
       </div>
 
       <div className="flex items-center gap-2 mb-4 overflow-x-auto pb-1 -mx-1 px-1">
-        {STAGES.map((s) => (
+        {TABS.map((s) => (
           <button
             key={s}
-            onClick={() => setStage(s)}
+            onClick={() => setTab(s)}
             className={
               "shrink-0 text-xs font-semibold px-3 py-1.5 rounded-full border transition-colors " +
-              (stage === s
+              (tab === s
                 ? "bg-ink text-primary-foreground border-ink"
                 : "bg-card text-ink border-border hover:bg-surface")
             }
