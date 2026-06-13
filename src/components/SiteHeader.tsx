@@ -1,9 +1,15 @@
-import { Link } from "@tanstack/react-router";
-import { usePlayer } from "@/hooks/use-player";
+import { Link, useNavigate } from "@tanstack/react-router";
+import { useAuth } from "@/hooks/use-auth";
 import { LogOut } from "lucide-react";
 
 export function SiteHeader() {
-  const { player, signOut } = usePlayer();
+  const { user, profile, signOut } = useAuth();
+  const navigate = useNavigate();
+  const label = profile?.display_name ?? user?.email ?? "";
+  async function handleSignOut() {
+    await signOut();
+    navigate({ to: "/auth" });
+  }
   return (
     <header className="bg-ink text-primary-foreground sticky top-0 z-40 border-b-4 border-primary">
       <div className="max-w-3xl mx-auto px-4 h-14 flex items-center justify-between">
@@ -29,13 +35,13 @@ export function SiteHeader() {
           >
             Leaderboard
           </Link>
-          {player && (
+          {user && (
             <div className="flex items-center gap-2 ml-2 pl-2 sm:pl-3 border-l border-white/20">
               <span className="text-xs opacity-80 hidden sm:inline">Playing as</span>
-              <span className="text-sm font-bold truncate max-w-[100px]">{player.name}</span>
+              <span className="text-sm font-bold truncate max-w-[100px]">{label}</span>
               <button
-                onClick={signOut}
-                title="Switch player"
+                onClick={handleSignOut}
+                title="Sign out"
                 className="opacity-70 hover:opacity-100"
               >
                 <LogOut className="h-4 w-4" />
