@@ -1,7 +1,10 @@
 import { createFileRoute } from "@tanstack/react-router";
 import Firecrawl from "@mendable/firecrawl-js";
 
-const BBC_URL = "https://www.bbc.com/sport/football/world-cup/scores-fixtures";
+const BBC_URLS = [
+  "https://www.bbc.com/sport/football/world-cup/scores-fixtures",
+  "https://www.bbc.com/sport/football/world-cup/scores-fixtures/2026-06?filter=results",
+] as const;
 
 type BbcMatch = {
   kickoff_iso?: string | null;
@@ -32,19 +35,25 @@ export const Route = createFileRoute("/api/public/sync-results")({
         let matches: BbcMatch[] = [];
         try {
           const firecrawl = new Firecrawl({ apiKey });
-          const result = (await firecrawl.scrape(BBC_URL, {
-            formats: [
-              {
-                type: "json",
-                prompt:
-                  "From the BBC World Cup fixtures/results page, extract every football match listed. Return an object with a 'matches' array. Each match has: kickoff_iso (ISO 8601 datetime, prefer UTC; null if unknown), team_home (full nation name as shown, or null/'TBD'), team_away, status (one of 'scheduled','live','finished'), home_score (the 90-minute full-time score as an integer; null if the match is not yet finished or you cannot determine the 90-minute score — DO NOT include goals scored in extra time or penalty shootouts), away_score (same rules), stage (e.g. 'Group A', 'Round of 32', 'Round of 16', 'Quarter-final', 'Semi-final', 'Third-place Play-off', 'Final'). If a knockout match shows specific team names, return those teams.",
-              },
-            ],
-            onlyMainContent: true,
-            waitFor: 2000,
-          })) as unknown as { json?: { matches?: BbcMatch[] } };
+          const results = await Promise.all(
+            BBC_URLS.map((url) =>
+              firecrawl.scrape(url, {
+                formats: [
+                  {
+                    type: "json",
+                    prompt:
+                      "From this BBC World Cup fixtures/results page, extract every football match listed. Return an object with a 'matches' array. Each match has: kickoff_iso (ISO 8601 datetime, prefer UTC; infer the year from the page URL/month heading; null if unknown), team_home (full nation name as shown, or null/'TBD'), team_away, status (one of 'scheduled','live','finished'), home_score (the 90-minute full-time score as an integer; null if the match is not yet finished or you cannot determine the 90-minute score — DO NOT include goals scored in extra time or penalty shootouts), away_score (same rules), stage (e.g. 'Group A', 'Round of 32', 'Round of 16', 'Quarter-final', 'Semi-final', 'Third-place Play-off', 'Final'). If a knockout match shows specific team names, return those teams.",
+                  },
+                ],
+                onlyMainContent: true,
+                waitFor: 2000,
+              }),
+            ),
+          );
 
-          matches = result.json?.matches ?? [];
+          matches = results.flatMap((result) =>
+            ((result as unknown as { json?: { matches?: BbcMatch[] } }).json?.matches ?? []),
+          );
         } catch (e) {
           console.error("Firecrawl scrape failed", e);
           return Response.json(
