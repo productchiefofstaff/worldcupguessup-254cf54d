@@ -1,9 +1,11 @@
 import { useEffect, useState } from "react";
 import { db as supabase } from "@/lib/db";
 import { Button } from "@/components/ui/button";
-import { Lock, Check } from "lucide-react";
+import { Lock, Check, ChevronDown } from "lucide-react";
 import { toast } from "sonner";
-import { useQueryClient } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import { flagFor } from "@/lib/flags";
 
 export type Fixture = {
   id: string;
@@ -50,6 +52,7 @@ export function FixtureCard({
   const [home, setHome] = useState<string>(prediction ? String(prediction.home_score) : "");
   const [away, setAway] = useState<string>(prediction ? String(prediction.away_score) : "");
   const [busy, setBusy] = useState(false);
+  const [open, setOpen] = useState(false);
 
   const [now, setNow] = useState(() => Date.now());
   useEffect(() => {
@@ -60,6 +63,35 @@ export function FixtureCard({
   const locked = new Date(fixture.kickoff_at).getTime() <= now;
   const hasResult = fixture.home_score !== null && fixture.away_score !== null;
   const pts = prediction ? pointsFor(prediction, fixture) : null;
+
+  const allPredsQ = useQuery({
+    queryKey: ["fixture-predictions", fixture.id],
+    enabled: open && locked,
+    queryFn: async () => {
+      const { data: preds, error } = await supabase
+        .from("predictions")
+        .select("user_id, home_score, away_score")
+        .eq("fixture_id", fixture.id);
+      if (error) throw error;
+      const ids = Array.from(new Set((preds ?? []).map((p) => p.user_id)));
+      if (ids.length === 0) return [] as Array<{ name: string; home: number; away: number; userId: string }>;
+      const { data: profiles, error: pErr } = await supabase
+        .from("profiles")
+        .select("id, display_name")
+        .in("id", ids);
+      if (pErr) throw pErr;
+      const nameById = new Map<string, string>();
+      (profiles ?? []).forEach((pr) => nameById.set(pr.id, pr.display_name));
+      return (preds ?? [])
+        .map((p) => ({
+          userId: p.user_id,
+          name: nameById.get(p.user_id) ?? "Player",
+          home: p.home_score,
+          away: p.away_score,
+        }))
+        .sort((a, b) => a.name.localeCompare(b.name));
+    },
+  });
 
   async function submit() {
     const h = Number(home);
@@ -95,8 +127,9 @@ export function FixtureCard({
 
       <div className="p-3">
         <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-2">
-          <div className="text-right font-bold text-ink truncate text-sm sm:text-base">
-            {fixture.team_home}
+          <div className="flex items-center justify-end gap-1.5 font-bold text-ink truncate text-sm sm:text-base">
+            <span className="truncate">{fixture.team_home}</span>
+            <span className="text-lg leading-none shrink-0" aria-hidden>{flagFor(fixture.team_home)}</span>
           </div>
           <div className="flex items-center gap-1">
             <input
@@ -125,8 +158,9 @@ export function FixtureCard({
               aria-label={`${fixture.team_away} predicted score`}
             />
           </div>
-          <div className="text-left font-bold text-ink truncate text-sm sm:text-base">
-            {fixture.team_away}
+          <div className="flex items-center justify-start gap-1.5 font-bold text-ink truncate text-sm sm:text-base">
+            <span className="text-lg leading-none shrink-0" aria-hidden>{flagFor(fixture.team_away)}</span>
+            <span className="truncate">{fixture.team_away}</span>
           </div>
         </div>
 
@@ -171,6 +205,48 @@ export function FixtureCard({
             </>
           )}
         </div>
+
+        <Collapsible open={open} onOpenChange={setOpen} className="mt-2 border-t border-border -mx-3 -mb-3">
+          <CollapsibleTrigger
+            disabled={!locked}
+            className="w-full flex items-center justify-between px-3 py-2 text-xs font-semibold text-muted-foreground hover:text-ink disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            <span>{locked ? "See the predictions" : "Predictions visible after kickoff"}</span>
+            <ChevronDown className={"h-4 w-4 transition-transform " + (open ? "rotate-180" : "")} />
+          </CollapsibleTrigger>
+          <CollapsibleContent className="px-3 pb-3">
+            {allPredsQ.isLoading && <p className="text-xs text-muted-foreground">Loading…</p>}
+            {allPredsQ.error && <p className="text-xs text-destructive">Failed to load predictions.</p>}
+            {allPredsQ.data && allPredsQ.data.length === 0 && (
+              <p className="text-xs text-muted-foreground">No one predicted this match.</p>
+            )}
+            {allPredsQ.data && allPredsQ.data.length > 0 && (
+              <ul className="divide-y divide-border">
+                {allPredsQ.data.map((row) => {
+                  const rowPts = hasResult ? pointsFor({ id: "", fixture_id: fixture.id, home_score: row.home, away_score: row.away }, fixture) : null;
+                  return (
+                    <li key={row.userId} className="flex items-center justify-between py-1.5 text-sm">
+                      <span className="truncate text-ink">{row.name}{row.userId === userId ? " (you)" : ""}</span>
+                      <span className="flex items-center gap-2 shrink-0">
+                        <span className="font-bold tabular-nums">{row.home}-{row.away}</span>
+                        {rowPts !== null && (
+                          <span
+                            className={
+                              "text-[10px] font-bold px-1.5 py-0.5 rounded-sm " +
+                              (rowPts === 40 ? "bg-success text-primary-foreground" : rowPts === 10 ? "bg-warning text-ink" : "bg-muted text-muted-foreground")
+                            }
+                          >
+                            +{rowPts}
+                          </span>
+                        )}
+                      </span>
+                    </li>
+                  );
+                })}
+              </ul>
+            )}
+          </CollapsibleContent>
+        </Collapsible>
       </div>
     </div>
   );
