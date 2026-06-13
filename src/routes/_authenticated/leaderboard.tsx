@@ -58,54 +58,59 @@ function LeaderboardPage() {
       {isLoading && <p className="text-sm text-muted-foreground">Loading…</p>}
       {error && <p className="text-sm text-destructive">Failed to load leaderboard.</p>}
 
-      <div className="bg-card border border-border rounded-md overflow-hidden">
-        <div className="grid grid-cols-[2.5rem_1fr_3.5rem_5.5rem_5.5rem_5.5rem] px-3 py-2 bg-surface text-[10px] font-bold uppercase tracking-wider text-muted-foreground border-b border-border">
-          <span>#</span>
-          <span>Player</span>
-          <span className="text-right">Points</span>
-          <span className="text-right">Correct Results</span>
-          <span className="text-right">Correct Scores</span>
-          <span className="text-right">Predictions</span>
-        </div>
-        {(data ?? []).map((row, i) => {
-          const isMe = user?.id === row.user_id;
-          const rank = i + 1;
-          return (
-            <div
-              key={row.user_id}
-              className={
-                "grid grid-cols-[2.5rem_1fr_3.5rem_5.5rem_5.5rem_5.5rem] px-3 py-3 items-center border-b border-border last:border-b-0 " +
-                (isMe ? "bg-primary/5" : "")
-              }
-            >
-              <span className="font-extrabold text-ink flex items-center gap-1">
-                {rank}
-                {rank <= 3 && (
-                  <Medal
-                    className={
-                      "h-4 w-4 " +
-                      (rank === 1 ? "text-warning" : rank === 2 ? "text-muted-foreground" : "text-primary/70")
-                    }
-                  />
-                )}
-              </span>
-              <span className="font-bold text-ink truncate">
-                {row.name}
-                {isMe && (
-                  <span className="ml-2 text-[10px] uppercase tracking-wider bg-primary text-primary-foreground px-1.5 py-0.5 rounded-sm">
-                    You
-                  </span>
-                )}
-              </span>
-              <span className="text-right font-extrabold text-ink">{row.points}</span>
-              <span className="text-right text-sm text-muted-foreground">{row.correct_results}</span>
-              <span className="text-right text-sm text-muted-foreground">{row.correct_scores}</span>
-              <span className="text-right text-xs text-muted-foreground">
-                {row.settled_predictions}/{row.total_predictions}
-              </span>
-            </div>
-          );
-        })}
+      <div className="bg-card border border-border rounded-md overflow-x-auto">
+        <table className="w-full text-sm border-collapse">
+          <thead>
+            <tr className="bg-surface text-[10px] font-bold uppercase tracking-wider text-muted-foreground border-b border-border">
+              <th className="px-3 py-2 text-left w-10">#</th>
+              <th className="px-3 py-2 text-left">Player</th>
+              <th className="px-3 py-2 text-right">Points</th>
+              <th className="px-3 py-2 text-right">Correct Results</th>
+              <th className="px-3 py-2 text-right">Correct Scores</th>
+              <th className="px-3 py-2 text-right">Predictions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {(data ?? []).map((row, i) => {
+              const isMe = user?.id === row.user_id;
+              const rank = i + 1;
+              return (
+                <tr
+                  key={row.user_id}
+                  className={"border-b border-border last:border-b-0 " + (isMe ? "bg-primary/5" : "")}
+                >
+                  <td className="px-3 py-3 font-extrabold text-ink">
+                    <span className="inline-flex items-center gap-1">
+                      {rank}
+                      {rank <= 3 && (
+                        <Medal
+                          className={
+                            "h-4 w-4 " +
+                            (rank === 1 ? "text-warning" : rank === 2 ? "text-muted-foreground" : "text-primary/70")
+                          }
+                        />
+                      )}
+                    </span>
+                  </td>
+                  <td className="px-3 py-3 font-bold text-ink">
+                    <span className="truncate">{row.name}</span>
+                    {isMe && (
+                      <span className="ml-2 text-[10px] uppercase tracking-wider bg-primary text-primary-foreground px-1.5 py-0.5 rounded-sm">
+                        You
+                      </span>
+                    )}
+                  </td>
+                  <td className="px-3 py-3 text-right font-extrabold text-ink tabular-nums">{row.points}</td>
+                  <td className="px-3 py-3 text-right text-muted-foreground tabular-nums">{row.correct_results}</td>
+                  <td className="px-3 py-3 text-right text-muted-foreground tabular-nums">{row.correct_scores}</td>
+                  <td className="px-3 py-3 text-right text-xs text-muted-foreground tabular-nums">
+                    {row.settled_predictions}/{row.total_predictions}
+                  </td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
         {!isLoading && (data?.length ?? 0) === 0 && (
           <div className="p-6 text-center text-sm text-muted-foreground">
             No players yet — be the first to predict!
