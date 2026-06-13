@@ -14,6 +14,7 @@ type SourceMatch = {
   home_score?: number | null;
   away_score?: number | null;
   stage?: string | null;
+  status_label?: string | null;
 };
 
 function norm(s: string | null | undefined): string {
@@ -42,7 +43,7 @@ export const Route = createFileRoute("/api/public/sync-results")({
                   {
                     type: "json",
                     prompt:
-                      "From this ESPN FIFA World Cup schedule/results page, extract every football match listed. Return an object with a 'matches' array. Each match has: kickoff_iso (ISO 8601 datetime, prefer UTC; null if unknown), team_home (full nation name as shown, or null/'TBD'), team_away, status (one of 'scheduled','live','finished' — 'FT' means finished), home_score (the 90-minute full-time score as an integer; null if the match is not yet finished or you cannot determine the 90-minute score — DO NOT include goals scored in extra time or penalty shootouts), away_score (same rules), stage (e.g. 'Group A', 'Round of 32', 'Round of 16', 'Quarter-final', 'Semi-final', 'Third-place Play-off', 'Final'). If a knockout match shows specific team names, return those teams.",
+                      "From this ESPN FIFA World Cup schedule/results page, extract every football match listed. Return an object with a 'matches' array. Each match has: kickoff_iso (ISO 8601 datetime, prefer UTC; null if unknown), team_home (full nation name as shown, or null/'TBD'), team_away, status_label (copy the EXACT short status text shown on the page next to the match, e.g. 'FT', 'AET', 'Pens', 'HT', \"45'\", \"78'\", 'LIVE', a kickoff time like '8:00 PM', or 'Postponed'; null if no such label is visible — DO NOT invent or infer this), status (one of 'scheduled','live','finished' — return 'finished' ONLY when status_label is exactly 'FT', 'AET', 'Pens', 'Final', or 'Full Time'. A visible scoreline alone is NOT enough — in-progress matches also show a score. If unsure, return 'live'), home_score (the 90-minute full-time score as an integer; null if the match is not yet finished or you cannot determine the 90-minute score — DO NOT include goals scored in extra time or penalty shootouts), away_score (same rules), stage (e.g. 'Group A', 'Round of 32', 'Round of 16', 'Quarter-final', 'Semi-final', 'Third-place Play-off', 'Final'). If a knockout match shows specific team names, return those teams.",
                   },
                 ],
                 onlyMainContent: true,
@@ -155,9 +156,18 @@ export const Route = createFileRoute("/api/public/sync-results")({
           const minutesSinceKickoff = (Date.now() - kickoffTs) / 60000;
           const alreadyHasScore =
             fixture.home_score !== null && fixture.away_score !== null;
+          const ftLabel = (m.status_label ?? "").trim().toLowerCase();
+          const labelConfirmsFinished =
+            ftLabel === "ft" ||
+            ftLabel === "aet" ||
+            ftLabel === "pens" ||
+            ftLabel === "final" ||
+            ftLabel === "full time" ||
+            ftLabel === "full-time";
           if (
             !alreadyHasScore &&
             m.status === "finished" &&
+            labelConfirmsFinished &&
             minutesSinceKickoff >= 110 &&
             Number.isInteger(m.home_score) &&
             Number.isInteger(m.away_score)
@@ -167,10 +177,10 @@ export const Route = createFileRoute("/api/public/sync-results")({
           } else if (
             !alreadyHasScore &&
             m.status === "finished" &&
-            minutesSinceKickoff < 110
+            (!labelConfirmsFinished || minutesSinceKickoff < 110)
           ) {
             console.warn(
-              `[sync-results] rejecting early 'finished' for match ${fixture.match_number} (${fixture.team_home} v ${fixture.team_away}) — only ${minutesSinceKickoff.toFixed(0)}min since kickoff`,
+              `[sync-results] rejecting 'finished' for match ${fixture.match_number} (${fixture.team_home} v ${fixture.team_away}) — label='${m.status_label ?? ""}', minsSinceKO=${minutesSinceKickoff.toFixed(0)}`,
             );
           }
 
