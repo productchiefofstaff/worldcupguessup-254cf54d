@@ -120,7 +120,7 @@ export function FixtureCard({
   }
 
   return (
-    <div className="bg-card border border-border rounded-md overflow-hidden">
+    <div className="bg-card border border-border rounded-md overflow-hidden flex flex-col h-full">
       <div className="flex items-center justify-between px-3 py-1.5 bg-surface text-xs text-muted-foreground border-b border-border">
         <span className="font-semibold">
           {fixture.group_name ? `Group ${fixture.group_name}` : fixture.stage}
@@ -128,8 +128,8 @@ export function FixtureCard({
         <span>{kickoffLabel(fixture.kickoff_at)}</span>
       </div>
 
-      <div className="p-3">
-        <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-2">
+      <div className="p-3 flex-1 flex flex-col">
+        <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-2 flex-1">
           <div className="flex items-center justify-end gap-1.5 font-bold text-ink truncate text-sm sm:text-base">
             <span className="truncate">{fixture.team_home}</span>
             <span className="text-lg leading-none shrink-0" aria-hidden>{flagFor(fixture.team_home)}</span>
