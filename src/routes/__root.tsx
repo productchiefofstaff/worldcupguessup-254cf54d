@@ -11,6 +11,9 @@ import { useEffect, type ReactNode } from "react";
 
 import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
+import { SiteHeader } from "@/components/SiteHeader";
+import { PlayerGate } from "@/components/PlayerGate";
+import { Toaster } from "@/components/ui/sonner";
 
 function NotFoundComponent() {
   return (
@@ -77,11 +80,10 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "Lovable App" },
-      { name: "description", content: "Lovable Generated Project" },
-      { name: "author", content: "Lovable" },
-      { property: "og:title", content: "Lovable App" },
-      { property: "og:description", content: "Lovable Generated Project" },
+      { title: "World Cup 2026 Predictor" },
+      { name: "description", content: "Pick scores for every 2026 World Cup match and climb the leaderboard." },
+      { property: "og:title", content: "World Cup 2026 Predictor" },
+      { property: "og:description", content: "Pick scores for every 2026 World Cup match and climb the leaderboard." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
       { name: "twitter:site", content: "@Lovable" },
@@ -118,8 +120,13 @@ function RootComponent() {
 
   return (
     <QueryClientProvider client={queryClient}>
-      {/* Required: nested routes render here. Removing <Outlet /> breaks all child routes. */}
-      <Outlet />
+      <PlayerGate>
+        <div className="min-h-screen bg-surface">
+          <SiteHeader />
+          <Outlet />
+        </div>
+      </PlayerGate>
+      <Toaster />
     </QueryClientProvider>
   );
 }
