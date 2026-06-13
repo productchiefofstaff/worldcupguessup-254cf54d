@@ -28,11 +28,11 @@ function dayKey(iso: string) {
   return `${d.getFullYear()}-${d.getMonth()}-${d.getDate()}`;
 }
 
-const STAGES = ["Upcoming", "All", "Group Stage", "Round of 32", "Round of 16", "Quarter-final", "Semi-final", "Third-place Play-off", "Final"] as const;
+const TABS = ["Upcoming", "Completed"] as const;
 
 function FixturesPage() {
   const { user } = useAuth();
-  const [stage, setStage] = useState<(typeof STAGES)[number]>("Upcoming");
+  const [tab, setTab] = useState<(typeof TABS)[number]>("Upcoming");
 
   const fixturesQ = useQuery({
     queryKey: ["fixtures"],
@@ -68,15 +68,13 @@ function FixturesPage() {
 
   const filtered = useMemo(() => {
     const all = fixturesQ.data ?? [];
-    const nowTs = Date.now();
     return all.filter((f) => {
-      if (stage !== "All" && stage !== "Upcoming" && f.stage !== stage) return false;
-      if (stage === "Upcoming") {
-        if (new Date(f.kickoff_at).getTime() < nowTs && f.home_score !== null) return false;
-      }
+      const hasResult = f.home_score !== null;
+      if (tab === "Upcoming") return !hasResult;
+      if (tab === "Completed") return hasResult;
       return true;
     });
-  }, [fixturesQ.data, stage]);
+  }, [fixturesQ.data, tab]);
 
   const grouped = useMemo(() => {
     const map = new Map<string, Fixture[]>();
@@ -86,8 +84,12 @@ function FixturesPage() {
       arr.push(f);
       map.set(k, arr);
     });
-    return Array.from(map.entries());
-  }, [filtered]);
+    const entries = Array.from(map.entries());
+    if (tab === "Completed") {
+      entries.reverse();
+    }
+    return entries;
+  }, [filtered, tab]);
 
   if (!user) return null;
 
@@ -105,13 +107,13 @@ function FixturesPage() {
       </div>
 
       <div className="flex items-center gap-2 mb-4 overflow-x-auto pb-1 -mx-1 px-1">
-        {STAGES.map((s) => (
+        {TABS.map((s) => (
           <button
             key={s}
-            onClick={() => setStage(s)}
+            onClick={() => setTab(s)}
             className={
               "shrink-0 text-xs font-semibold px-3 py-1.5 rounded-full border transition-colors " +
-              (stage === s
+              (tab === s
                 ? "bg-ink text-primary-foreground border-ink"
                 : "bg-card text-ink border-border hover:bg-surface")
             }
