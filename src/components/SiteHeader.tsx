@@ -1,5 +1,7 @@
 import { Link, useNavigate, useRouterState } from "@tanstack/react-router";
 import { useAuth } from "@/hooks/use-auth";
+import { useQuery } from "@tanstack/react-query";
+import { db } from "@/lib/db";
 import { LogOut } from "lucide-react";
 
 export function SiteHeader() {
@@ -8,6 +10,15 @@ export function SiteHeader() {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   if (pathname.startsWith("/auth")) return null;
   const label = profile?.display_name ?? user?.email ?? "";
+  const roleQ = useQuery({
+    queryKey: ["my-role", user?.id],
+    enabled: !!user,
+    queryFn: async () => {
+      const { data } = await db.from("user_roles").select("role").eq("user_id", user!.id);
+      return (data ?? []).map((r: { role: string }) => r.role);
+    },
+  });
+  const isAdmin = (roleQ.data ?? []).includes("admin");
   async function handleSignOut() {
     await signOut();
     navigate({ to: "/auth" });
@@ -43,6 +54,15 @@ export function SiteHeader() {
           >
             My Predictions
           </Link>
+          {isAdmin && (
+            <Link
+              to="/admin"
+              className="px-2 py-1 hover:text-primary"
+              activeProps={{ className: "px-2 py-1 text-primary underline underline-offset-4" }}
+            >
+              Admin
+            </Link>
+          )}
           {user && (
             <div className="flex items-center gap-2 ml-2 pl-2 sm:pl-3 border-l border-white/20 shrink-0">
               <span className="text-xs opacity-80 hidden sm:inline">Playing as</span>
