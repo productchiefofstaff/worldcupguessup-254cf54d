@@ -1,9 +1,11 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useServerFn } from "@tanstack/react-start";
+import { updateFixtureScore } from "@/lib/admin-fixtures.functions";
 import { db as supabase } from "@/lib/db";
 import { useAuth } from "@/hooks/use-auth";
 import { flagFor } from "@/lib/flags";
-import { Shield, Download } from "lucide-react";
+import { Shield, Download, Pencil } from "lucide-react";
 import { useState } from "react";
 
 export const Route = createFileRoute("/_authenticated/admin")({
@@ -36,7 +38,23 @@ type Profile = { id: string; display_name: string; created_at?: string };
 
 function AdminPage() {
   const { user, ready } = useAuth();
-  const [tab, setTab] = useState<"predictions" | "users">("predictions");
+  const [tab, setTab] = useState<"predictions" | "users" | "fixtures">("predictions");
+  const qc = useQueryClient();
+  const updateScoreFn = useServerFn(updateFixtureScore);
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editHome, setEditHome] = useState<string>("");
+  const [editAway, setEditAway] = useState<string>("");
+
+  const updateMut = useMutation({
+    mutationFn: (vars: { fixtureId: string; homeScore: number | null; awayScore: number | null }) =>
+      updateScoreFn({ data: vars }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["fixtures-admin"] });
+      qc.invalidateQueries({ queryKey: ["leaderboard"] });
+      qc.invalidateQueries({ queryKey: ["fixtures"] });
+      setEditingId(null);
+    },
+  });
 
   const roleQ = useQuery({
     queryKey: ["my-role", user?.id],
@@ -112,6 +130,13 @@ function AdminPage() {
     f: fixtureMap.get(r.fixture_id),
     name: profileMap.get(r.user_id)?.display_name ?? r.user_id.slice(0, 8),
   }));
+
+  const completedFixtures = (fixturesQ.data ?? [])
+    .filter((f) => f.home_score !== null && f.away_score !== null)
+    .sort(
+      (a, b) =>
+        new Date(b.kickoff_at).getTime() - new Date(a.kickoff_at).getTime(),
+    );
 
   function downloadCsv() {
     const header = ["player", "match_number", "stage", "team_home", "team_away", "kickoff_at", "pred_home", "pred_away", "actual_home", "actual_away", "updated_at"];
@@ -192,9 +217,20 @@ function AdminPage() {
         >
           Users
         </button>
+        <button
+          onClick={() => setTab("fixtures")}
+          className={
+            "px-3 py-2 text-sm font-bold border-b-2 -mb-px " +
+            (tab === "fixtures"
+              ? "border-primary text-ink"
+              : "border-transparent text-muted-foreground hover:text-ink")
+          }
+        >
+          Fixtures
+        </button>
       </div>
 
-      {tab === "predictions" ? (
+      {tab === "predictions" && (
       <>
       {predsQ.isLoading && <p className="text-sm text-muted-foreground">Loading…</p>}
 
@@ -256,7 +292,9 @@ function AdminPage() {
         </table>
       </div>
       </>
-      ) : (
+      )}
+
+      {tab === "users" && (
         <div className="bg-card border border-border rounded-md overflow-x-auto">
           <table className="w-full text-sm">
             <thead className="bg-surface text-[10px] uppercase tracking-wider text-muted-foreground">
@@ -294,6 +332,125 @@ function AdminPage() {
           {isAdmin && tab === "users" && (
             <p className="px-3 py-2 text-[11px] text-muted-foreground border-t border-border">
               {(usersQ.data ?? []).length} total
+            </p>
+          )}
+        </div>
+      )}
+
+      {tab === "fixtures" && (
+        <div className="bg-card border border-border rounded-md overflow-x-auto">
+          <p className="px-3 py-2 text-[11px] text-muted-foreground border-b border-border">
+            Emergency override only. Scores normally come from the automatic
+            scraper. Saving updates the leaderboard immediately.
+          </p>
+          <table className="w-full text-sm">
+            <thead className="bg-surface text-[10px] uppercase tracking-wider text-muted-foreground">
+              <tr>
+                <th className="text-left px-3 py-2">Match</th>
+                <th className="text-right px-3 py-2 whitespace-nowrap">Kickoff</th>
+                <th className="text-right px-3 py-2">Score</th>
+                <th className="text-right px-3 py-2">Edit</th>
+              </tr>
+            </thead>
+            <tbody>
+              {completedFixtures.map((f) => {
+                const isEditing = editingId === f.id;
+                return (
+                  <tr key={f.id} className="border-t border-border">
+                    <td className="px-3 py-2">
+                      <span className="flex items-center gap-1">
+                        <span>{flagFor(f.team_home)}</span>
+                        <span>{f.team_home}</span>
+                        <span className="text-muted-foreground">v</span>
+                        <span>{f.team_away}</span>
+                        <span>{flagFor(f.team_away)}</span>
+                      </span>
+                    </td>
+                    <td className="px-3 py-2 text-right text-[11px] text-muted-foreground whitespace-nowrap">
+                      {new Date(f.kickoff_at).toLocaleString(undefined, {
+                        day: "numeric",
+                        month: "short",
+                        hour: "2-digit",
+                        minute: "2-digit",
+                      })}
+                    </td>
+                    <td className="px-3 py-2 text-right font-bold">
+                      {isEditing ? (
+                        <span className="inline-flex items-center gap-1 justify-end">
+                          <input
+                            type="number"
+                            min={0}
+                            value={editHome}
+                            onChange={(e) => setEditHome(e.target.value)}
+                            className="w-12 text-right border border-border rounded-sm px-1 py-0.5 bg-background"
+                          />
+                          <span>–</span>
+                          <input
+                            type="number"
+                            min={0}
+                            value={editAway}
+                            onChange={(e) => setEditAway(e.target.value)}
+                            className="w-12 text-right border border-border rounded-sm px-1 py-0.5 bg-background"
+                          />
+                        </span>
+                      ) : (
+                        <>
+                          {f.home_score} – {f.away_score}
+                        </>
+                      )}
+                    </td>
+                    <td className="px-3 py-2 text-right">
+                      {isEditing ? (
+                        <span className="inline-flex gap-1 justify-end">
+                          <button
+                            disabled={updateMut.isPending}
+                            onClick={() => {
+                              const h = parseInt(editHome, 10);
+                              const a = parseInt(editAway, 10);
+                              if (!Number.isInteger(h) || !Number.isInteger(a) || h < 0 || a < 0) return;
+                              updateMut.mutate({ fixtureId: f.id, homeScore: h, awayScore: a });
+                            }}
+                            className="text-[11px] font-bold bg-primary text-primary-foreground px-2 py-1 rounded-sm hover:opacity-90 disabled:opacity-50"
+                          >
+                            Save
+                          </button>
+                          <button
+                            disabled={updateMut.isPending}
+                            onClick={() => setEditingId(null)}
+                            className="text-[11px] font-bold border border-border px-2 py-1 rounded-sm hover:bg-surface"
+                          >
+                            Cancel
+                          </button>
+                        </span>
+                      ) : (
+                        <button
+                          onClick={() => {
+                            setEditingId(f.id);
+                            setEditHome(String(f.home_score ?? ""));
+                            setEditAway(String(f.away_score ?? ""));
+                          }}
+                          className="inline-flex items-center gap-1 text-[11px] font-bold border border-border px-2 py-1 rounded-sm hover:bg-surface"
+                        >
+                          <Pencil className="h-3 w-3" />
+                          Edit
+                        </button>
+                      )}
+                    </td>
+                  </tr>
+                );
+              })}
+              {completedFixtures.length === 0 && (
+                <tr>
+                  <td colSpan={4} className="p-6 text-center text-sm text-muted-foreground">
+                    No completed fixtures yet.
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+          {updateMut.isError && (
+            <p className="px-3 py-2 text-[11px] text-destructive border-t border-border">
+              {(updateMut.error as Error).message}
             </p>
           )}
         </div>
