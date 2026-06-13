@@ -133,9 +133,7 @@ function MyPredictionsPage() {
               <div className="min-w-0">
                 <div className="flex items-center gap-1.5 text-sm font-bold text-ink truncate">
                   <span>{flagFor(f.team_home)}</span>
-                  <span className="truncate">{f.team_home}</span>
                   <span className="text-muted-foreground font-normal">v</span>
-                  <span className="truncate">{f.team_away}</span>
                   <span>{flagFor(f.team_away)}</span>
                 </div>
                 <div className="text-[10px] text-muted-foreground mt-0.5">
