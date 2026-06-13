@@ -13,6 +13,7 @@ import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as AuthenticatedIndexRouteImport } from './routes/_authenticated/index'
 import { Route as AuthenticatedLeaderboardRouteImport } from './routes/_authenticated/leaderboard'
+import { Route as ApiPublicSyncResultsRouteImport } from './routes/api/public/sync-results'
 
 const AuthRoute = AuthRouteImport.update({
   id: '/auth',
@@ -34,16 +35,23 @@ const AuthenticatedLeaderboardRoute =
     path: '/leaderboard',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const ApiPublicSyncResultsRoute = ApiPublicSyncResultsRouteImport.update({
+  id: '/api/public/sync-results',
+  path: '/api/public/sync-results',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof AuthenticatedIndexRoute
   '/auth': typeof AuthRoute
   '/leaderboard': typeof AuthenticatedLeaderboardRoute
+  '/api/public/sync-results': typeof ApiPublicSyncResultsRoute
 }
 export interface FileRoutesByTo {
   '/auth': typeof AuthRoute
   '/leaderboard': typeof AuthenticatedLeaderboardRoute
   '/': typeof AuthenticatedIndexRoute
+  '/api/public/sync-results': typeof ApiPublicSyncResultsRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -51,23 +59,26 @@ export interface FileRoutesById {
   '/auth': typeof AuthRoute
   '/_authenticated/leaderboard': typeof AuthenticatedLeaderboardRoute
   '/_authenticated/': typeof AuthenticatedIndexRoute
+  '/api/public/sync-results': typeof ApiPublicSyncResultsRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/auth' | '/leaderboard'
+  fullPaths: '/' | '/auth' | '/leaderboard' | '/api/public/sync-results'
   fileRoutesByTo: FileRoutesByTo
-  to: '/auth' | '/leaderboard' | '/'
+  to: '/auth' | '/leaderboard' | '/' | '/api/public/sync-results'
   id:
     | '__root__'
     | '/_authenticated'
     | '/auth'
     | '/_authenticated/leaderboard'
     | '/_authenticated/'
+    | '/api/public/sync-results'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
   AuthRoute: typeof AuthRoute
+  ApiPublicSyncResultsRoute: typeof ApiPublicSyncResultsRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -100,6 +111,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedLeaderboardRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/api/public/sync-results': {
+      id: '/api/public/sync-results'
+      path: '/api/public/sync-results'
+      fullPath: '/api/public/sync-results'
+      preLoaderRoute: typeof ApiPublicSyncResultsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -119,6 +137,7 @@ const AuthenticatedRouteRouteWithChildren =
 const rootRouteChildren: RootRouteChildren = {
   AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
   AuthRoute: AuthRoute,
+  ApiPublicSyncResultsRoute: ApiPublicSyncResultsRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
