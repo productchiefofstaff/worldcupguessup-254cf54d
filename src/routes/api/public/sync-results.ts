@@ -111,7 +111,12 @@ export const Route = createFileRoute("/api/public/sync-results")({
 
           if (!fixture) continue;
 
-          const patch: Record<string, unknown> = {};
+          const patch: {
+            team_home?: string;
+            team_away?: string;
+            home_score?: number;
+            away_score?: number;
+          } = {};
 
           // Fill in knockout teams as they're decided
           if (
@@ -135,8 +140,8 @@ export const Route = createFileRoute("/api/public/sync-results")({
             Number.isInteger(m.home_score) &&
             Number.isInteger(m.away_score)
           ) {
-            if (fixture.home_score !== m.home_score) patch.home_score = m.home_score;
-            if (fixture.away_score !== m.away_score) patch.away_score = m.away_score;
+            if (fixture.home_score !== m.home_score) patch.home_score = m.home_score as number;
+            if (fixture.away_score !== m.away_score) patch.away_score = m.away_score as number;
           }
 
           if (Object.keys(patch).length === 0) continue;
