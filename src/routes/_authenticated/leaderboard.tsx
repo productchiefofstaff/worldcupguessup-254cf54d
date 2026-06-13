@@ -18,6 +18,8 @@ type Row = {
   user_id: string;
   name: string;
   points: number;
+  correct_results: number;
+  correct_scores: number;
   settled_predictions: number;
   total_predictions: number;
 };
