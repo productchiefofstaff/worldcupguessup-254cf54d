@@ -151,7 +151,7 @@ export function FixtureCard({
               disabled={locked}
               placeholder="-"
               className={
-                "w-10 h-10 text-center font-extrabold text-lg border rounded-sm focus:outline-none focus:ring-2 focus:ring-ring disabled:opacity-100 " +
+                "w-10 h-10 text-center font-extrabold text-lg border rounded-sm leading-10 focus:outline-none focus:ring-2 focus:ring-ring disabled:opacity-100 " +
                 (hasResult
                   ? "bg-ink text-background border-ink"
                   : "bg-background border-input disabled:bg-muted disabled:text-ink")
@@ -175,7 +175,7 @@ export function FixtureCard({
               disabled={locked}
               placeholder="-"
               className={
-                "w-10 h-10 text-center font-extrabold text-lg border rounded-sm focus:outline-none focus:ring-2 focus:ring-ring disabled:opacity-100 " +
+                "w-10 h-10 text-center font-extrabold text-lg border rounded-sm leading-10 focus:outline-none focus:ring-2 focus:ring-ring disabled:opacity-100 " +
                 (hasResult
                   ? "bg-ink text-background border-ink"
                   : "bg-background border-input disabled:bg-muted disabled:text-ink")
