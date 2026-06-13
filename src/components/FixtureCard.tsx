@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { supabase } from "@/integrations/supabase/client";
+import { db as supabase } from "@/lib/db";
 import { Button } from "@/components/ui/button";
 import { Lock, Check } from "lucide-react";
 import { toast } from "sonner";

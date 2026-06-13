@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
+import { db as supabase } from "@/lib/db";
 import { usePlayer } from "@/hooks/use-player";
 import { FixtureCard, type Fixture, type Prediction } from "@/components/FixtureCard";
 import { useMemo, useState } from "react";

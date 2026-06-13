@@ -1,5 +1,5 @@
 import { useEffect, useState, useCallback } from "react";
-import { supabase } from "@/integrations/supabase/client";
+import { db as supabase } from "@/lib/db";
 
 export type Player = { id: string; name: string };
 
