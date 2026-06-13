@@ -203,7 +203,9 @@ export function FixtureCard({
                   )}
                 </span>
               ) : (
-                <span className="text-xs text-muted-foreground">Awaiting result</span>
+                <span className="inline-flex items-center gap-1 text-xs text-destructive font-semibold">
+                  <Radio className="h-3 w-3" /> Live – awaiting result
+                </span>
               )}
             </>
           )}
