@@ -12,6 +12,7 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as AuthenticatedIndexRouteImport } from './routes/_authenticated/index'
+import { Route as AuthenticatedMyPredictionsRouteImport } from './routes/_authenticated/my-predictions'
 import { Route as AuthenticatedLeaderboardRouteImport } from './routes/_authenticated/leaderboard'
 import { Route as ApiPublicSyncResultsRouteImport } from './routes/api/public/sync-results'
 
@@ -29,6 +30,12 @@ const AuthenticatedIndexRoute = AuthenticatedIndexRouteImport.update({
   path: '/',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedMyPredictionsRoute =
+  AuthenticatedMyPredictionsRouteImport.update({
+    id: '/my-predictions',
+    path: '/my-predictions',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedLeaderboardRoute =
   AuthenticatedLeaderboardRouteImport.update({
     id: '/leaderboard',
@@ -45,11 +52,13 @@ export interface FileRoutesByFullPath {
   '/': typeof AuthenticatedIndexRoute
   '/auth': typeof AuthRoute
   '/leaderboard': typeof AuthenticatedLeaderboardRoute
+  '/my-predictions': typeof AuthenticatedMyPredictionsRoute
   '/api/public/sync-results': typeof ApiPublicSyncResultsRoute
 }
 export interface FileRoutesByTo {
   '/auth': typeof AuthRoute
   '/leaderboard': typeof AuthenticatedLeaderboardRoute
+  '/my-predictions': typeof AuthenticatedMyPredictionsRoute
   '/': typeof AuthenticatedIndexRoute
   '/api/public/sync-results': typeof ApiPublicSyncResultsRoute
 }
@@ -58,19 +67,31 @@ export interface FileRoutesById {
   '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
   '/auth': typeof AuthRoute
   '/_authenticated/leaderboard': typeof AuthenticatedLeaderboardRoute
+  '/_authenticated/my-predictions': typeof AuthenticatedMyPredictionsRoute
   '/_authenticated/': typeof AuthenticatedIndexRoute
   '/api/public/sync-results': typeof ApiPublicSyncResultsRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/auth' | '/leaderboard' | '/api/public/sync-results'
+  fullPaths:
+    | '/'
+    | '/auth'
+    | '/leaderboard'
+    | '/my-predictions'
+    | '/api/public/sync-results'
   fileRoutesByTo: FileRoutesByTo
-  to: '/auth' | '/leaderboard' | '/' | '/api/public/sync-results'
+  to:
+    | '/auth'
+    | '/leaderboard'
+    | '/my-predictions'
+    | '/'
+    | '/api/public/sync-results'
   id:
     | '__root__'
     | '/_authenticated'
     | '/auth'
     | '/_authenticated/leaderboard'
+    | '/_authenticated/my-predictions'
     | '/_authenticated/'
     | '/api/public/sync-results'
   fileRoutesById: FileRoutesById
@@ -104,6 +125,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedIndexRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/my-predictions': {
+      id: '/_authenticated/my-predictions'
+      path: '/my-predictions'
+      fullPath: '/my-predictions'
+      preLoaderRoute: typeof AuthenticatedMyPredictionsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/leaderboard': {
       id: '/_authenticated/leaderboard'
       path: '/leaderboard'
@@ -123,11 +151,13 @@ declare module '@tanstack/react-router' {
 
 interface AuthenticatedRouteRouteChildren {
   AuthenticatedLeaderboardRoute: typeof AuthenticatedLeaderboardRoute
+  AuthenticatedMyPredictionsRoute: typeof AuthenticatedMyPredictionsRoute
   AuthenticatedIndexRoute: typeof AuthenticatedIndexRoute
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedLeaderboardRoute: AuthenticatedLeaderboardRoute,
+  AuthenticatedMyPredictionsRoute: AuthenticatedMyPredictionsRoute,
   AuthenticatedIndexRoute: AuthenticatedIndexRoute,
 }
 
@@ -142,3 +172,13 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { startInstance } from './start.ts'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>
+  }
+}
