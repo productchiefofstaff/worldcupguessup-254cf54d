@@ -34,6 +34,7 @@ const ISO: Record<string, string> = {
   "Serbia": "RS",
   "Turkey": "TR",
   "Türkiye": "TR",
+  "Turkiye": "TR",
   "Wales": "GB-WLS",
   "Scotland": "GB-SCT",
   "Republic of Ireland": "IE",
