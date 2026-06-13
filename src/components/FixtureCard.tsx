@@ -207,9 +207,11 @@ export function FixtureCard({
             </>
           ) : (
             <>
-              <span className="inline-flex items-center gap-1 text-xs text-muted-foreground">
-                <Lock className="h-3 w-3" /> Locked
-              </span>
+              {!hasResult && (
+                <span className="inline-flex items-center gap-1 text-xs text-muted-foreground">
+                  <Lock className="h-3 w-3" /> Locked
+                </span>
+              )}
               {hasResult ? (
                 <span className="text-xs font-semibold inline-flex items-center gap-2">
                   {prediction ? (
