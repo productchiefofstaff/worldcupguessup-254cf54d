@@ -230,7 +230,7 @@ function AdminPage() {
         </button>
       </div>
 
-      {tab === "predictions" ? (
+      {tab === "predictions" && (
       <>
       {predsQ.isLoading && <p className="text-sm text-muted-foreground">Loading…</p>}
 
@@ -292,7 +292,9 @@ function AdminPage() {
         </table>
       </div>
       </>
-      ) : (
+      )}
+
+      {tab === "users" && (
         <div className="bg-card border border-border rounded-md overflow-x-auto">
           <table className="w-full text-sm">
             <thead className="bg-surface text-[10px] uppercase tracking-wider text-muted-foreground">
@@ -333,7 +335,7 @@ function AdminPage() {
             </p>
           )}
         </div>
-      ) : null}
+      )}
 
       {tab === "fixtures" && (
         <div className="bg-card border border-border rounded-md overflow-x-auto">
