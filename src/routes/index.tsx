@@ -9,7 +9,7 @@ export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
       { title: "Fixtures – World Cup 2026 Predictor" },
-      { name: "description", content: "Predict the score of every 2026 World Cup match. 3 points for the exact score, 1 for the result." },
+      { name: "description", content: "Predict the score of every 2026 World Cup match. 40 points for the exact score, 10 for the result." },
     ],
   }),
   component: FixturesPage,
@@ -95,8 +95,11 @@ function FixturesPage() {
       <div className="mb-4">
         <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-ink">Fixtures</h1>
         <p className="text-sm text-muted-foreground mt-1">
-          <span className="font-bold text-success">3 pts</span> exact score ·{" "}
-          <span className="font-bold text-warning">1 pt</span> correct result · predictions lock at kickoff
+          <span className="font-bold text-success">40 pts</span> exact score ·{" "}
+          <span className="font-bold text-warning">10 pts</span> correct result · predictions lock at kickoff
+        </p>
+        <p className="text-xs text-muted-foreground mt-1">
+          Knockout scores are based on the 90-minute result (extra time and penalties do not count).
         </p>
       </div>
 

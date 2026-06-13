@@ -26,10 +26,10 @@ export type Prediction = {
 
 function pointsFor(p: Prediction, f: Fixture): number | null {
   if (f.home_score === null || f.away_score === null) return null;
-  if (p.home_score === f.home_score && p.away_score === f.away_score) return 3;
+  if (p.home_score === f.home_score && p.away_score === f.away_score) return 40;
   const pr = Math.sign(p.home_score - p.away_score);
   const ac = Math.sign(f.home_score - f.away_score);
-  return pr === ac ? 1 : 0;
+  return pr === ac ? 10 : 0;
 }
 
 function kickoffLabel(iso: string) {
@@ -158,10 +158,10 @@ export function FixtureCard({
                     <span
                       className={
                         "ml-2 px-1.5 py-0.5 rounded-sm text-primary-foreground " +
-                        (pts === 3 ? "bg-success" : pts === 1 ? "bg-warning text-ink" : "bg-muted text-muted-foreground")
+                        (pts === 40 ? "bg-success" : pts === 10 ? "bg-warning text-ink" : "bg-muted text-muted-foreground")
                       }
                     >
-                      +{pts} pt{pts === 1 ? "" : "s"}
+                      +{pts} pts
                     </span>
                   )}
                 </span>
