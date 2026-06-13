@@ -214,12 +214,10 @@ export function FixtureCard({
               )}
               {hasResult ? (
                 <span className="text-xs font-semibold inline-flex items-center gap-2">
-                  {prediction ? (
+                  {prediction && (
                     <span className="text-muted-foreground">
                       Your pick <span className="text-ink font-extrabold">{prediction.home_score}-{prediction.away_score}</span>
                     </span>
-                  ) : (
-                    <span className="text-muted-foreground">No prediction</span>
                   )}
                   {prediction && pts !== null && (
                     <span
@@ -257,27 +255,50 @@ export function FixtureCard({
             )}
             {allPredsQ.data && allPredsQ.data.length > 0 && (
               <ul className="divide-y divide-border">
-                {allPredsQ.data.map((row) => {
-                  const rowPts = hasResult ? pointsFor({ id: "", fixture_id: fixture.id, home_score: row.home, away_score: row.away }, fixture) : null;
-                  return (
-                    <li key={row.userId} className="flex items-center justify-between py-1.5 text-sm">
-                      <span className="truncate text-ink">{row.name}{row.userId === userId ? " (you)" : ""}</span>
-                      <span className="flex items-center gap-2 shrink-0">
-                        <span className="font-bold tabular-nums">{row.home}-{row.away}</span>
-                        {rowPts !== null && (
-                          <span
-                            className={
-                              "text-[10px] font-bold px-1.5 py-0.5 rounded-sm " +
-                              (rowPts === 40 ? "bg-success text-primary-foreground" : rowPts === 10 ? "bg-warning text-ink" : "bg-muted text-muted-foreground")
-                            }
-                          >
-                            +{rowPts}
-                          </span>
-                        )}
-                      </span>
-                    </li>
-                  );
-                })}
+                {[...allPredsQ.data]
+                  .map((row) => ({
+                    row,
+                    pts: hasResult
+                      ? pointsFor({ id: "", fixture_id: fixture.id, home_score: row.home, away_score: row.away }, fixture)
+                      : null,
+                  }))
+                  .sort((a, b) => {
+                    if (hasResult) {
+                      const ap = a.pts ?? 0;
+                      const bp = b.pts ?? 0;
+                      if (ap !== bp) return bp - ap;
+                    }
+                    return a.row.name.localeCompare(b.row.name);
+                  })
+                  .map(({ row, pts: rowPts }) => {
+                    const bg =
+                      rowPts === 40
+                        ? "bg-amber-200/70"
+                        : rowPts === 10
+                          ? "bg-slate-200/70"
+                          : "";
+                    return (
+                      <li
+                        key={row.userId}
+                        className={"flex items-center justify-between py-1.5 px-2 -mx-2 text-sm rounded-sm " + bg}
+                      >
+                        <span className="truncate text-ink">{row.name}{row.userId === userId ? " (you)" : ""}</span>
+                        <span className="flex items-center gap-2 shrink-0">
+                          <span className="font-bold tabular-nums">{row.home}-{row.away}</span>
+                          {rowPts !== null && (
+                            <span
+                              className={
+                                "text-[10px] font-bold px-1.5 py-0.5 rounded-sm " +
+                                (rowPts === 40 ? "bg-success text-primary-foreground" : rowPts === 10 ? "bg-warning text-ink" : "bg-muted text-muted-foreground")
+                              }
+                            >
+                              +{rowPts}
+                            </span>
+                          )}
+                        </span>
+                      </li>
+                    );
+                  })}
               </ul>
             )}
           </CollapsibleContent>
