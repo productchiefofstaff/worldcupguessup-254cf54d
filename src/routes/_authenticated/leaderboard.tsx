@@ -1,10 +1,10 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { db as supabase } from "@/lib/db";
-import { usePlayer } from "@/hooks/use-player";
+import { useAuth } from "@/hooks/use-auth";
 import { Trophy, Medal } from "lucide-react";
 
-export const Route = createFileRoute("/leaderboard")({
+export const Route = createFileRoute("/_authenticated/leaderboard")({
   head: () => ({
     meta: [
       { title: "Leaderboard – World Cup 2026 Predictor" },
@@ -15,7 +15,7 @@ export const Route = createFileRoute("/leaderboard")({
 });
 
 type Row = {
-  player_id: string;
+  user_id: string;
   name: string;
   points: number;
   settled_predictions: number;
@@ -23,7 +23,7 @@ type Row = {
 };
 
 function LeaderboardPage() {
-  const { player } = usePlayer();
+  const { user } = useAuth();
   const { data, isLoading, error } = useQuery({
     queryKey: ["leaderboard"],
     queryFn: async () => {
@@ -64,11 +64,11 @@ function LeaderboardPage() {
           <span className="text-right">Points</span>
         </div>
         {(data ?? []).map((row, i) => {
-          const isMe = player?.id === row.player_id;
+          const isMe = user?.id === row.user_id;
           const rank = i + 1;
           return (
             <div
-              key={row.player_id}
+              key={row.user_id}
               className={
                 "grid grid-cols-[3rem_1fr_4rem_5rem] px-3 py-3 items-center border-b border-border last:border-b-0 " +
                 (isMe ? "bg-primary/5" : "")

@@ -1,11 +1,11 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { db as supabase } from "@/lib/db";
-import { usePlayer } from "@/hooks/use-player";
+import { useAuth } from "@/hooks/use-auth";
 import { FixtureCard, type Fixture, type Prediction } from "@/components/FixtureCard";
 import { useMemo, useState } from "react";
 
-export const Route = createFileRoute("/")({
+export const Route = createFileRoute("/_authenticated/")({
   head: () => ({
     meta: [
       { title: "Fixtures – World Cup 2026 Predictor" },
@@ -31,7 +31,7 @@ function dayKey(iso: string) {
 const STAGES = ["All", "Group Stage", "Round of 32", "Round of 16", "Quarter-final", "Semi-final", "Third-place Play-off", "Final"] as const;
 
 function FixturesPage() {
-  const { player } = usePlayer();
+  const { user } = useAuth();
   const [stage, setStage] = useState<(typeof STAGES)[number]>("All");
   const [showUpcoming, setShowUpcoming] = useState(true);
 
@@ -48,13 +48,13 @@ function FixturesPage() {
   });
 
   const predsQ = useQuery({
-    queryKey: ["predictions", player?.id],
-    enabled: !!player,
+    queryKey: ["predictions", user?.id],
+    enabled: !!user,
     queryFn: async () => {
       const { data, error } = await supabase
         .from("predictions")
         .select("id, fixture_id, home_score, away_score")
-        .eq("player_id", player!.id);
+        .eq("user_id", user!.id);
       if (error) throw error;
       return data as Prediction[];
     },
@@ -72,7 +72,6 @@ function FixturesPage() {
     return all.filter((f) => {
       if (stage !== "All" && f.stage !== stage) return false;
       if (showUpcoming) {
-        // upcoming = kickoff in future OR not yet resulted
         if (new Date(f.kickoff_at).getTime() < nowTs && f.home_score !== null) return false;
       }
       return true;
@@ -89,6 +88,8 @@ function FixturesPage() {
     });
     return Array.from(map.entries());
   }, [filtered]);
+
+  if (!user) return null;
 
   return (
     <main className="max-w-3xl mx-auto px-4 py-4 sm:py-6">
@@ -146,7 +147,7 @@ function FixturesPage() {
                   key={f.id}
                   fixture={f}
                   prediction={predByFixture.get(f.id) ?? null}
-                  playerId={player!.id}
+                  userId={user.id}
                 />
               ))}
             </div>

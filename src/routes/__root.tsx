@@ -12,7 +12,6 @@ import { useEffect, type ReactNode } from "react";
 import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
 import { SiteHeader } from "@/components/SiteHeader";
-import { PlayerGate } from "@/components/PlayerGate";
 import { Toaster } from "@/components/ui/sonner";
 
 function NotFoundComponent() {
@@ -120,12 +119,10 @@ function RootComponent() {
 
   return (
     <QueryClientProvider client={queryClient}>
-      <PlayerGate>
-        <div className="min-h-screen bg-surface">
-          <SiteHeader />
-          <Outlet />
-        </div>
-      </PlayerGate>
+      <div className="min-h-screen bg-surface">
+        <SiteHeader />
+        <Outlet />
+      </div>
       <Toaster />
     </QueryClientProvider>
   );
