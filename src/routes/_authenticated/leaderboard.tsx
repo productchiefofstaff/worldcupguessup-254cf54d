@@ -59,13 +59,13 @@ function LeaderboardPage() {
       {error && <p className="text-sm text-destructive">Failed to load leaderboard.</p>}
 
       <div className="bg-card border border-border rounded-md overflow-hidden">
-        <div className="grid grid-cols-[2.5rem_1fr_3rem_3rem_3rem_3.5rem] px-3 py-2 bg-surface text-[10px] font-bold uppercase tracking-wider text-muted-foreground border-b border-border">
+        <div className="grid grid-cols-[2.5rem_1fr_3.5rem_5.5rem_5.5rem_5.5rem] px-3 py-2 bg-surface text-[10px] font-bold uppercase tracking-wider text-muted-foreground border-b border-border">
           <span>#</span>
           <span>Player</span>
-          <span className="text-right">Pts</span>
-          <span className="text-right">Res</span>
-          <span className="text-right">Scr</span>
-          <span className="text-right">Picks</span>
+          <span className="text-right">Points</span>
+          <span className="text-right">Correct Results</span>
+          <span className="text-right">Correct Scores</span>
+          <span className="text-right">Predictions</span>
         </div>
         {(data ?? []).map((row, i) => {
           const isMe = user?.id === row.user_id;
@@ -74,7 +74,7 @@ function LeaderboardPage() {
             <div
               key={row.user_id}
               className={
-                "grid grid-cols-[2.5rem_1fr_3rem_3rem_3rem_3.5rem] px-3 py-3 items-center border-b border-border last:border-b-0 " +
+                "grid grid-cols-[2.5rem_1fr_3.5rem_5.5rem_5.5rem_5.5rem] px-3 py-3 items-center border-b border-border last:border-b-0 " +
                 (isMe ? "bg-primary/5" : "")
               }
             >
