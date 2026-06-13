@@ -64,7 +64,8 @@ export function FixtureCard({
   const hasResult = fixture.home_score !== null && fixture.away_score !== null;
   const pts = prediction ? pointsFor(prediction, fixture) : null;
 
-  const allPredsQ = useQuery({
+  type PredRow = { name: string; home: number; away: number; userId: string };
+  const allPredsQ = useQuery<PredRow[]>({
     queryKey: ["fixture-predictions", fixture.id],
     enabled: open && locked,
     queryFn: async () => {
