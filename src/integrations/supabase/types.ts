@@ -50,24 +50,6 @@ export type Database = {
         }
         Relationships: []
       }
-      players: {
-        Row: {
-          created_at: string
-          id: string
-          name: string
-        }
-        Insert: {
-          created_at?: string
-          id?: string
-          name: string
-        }
-        Update: {
-          created_at?: string
-          id?: string
-          name?: string
-        }
-        Relationships: []
-      }
       predictions: {
         Row: {
           away_score: number
@@ -75,8 +57,8 @@ export type Database = {
           fixture_id: string
           home_score: number
           id: string
-          player_id: string
           updated_at: string
+          user_id: string
         }
         Insert: {
           away_score: number
@@ -84,8 +66,8 @@ export type Database = {
           fixture_id: string
           home_score: number
           id?: string
-          player_id: string
           updated_at?: string
+          user_id: string
         }
         Update: {
           away_score?: number
@@ -93,8 +75,8 @@ export type Database = {
           fixture_id?: string
           home_score?: number
           id?: string
-          player_id?: string
           updated_at?: string
+          user_id?: string
         }
         Relationships: [
           {
@@ -104,31 +86,38 @@ export type Database = {
             referencedRelation: "fixtures"
             referencedColumns: ["id"]
           },
-          {
-            foreignKeyName: "predictions_player_id_fkey"
-            columns: ["player_id"]
-            isOneToOne: false
-            referencedRelation: "leaderboard"
-            referencedColumns: ["player_id"]
-          },
-          {
-            foreignKeyName: "predictions_player_id_fkey"
-            columns: ["player_id"]
-            isOneToOne: false
-            referencedRelation: "players"
-            referencedColumns: ["id"]
-          },
         ]
+      }
+      profiles: {
+        Row: {
+          created_at: string
+          display_name: string
+          id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          display_name: string
+          id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          display_name?: string
+          id?: string
+          updated_at?: string
+        }
+        Relationships: []
       }
     }
     Views: {
       leaderboard: {
         Row: {
           name: string | null
-          player_id: string | null
           points: number | null
           settled_predictions: number | null
           total_predictions: number | null
+          user_id: string | null
         }
         Relationships: []
       }
