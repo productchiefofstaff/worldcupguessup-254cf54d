@@ -9,6 +9,7 @@ import { Trophy } from "lucide-react";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/auth")({
+  ssr: false,
   head: () => ({
     meta: [
       { title: "Sign in – World Cup 2026 Predictor" },
