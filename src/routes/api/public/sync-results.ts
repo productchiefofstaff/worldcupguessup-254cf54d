@@ -144,8 +144,14 @@ export const Route = createFileRoute("/api/public/sync-results")({
           }
 
           // Settle 90-minute full-time scores
+          // Guard against the scraper misreporting a live match as finished:
+          // require status === "finished" AND kickoff at least 110 minutes ago
+          // (covers 90' + generous stoppage time).
+          const kickoffTs = new Date(fixture.kickoff_at).getTime();
+          const minutesSinceKickoff = (Date.now() - kickoffTs) / 60000;
           if (
             m.status === "finished" &&
+            minutesSinceKickoff >= 110 &&
             Number.isInteger(m.home_score) &&
             Number.isInteger(m.away_score)
           ) {
