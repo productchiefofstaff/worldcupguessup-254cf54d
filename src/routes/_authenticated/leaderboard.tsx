@@ -74,7 +74,7 @@ function LeaderboardPage() {
             <div
               key={row.user_id}
               className={
-                "grid grid-cols-[2.5rem_1fr_3rem_3rem_3rem_3.5rem] px-3 py-3 items-center border-b border-border last:border-b-0 " +
+                "grid grid-cols-[2.5rem_1fr_3.5rem_5.5rem_5.5rem_5.5rem] px-3 py-3 items-center border-b border-border last:border-b-0 " +
                 (isMe ? "bg-primary/5" : "")
               }
             >
