@@ -118,17 +118,6 @@ function FixturesPage() {
             {s}
           </button>
         ))}
-        <button
-          onClick={() => setShowUpcoming((v) => !v)}
-          className={
-            "shrink-0 text-xs font-semibold px-3 py-1.5 rounded-full border ml-auto " +
-            (showUpcoming
-              ? "bg-primary text-primary-foreground border-primary"
-              : "bg-card text-ink border-border")
-          }
-        >
-          {showUpcoming ? "Upcoming only" : "Show all"}
-        </button>
       </div>
 
       {fixturesQ.isLoading && <p className="text-sm text-muted-foreground">Loading fixtures…</p>}
