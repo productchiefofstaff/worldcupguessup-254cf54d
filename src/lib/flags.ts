@@ -80,6 +80,7 @@ const ISO: Record<string, string> = {
   "Honduras": "HN",
   "El Salvador": "SV",
   "Curaçao": "CW",
+  "Curacao": "CW",
   "Haiti": "HT",
   "Trinidad and Tobago": "TT",
 };
