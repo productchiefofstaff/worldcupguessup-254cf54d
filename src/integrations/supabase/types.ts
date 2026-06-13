@@ -113,6 +113,8 @@ export type Database = {
     Views: {
       leaderboard: {
         Row: {
+          correct_results: number | null
+          correct_scores: number | null
           name: string | null
           points: number | null
           settled_predictions: number | null
