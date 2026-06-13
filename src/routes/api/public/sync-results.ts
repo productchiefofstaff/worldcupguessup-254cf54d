@@ -143,20 +143,35 @@ export const Route = createFileRoute("/api/public/sync-results")({
             patch.team_away = m.team_away;
           }
 
-          // Settle 90-minute full-time scores
-          // Guard against the scraper misreporting a live match as finished:
-          // require status === "finished" AND kickoff at least 110 minutes ago
-          // (covers 90' + generous stoppage time).
+          // Settle 90-minute full-time scores. Multiple guards because the LLM
+          // extraction occasionally hallucinates status="finished" + a live
+          // scoreline:
+          //  1) scraper must say status === "finished"
+          //  2) kickoff must be at least 110 minutes in the past (90' + stoppage)
+          //  3) only write when the fixture currently has NO score — never
+          //     overwrite an existing value. Admin edits or earlier final
+          //     scores stay authoritative; corrections happen via the admin UI.
           const kickoffTs = new Date(fixture.kickoff_at).getTime();
           const minutesSinceKickoff = (Date.now() - kickoffTs) / 60000;
+          const alreadyHasScore =
+            fixture.home_score !== null && fixture.away_score !== null;
           if (
+            !alreadyHasScore &&
             m.status === "finished" &&
             minutesSinceKickoff >= 110 &&
             Number.isInteger(m.home_score) &&
             Number.isInteger(m.away_score)
           ) {
-            if (fixture.home_score !== m.home_score) patch.home_score = m.home_score as number;
-            if (fixture.away_score !== m.away_score) patch.away_score = m.away_score as number;
+            patch.home_score = m.home_score as number;
+            patch.away_score = m.away_score as number;
+          } else if (
+            !alreadyHasScore &&
+            m.status === "finished" &&
+            minutesSinceKickoff < 110
+          ) {
+            console.warn(
+              `[sync-results] rejecting early 'finished' for match ${fixture.match_number} (${fixture.team_home} v ${fixture.team_away}) — only ${minutesSinceKickoff.toFixed(0)}min since kickoff`,
+            );
           }
 
           if (Object.keys(patch).length === 0) continue;
