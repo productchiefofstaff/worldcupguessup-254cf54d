@@ -140,11 +140,22 @@ export function FixtureCard({
               inputMode="numeric"
               min={0}
               max={30}
-              value={locked ? (prediction ? prediction.home_score : "—") : home}
+              value={
+                hasResult
+                  ? (fixture.home_score as number)
+                  : locked
+                    ? (prediction ? prediction.home_score : "—")
+                    : home
+              }
               onChange={(e) => setHome(e.target.value)}
               disabled={locked}
               placeholder="-"
-              className="w-10 h-10 text-center font-extrabold text-lg border border-input rounded-sm bg-background disabled:bg-muted disabled:text-ink disabled:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring"
+              className={
+                "w-10 h-10 text-center font-extrabold text-lg border rounded-sm focus:outline-none focus:ring-2 focus:ring-ring disabled:opacity-100 " +
+                (hasResult
+                  ? "bg-ink text-background border-ink"
+                  : "bg-background border-input disabled:bg-muted disabled:text-ink")
+              }
               aria-label={`${fixture.team_home} predicted score`}
             />
             <span className="text-muted-foreground font-bold">v</span>
@@ -153,11 +164,22 @@ export function FixtureCard({
               inputMode="numeric"
               min={0}
               max={30}
-              value={locked ? (prediction ? prediction.away_score : "—") : away}
+              value={
+                hasResult
+                  ? (fixture.away_score as number)
+                  : locked
+                    ? (prediction ? prediction.away_score : "—")
+                    : away
+              }
               onChange={(e) => setAway(e.target.value)}
               disabled={locked}
               placeholder="-"
-              className="w-10 h-10 text-center font-extrabold text-lg border border-input rounded-sm bg-background disabled:bg-muted disabled:text-ink disabled:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring"
+              className={
+                "w-10 h-10 text-center font-extrabold text-lg border rounded-sm focus:outline-none focus:ring-2 focus:ring-ring disabled:opacity-100 " +
+                (hasResult
+                  ? "bg-ink text-background border-ink"
+                  : "bg-background border-input disabled:bg-muted disabled:text-ink")
+              }
               aria-label={`${fixture.team_away} predicted score`}
             />
           </div>
@@ -189,12 +211,18 @@ export function FixtureCard({
                 <Lock className="h-3 w-3" /> Locked
               </span>
               {hasResult ? (
-                <span className="text-xs font-semibold">
-                  Result <span className="text-ink font-extrabold">{fixture.home_score}-{fixture.away_score}</span>
+                <span className="text-xs font-semibold inline-flex items-center gap-2">
+                  {prediction ? (
+                    <span className="text-muted-foreground">
+                      Your pick <span className="text-ink font-extrabold">{prediction.home_score}-{prediction.away_score}</span>
+                    </span>
+                  ) : (
+                    <span className="text-muted-foreground">No prediction</span>
+                  )}
                   {prediction && pts !== null && (
                     <span
                       className={
-                        "ml-2 px-1.5 py-0.5 rounded-sm text-primary-foreground " +
+                        "px-1.5 py-0.5 rounded-sm text-primary-foreground " +
                         (pts === 40 ? "bg-success" : pts === 10 ? "bg-warning text-ink" : "bg-muted text-muted-foreground")
                       }
                     >
