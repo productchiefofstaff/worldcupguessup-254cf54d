@@ -4,6 +4,7 @@ import { db as supabase } from "@/lib/db";
 import { useAuth } from "@/hooks/use-auth";
 import { flagFor } from "@/lib/flags";
 import { Shield, Download } from "lucide-react";
+import { useState } from "react";
 
 export const Route = createFileRoute("/_authenticated/admin")({
   head: () => ({
@@ -31,10 +32,11 @@ type Fixture = {
   home_score: number | null;
   away_score: number | null;
 };
-type Profile = { id: string; display_name: string };
+type Profile = { id: string; display_name: string; created_at?: string };
 
 function AdminPage() {
   const { user, ready } = useAuth();
+  const [tab, setTab] = useState<"predictions" | "users">("predictions");
 
   const roleQ = useQuery({
     queryKey: ["my-role", user?.id],
@@ -76,6 +78,17 @@ function AdminPage() {
     enabled: isAdmin,
     queryFn: async () => {
       const { data } = await supabase.from("profiles").select("id, display_name");
+      return (data ?? []) as Profile[];
+    },
+  });
+  const usersQ = useQuery({
+    queryKey: ["users-admin"],
+    enabled: isAdmin && tab === "users",
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("profiles")
+        .select("id, display_name, created_at")
+        .order("created_at", { ascending: false });
       return (data ?? []) as Profile[];
     },
   });
@@ -156,6 +169,33 @@ function AdminPage() {
         </button>
       </div>
 
+      <div className="mb-4 flex gap-1 border-b border-border">
+        <button
+          onClick={() => setTab("predictions")}
+          className={
+            "px-3 py-2 text-sm font-bold border-b-2 -mb-px " +
+            (tab === "predictions"
+              ? "border-primary text-ink"
+              : "border-transparent text-muted-foreground hover:text-ink")
+          }
+        >
+          Predictions
+        </button>
+        <button
+          onClick={() => setTab("users")}
+          className={
+            "px-3 py-2 text-sm font-bold border-b-2 -mb-px " +
+            (tab === "users"
+              ? "border-primary text-ink"
+              : "border-transparent text-muted-foreground hover:text-ink")
+          }
+        >
+          Users
+        </button>
+      </div>
+
+      {tab === "predictions" ? (
+      <>
       {predsQ.isLoading && <p className="text-sm text-muted-foreground">Loading…</p>}
 
       <div className="bg-card border border-border rounded-md overflow-x-auto">
@@ -215,6 +255,49 @@ function AdminPage() {
           </tbody>
         </table>
       </div>
+      </>
+      ) : (
+        <div className="bg-card border border-border rounded-md overflow-x-auto">
+          <table className="w-full text-sm">
+            <thead className="bg-surface text-[10px] uppercase tracking-wider text-muted-foreground">
+              <tr>
+                <th className="text-left px-3 py-2">Display name</th>
+                <th className="text-right px-3 py-2 whitespace-nowrap">Signed up</th>
+              </tr>
+            </thead>
+            <tbody>
+              {(usersQ.data ?? []).map((p) => (
+                <tr key={p.id} className="border-t border-border">
+                  <td className="px-3 py-2 font-bold text-ink">{p.display_name}</td>
+                  <td className="px-3 py-2 text-right text-[11px] text-muted-foreground whitespace-nowrap">
+                    {p.created_at
+                      ? new Date(p.created_at).toLocaleString(undefined, {
+                          day: "numeric",
+                          month: "short",
+                          year: "numeric",
+                          hour: "2-digit",
+                          minute: "2-digit",
+                        })
+                      : "—"}
+                  </td>
+                </tr>
+              ))}
+              {!usersQ.isLoading && (usersQ.data ?? []).length === 0 && (
+                <tr>
+                  <td colSpan={2} className="p-6 text-center text-sm text-muted-foreground">
+                    No users yet.
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+          {isAdmin && tab === "users" && (
+            <p className="px-3 py-2 text-[11px] text-muted-foreground border-t border-border">
+              {(usersQ.data ?? []).length} total
+            </p>
+          )}
+        </div>
+      )}
     </main>
   );
 }
