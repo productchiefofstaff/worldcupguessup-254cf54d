@@ -73,16 +73,18 @@ export function FixtureCard({
         .select("user_id, home_score, away_score")
         .eq("fixture_id", fixture.id);
       if (error) throw error;
-      const ids = Array.from(new Set((preds ?? []).map((p) => p.user_id)));
+      const predRows = (preds ?? []) as Array<{ user_id: string; home_score: number; away_score: number }>;
+      const ids = Array.from(new Set(predRows.map((p) => p.user_id)));
       if (ids.length === 0) return [] as Array<{ name: string; home: number; away: number; userId: string }>;
       const { data: profiles, error: pErr } = await supabase
         .from("profiles")
         .select("id, display_name")
         .in("id", ids);
       if (pErr) throw pErr;
+      const profileRows = (profiles ?? []) as Array<{ id: string; display_name: string }>;
       const nameById = new Map<string, string>();
-      (profiles ?? []).forEach((pr) => nameById.set(pr.id, pr.display_name));
-      return (preds ?? [])
+      profileRows.forEach((pr) => nameById.set(pr.id, pr.display_name));
+      return predRows
         .map((p) => ({
           userId: p.user_id,
           name: nameById.get(p.user_id) ?? "Player",
