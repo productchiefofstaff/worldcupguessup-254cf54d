@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { db as supabase } from "@/lib/db";
 import { Button } from "@/components/ui/button";
-import { Lock, Check, ChevronDown } from "lucide-react";
+import { Lock, Check, ChevronDown, Radio } from "lucide-react";
 import { toast } from "sonner";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
@@ -203,7 +203,9 @@ export function FixtureCard({
                   )}
                 </span>
               ) : (
-                <span className="text-xs text-muted-foreground">Awaiting result</span>
+                <span className="inline-flex items-center gap-1 text-xs text-destructive font-semibold">
+                  <Radio className="h-3 w-3" /> Live – awaiting result
+                </span>
               )}
             </>
           )}
