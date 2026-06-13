@@ -63,6 +63,7 @@ export function FixtureCard({
   const locked = new Date(fixture.kickoff_at).getTime() <= now;
   const hasResult = fixture.home_score !== null && fixture.away_score !== null;
   const pts = prediction ? pointsFor(prediction, fixture) : null;
+  const showStatusRow = !locked || !hasResult || Boolean(prediction);
 
   type PredRow = { name: string; home: number; away: number; userId: string };
   const allPredsQ = useQuery<PredRow[]>({
@@ -189,55 +190,57 @@ export function FixtureCard({
           </div>
         </div>
 
-        <div className="mt-3 flex items-center justify-between gap-2 min-h-[2rem]">
-          {!locked ? (
-            <>
-              <span className="text-xs text-muted-foreground">
-                {prediction ? (
-                  <span className="inline-flex items-center gap-1 text-success">
-                    <Check className="h-3 w-3" /> Saved – update before kickoff
+        {showStatusRow && (
+          <div className="mt-3 flex items-center justify-between gap-2 min-h-[2rem]">
+            {!locked ? (
+              <>
+                <span className="text-xs text-muted-foreground">
+                  {prediction ? (
+                    <span className="inline-flex items-center gap-1 text-success">
+                      <Check className="h-3 w-3" /> Saved – update before kickoff
+                    </span>
+                  ) : (
+                    "Enter your prediction"
+                  )}
+                </span>
+                <Button size="sm" onClick={submit} disabled={busy} className="font-bold h-8">
+                  {prediction ? "Update" : "Submit"}
+                </Button>
+              </>
+            ) : (
+              <>
+                {!hasResult && (
+                  <span className="inline-flex items-center gap-1 text-xs text-muted-foreground">
+                    <Lock className="h-3 w-3" /> Locked
+                  </span>
+                )}
+                {hasResult ? (
+                  <span className="text-xs font-semibold inline-flex items-center gap-2">
+                    {prediction && (
+                      <span className="text-muted-foreground">
+                        Your pick <span className="text-ink font-extrabold">{prediction.home_score}-{prediction.away_score}</span>
+                      </span>
+                    )}
+                    {prediction && pts !== null && (
+                      <span
+                        className={
+                          "px-1.5 py-0.5 rounded-sm text-primary-foreground " +
+                          (pts === 40 ? "bg-success" : pts === 10 ? "bg-warning text-ink" : "bg-muted text-muted-foreground")
+                        }
+                      >
+                        +{pts} pts
+                      </span>
+                    )}
                   </span>
                 ) : (
-                  "Enter your prediction"
+                  <span className="inline-flex items-center gap-1 text-xs text-destructive font-semibold">
+                    <Radio className="h-3 w-3" /> Live
+                  </span>
                 )}
-              </span>
-              <Button size="sm" onClick={submit} disabled={busy} className="font-bold h-8">
-                {prediction ? "Update" : "Submit"}
-              </Button>
-            </>
-          ) : (
-            <>
-              {!hasResult && (
-                <span className="inline-flex items-center gap-1 text-xs text-muted-foreground">
-                  <Lock className="h-3 w-3" /> Locked
-                </span>
-              )}
-              {hasResult ? (
-                <span className="text-xs font-semibold inline-flex items-center gap-2">
-                  {prediction && (
-                    <span className="text-muted-foreground">
-                      Your pick <span className="text-ink font-extrabold">{prediction.home_score}-{prediction.away_score}</span>
-                    </span>
-                  )}
-                  {prediction && pts !== null && (
-                    <span
-                      className={
-                        "px-1.5 py-0.5 rounded-sm text-primary-foreground " +
-                        (pts === 40 ? "bg-success" : pts === 10 ? "bg-warning text-ink" : "bg-muted text-muted-foreground")
-                      }
-                    >
-                      +{pts} pts
-                    </span>
-                  )}
-                </span>
-              ) : (
-                <span className="inline-flex items-center gap-1 text-xs text-destructive font-semibold">
-                  <Radio className="h-3 w-3" /> Live
-                </span>
-              )}
-            </>
-          )}
-        </div>
+              </>
+            )}
+          </div>
+        )}
 
         <Collapsible open={open} onOpenChange={setOpen} className="mt-2 border-t border-border -mx-3 -mb-3">
           <CollapsibleTrigger
