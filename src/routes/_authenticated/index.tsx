@@ -28,12 +28,11 @@ function dayKey(iso: string) {
   return `${d.getFullYear()}-${d.getMonth()}-${d.getDate()}`;
 }
 
-const STAGES = ["All", "Group Stage", "Round of 32", "Round of 16", "Quarter-final", "Semi-final", "Third-place Play-off", "Final"] as const;
+const STAGES = ["Upcoming", "All", "Group Stage", "Round of 32", "Round of 16", "Quarter-final", "Semi-final", "Third-place Play-off", "Final"] as const;
 
 function FixturesPage() {
   const { user } = useAuth();
-  const [stage, setStage] = useState<(typeof STAGES)[number]>("All");
-  const [showUpcoming, setShowUpcoming] = useState(true);
+  const [stage, setStage] = useState<(typeof STAGES)[number]>("Upcoming");
 
   const fixturesQ = useQuery({
     queryKey: ["fixtures"],
@@ -70,13 +69,13 @@ function FixturesPage() {
     const all = fixturesQ.data ?? [];
     const nowTs = Date.now();
     return all.filter((f) => {
-      if (stage !== "All" && f.stage !== stage) return false;
-      if (showUpcoming) {
+      if (stage !== "All" && stage !== "Upcoming" && f.stage !== stage) return false;
+      if (stage === "Upcoming") {
         if (new Date(f.kickoff_at).getTime() < nowTs && f.home_score !== null) return false;
       }
       return true;
     });
-  }, [fixturesQ.data, stage, showUpcoming]);
+  }, [fixturesQ.data, stage]);
 
   const grouped = useMemo(() => {
     const map = new Map<string, Fixture[]>();
