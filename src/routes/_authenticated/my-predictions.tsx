@@ -107,12 +107,18 @@ function MyPredictionsPage() {
   const players = leaderboardQ.data ?? [];
   const others = players.filter((p) => p.user_id !== user.id);
 
-  function rowsFor(userId: string) {
+  function rowsFor(userId: string, isOther = false) {
+    const now = new Date();
     return (allPredsQ.data ?? [])
       .filter((p) => p.user_id === userId)
       .map((p) => {
         const f = fixtureMap.get(p.fixture_id);
         if (!f) return null;
+        if (isOther) {
+          const kickoff = new Date(f.kickoff_at);
+          const hasResult = f.home_score !== null && f.away_score !== null;
+          if (!hasResult && kickoff > now) return null;
+        }
         return { f, p, pts: pointsFor(p, f) };
       })
       .filter(Boolean) as Array<{ f: FixtureRow; p: PredRow; pts: number | null }>;
