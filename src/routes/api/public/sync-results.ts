@@ -27,7 +27,11 @@ type SourceMatch = {
 };
 
 function norm(s: string | null | undefined): string {
-  return (s ?? "").toLowerCase().replace(/[^a-z]/g, "");
+  return (s ?? "")
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .replace(/[^a-z]/g, "");
 }
 
 export const Route = createFileRoute("/api/public/sync-results")({
