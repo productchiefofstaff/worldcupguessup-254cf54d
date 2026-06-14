@@ -234,38 +234,36 @@ function PlayerRow({ row, rank, isMe }: { row: Row; rank: number; isMe: boolean 
                 key={f.id}
                 className={"border-b border-border " + (bg ? bg : isMe ? "bg-primary/5" : "")}
               >
-                <td className="px-3 py-1.5" />
-                <td className="px-3 py-1.5">
-                  <span className="flex items-center gap-1.5 text-ink truncate">
-                    <span aria-hidden>{flagFor(f.team_home)}</span>
-                    <span className="text-muted-foreground text-xs">v</span>
-                    <span aria-hidden>{flagFor(f.team_away)}</span>
-                  </span>
+                <td colSpan={6} className="p-0">
+                  <div className="flex items-center px-3 py-1.5">
+                    <span className="flex items-center gap-1.5 text-ink flex-1 min-w-0">
+                      <span aria-hidden>{flagFor(f.team_home)}</span>
+                      <span className="text-muted-foreground text-xs">v</span>
+                      <span aria-hidden>{flagFor(f.team_away)}</span>
+                    </span>
+                    <span className="inline-grid grid-cols-[3rem_2.5rem] items-center gap-2 shrink-0">
+                      <span className="w-12 text-right font-bold tabular-nums">{p.home_score}-{p.away_score}</span>
+                      {pts !== null ? (
+                        <span
+                          className={
+                            "justify-self-start text-center text-[10px] font-bold px-1.5 py-0.5 rounded-sm " +
+                            (pts === 40
+                              ? "bg-success text-primary-foreground"
+                              : pts === 10
+                                ? "bg-warning text-ink"
+                                : "bg-muted text-muted-foreground")
+                          }
+                        >
+                          +{pts}
+                        </span>
+                      ) : (
+                        <span className="justify-self-start text-xs text-destructive font-semibold">
+                          Live
+                        </span>
+                      )}
+                    </span>
+                  </div>
                 </td>
-                <td className="px-3 py-1.5 text-right">
-                  <span className="inline-grid grid-cols-[3rem_2.5rem] items-center gap-2 justify-end">
-                    <span className="w-12 text-right font-bold tabular-nums">{p.home_score}-{p.away_score}</span>
-                    {pts !== null ? (
-                      <span
-                        className={
-                          "justify-self-start text-center text-[10px] font-bold px-1.5 py-0.5 rounded-sm " +
-                          (pts === 40
-                            ? "bg-success text-primary-foreground"
-                            : pts === 10
-                              ? "bg-warning text-ink"
-                              : "bg-muted text-muted-foreground")
-                        }
-                      >
-                        +{pts}
-                      </span>
-                    ) : (
-                      <span className="justify-self-start text-xs text-destructive font-semibold">
-                        Live
-                      </span>
-                    )}
-                  </span>
-                </td>
-                <td colSpan={3} className="px-3 py-1.5" />
               </tr>
             );
           })}
