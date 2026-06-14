@@ -147,44 +147,35 @@ export const Route = createFileRoute("/api/public/sync-results")({
   server: {
     handlers: {
       POST: async () => {
-        const apiKey = process.env.FIRECRAWL_API_KEY;
-        if (!apiKey) {
-          return Response.json(
-            { error: "FIRECRAWL_API_KEY missing" },
-            { status: 500 },
-          );
-        }
-
         let matches: SourceMatch[] = [];
         try {
-          const firecrawl = new Firecrawl({ apiKey });
           const urls = scoreboardUrls();
           const results = await Promise.allSettled(
             urls.map((url) =>
-              firecrawl.scrape(url, {
-                formats: [{ type: "json", prompt: SCOREBOARD_PROMPT }],
-                onlyMainContent: true,
-                waitFor: 3000,
-              }),
+              fetch(url, { headers: { Accept: "application/json" } }).then(
+                async (response) => {
+                  if (!response.ok) {
+                    throw new Error(`ESPN ${response.status} ${response.statusText}`);
+                  }
+                  return (await response.json()) as EspnScoreboard;
+                },
+              ),
             ),
           );
 
           matches = results.flatMap((result, index) => {
             if (result.status === "rejected") {
               console.warn(
-                `[sync-results] scrape skipped for ${urls[index]} — ${String(result.reason)}`,
+                `[sync-results] ESPN fetch skipped for ${urls[index]} — ${String(result.reason)}`,
               );
               return [];
             }
-            return (
-              (result.value as unknown as { json?: { matches?: SourceMatch[] } })
-                .json?.matches ?? []
-            );
+            return parseEspnScoreboard(result.value);
           });
         } catch (e) {
-          console.error("Firecrawl scrape failed", e);
+          console.error("ESPN scoreboard fetch failed", e);
           return Response.json(
-            { error: "scrape_failed", detail: String(e) },
+            { error: "scoreboard_fetch_failed", detail: String(e) },
             { status: 502 },
           );
         }
