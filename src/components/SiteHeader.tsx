@@ -29,7 +29,7 @@ export function SiteHeader() {
         <div className="max-w-3xl mx-auto px-4 pt-3 pb-2">
           <Link to="/" className="block text-center">
             <h1 className="text-xl sm:text-2xl font-extrabold tracking-tight">
-              World Cup Guess Up
+              🏆 2026 World Cup Guess Up
             </h1>
           </Link>
         </div>
