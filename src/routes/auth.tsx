@@ -39,7 +39,7 @@ const signUpSchema = signInSchema.extend({
 
 function AuthPage() {
   const navigate = useNavigate();
-  const [mode, setMode] = useState<"signin" | "signup">("signin");
+  const [mode, setMode] = useState<"signin" | "signup" | "forgot">("signin");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [displayName, setDisplayName] = useState("");
@@ -49,7 +49,22 @@ function AuthPage() {
     e.preventDefault();
     setBusy(true);
     try {
-      if (mode === "signup") {
+      if (mode === "forgot") {
+        const parsed = z.string().trim().email("Enter a valid email").max(255).safeParse(email);
+        if (!parsed.success) {
+          toast.error(parsed.error.issues[0].message);
+          return;
+        }
+        const { error } = await supabase.auth.resetPasswordForEmail(parsed.data, {
+          redirectTo: `${window.location.origin}/reset-password`,
+        });
+        if (error) {
+          toast.error(error.message);
+          return;
+        }
+        toast.success("Check your email for a reset link");
+        setMode("signin");
+      } else if (mode === "signup") {
         const parsed = signUpSchema.safeParse({ email, password, displayName });
         if (!parsed.success) {
           toast.error(parsed.error.issues[0].message);
@@ -119,7 +134,7 @@ function AuthPage() {
               onClick={() => setMode("signin")}
               className={
                 "py-1.5 rounded-sm transition-colors " +
-                (mode === "signin" ? "bg-card shadow-sm text-ink" : "text-muted-foreground")
+                (mode === "signin" || mode === "forgot" ? "bg-card shadow-sm text-ink" : "text-muted-foreground")
               }
             >
               Sign in
@@ -161,21 +176,56 @@ function AuthPage() {
               required
             />
           </div>
-          <div>
-            <label className="block text-sm font-semibold mb-2 text-ink">Password</label>
-            <Input
-              type="password"
-              autoComplete={mode === "signup" ? "new-password" : "current-password"}
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required
-              minLength={6}
-            />
-          </div>
+          {mode !== "forgot" && (
+            <div>
+              <div className="flex items-center justify-between mb-2">
+                <label className="block text-sm font-semibold text-ink">Password</label>
+                {mode === "signin" && (
+                  <button
+                    type="button"
+                    onClick={() => setMode("forgot")}
+                    className="text-xs font-semibold text-primary hover:underline"
+                  >
+                    Forgot password?
+                  </button>
+                )}
+              </div>
+              <Input
+                type="password"
+                autoComplete={mode === "signup" ? "new-password" : "current-password"}
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                required
+                minLength={6}
+              />
+            </div>
+          )}
+          {mode === "forgot" && (
+            <p className="text-xs text-muted-foreground">
+              Enter your email and we'll send you a link to reset your password.
+            </p>
+          )}
           <Button type="submit" disabled={busy} className="w-full font-bold">
-            {busy ? "Please wait…" : mode === "signup" ? "Create account" : "Sign in"}
+            {busy
+              ? "Please wait…"
+              : mode === "signup"
+              ? "Create account"
+              : mode === "forgot"
+              ? "Send reset link"
+              : "Sign in"}
           </Button>
+          {mode === "forgot" && (
+            <button
+              type="button"
+              onClick={() => setMode("signin")}
+              className="block w-full text-center text-xs font-semibold text-muted-foreground hover:underline"
+            >
+              Back to sign in
+            </button>
+          )}
 
+          {mode !== "forgot" && (
+          <>
           <div className="flex items-center gap-2 text-xs text-muted-foreground">
             <div className="flex-1 h-px bg-border" />
             OR
@@ -197,6 +247,8 @@ function AuthPage() {
             </svg>
             Continue with Google
           </Button>
+          </>
+          )}
 
           <p className="text-center text-xs text-muted-foreground">
             <Link to="/" className="hover:underline">Back home</Link>
