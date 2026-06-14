@@ -2,7 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { db as supabase } from "@/lib/db";
 import { useAuth } from "@/hooks/use-auth";
-import { Trophy, Medal, Crown, ChevronDown, Radio } from "lucide-react";
+import { Trophy, Medal, Crown, ChevronDown } from "lucide-react";
 import { flagFor } from "@/lib/flags";
 import { useState } from "react";
 
@@ -257,8 +257,8 @@ function PlayerRow({ row, rank, isMe }: { row: Row; rank: number; isMe: boolean 
                         +{pts}
                       </span>
                     ) : (
-                      <span className="inline-flex items-center gap-1 text-xs text-destructive font-semibold">
-                        <Radio className="h-3 w-3" /> Live
+                      <span className="text-xs text-destructive font-semibold">
+                        Live
                       </span>
                     )}
                   </span>
