@@ -75,8 +75,8 @@ function LeaderboardPage() {
               <th className="px-3 py-2 text-left w-10">#</th>
               <th className="px-3 py-2 text-left">Player</th>
               <th className="px-3 py-2 text-right">Points</th>
-              <th className="px-3 py-2 text-right">Correct Results</th>
               <th className="px-3 py-2 text-right">Correct Scores</th>
+              <th className="px-3 py-2 text-right">Correct Results</th>
               <th className="px-3 py-2 text-right">Correct %</th>
             </tr>
           </thead>
