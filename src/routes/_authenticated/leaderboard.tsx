@@ -241,12 +241,12 @@ function PlayerRow({ row, rank, isMe }: { row: Row; rank: number; isMe: boolean 
                   </span>
                 </td>
                 <td className="px-3 py-1.5 text-right">
-                  <span className="inline-flex items-center justify-end gap-2">
-                    <span className="font-bold tabular-nums">{p.home_score}-{p.away_score}</span>
+                  <span className="inline-grid grid-cols-[3rem_2.5rem] items-center gap-2 justify-end">
+                    <span className="w-12 text-right font-bold tabular-nums">{p.home_score}-{p.away_score}</span>
                     {pts !== null ? (
                       <span
                         className={
-                          "text-[10px] font-bold px-1.5 py-0.5 rounded-sm " +
+                          "justify-self-start text-center text-[10px] font-bold px-1.5 py-0.5 rounded-sm " +
                           (pts === 40
                             ? "bg-success text-primary-foreground"
                             : pts === 10
@@ -257,7 +257,7 @@ function PlayerRow({ row, rank, isMe }: { row: Row; rank: number; isMe: boolean 
                         +{pts}
                       </span>
                     ) : (
-                      <span className="text-xs text-destructive font-semibold">
+                      <span className="justify-self-start text-xs text-destructive font-semibold">
                         Live
                       </span>
                     )}
