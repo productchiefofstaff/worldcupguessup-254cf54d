@@ -141,8 +141,9 @@ function AdminPage() {
     name: profileMap.get(r.user_id)?.display_name ?? r.user_id.slice(0, 8),
   }));
 
-  const completedFixtures = (fixturesQ.data ?? [])
-    .filter((f) => f.home_score !== null && f.away_score !== null)
+  const now = Date.now();
+  const editableFixtures = (fixturesQ.data ?? [])
+    .filter((f) => new Date(f.kickoff_at).getTime() <= now)
     .sort(
       (a, b) =>
         new Date(b.kickoff_at).getTime() - new Date(a.kickoff_at).getTime(),
@@ -380,8 +381,9 @@ function AdminPage() {
       {tab === "fixtures" && (
         <div className="bg-card border border-border rounded-md overflow-x-auto">
           <p className="px-3 py-2 text-[11px] text-muted-foreground border-b border-border">
-            Emergency override only. Scores normally come from the automatic
-            scraper. Saving updates the leaderboard immediately.
+            Live and completed matches. Scores normally come from the automatic
+            scraper — manual edits here override it and update the leaderboard
+            immediately.
           </p>
           <table className="w-full text-sm">
             <thead className="bg-surface text-[10px] uppercase tracking-wider text-muted-foreground">
@@ -393,8 +395,9 @@ function AdminPage() {
               </tr>
             </thead>
             <tbody>
-              {completedFixtures.map((f) => {
+              {editableFixtures.map((f) => {
                 const isEditing = editingId === f.id;
+                const hasScore = f.home_score !== null && f.away_score !== null;
                 return (
                   <tr key={f.id} className="border-t border-border">
                     <td className="px-3 py-2">
@@ -435,7 +438,13 @@ function AdminPage() {
                         </span>
                       ) : (
                         <>
-                          {f.home_score} – {f.away_score}
+                          {hasScore ? (
+                            <>
+                              {f.home_score} – {f.away_score}
+                            </>
+                          ) : (
+                            <span className="text-muted-foreground font-normal">—</span>
+                          )}
                         </>
                       )}
                     </td>
@@ -472,17 +481,17 @@ function AdminPage() {
                           className="inline-flex items-center gap-1 text-[11px] font-bold border border-border px-2 py-1 rounded-sm hover:bg-surface"
                         >
                           <Pencil className="h-3 w-3" />
-                          Edit
+                          {hasScore ? "Edit" : "Add"}
                         </button>
                       )}
                     </td>
                   </tr>
                 );
               })}
-              {completedFixtures.length === 0 && (
+              {editableFixtures.length === 0 && (
                 <tr>
                   <td colSpan={4} className="p-6 text-center text-sm text-muted-foreground">
-                    No completed fixtures yet.
+                    No live or completed fixtures yet.
                   </td>
                 </tr>
               )}
