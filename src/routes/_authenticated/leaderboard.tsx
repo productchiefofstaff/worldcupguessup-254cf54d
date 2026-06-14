@@ -56,6 +56,13 @@ function LeaderboardPage() {
         </div>
       </div>
 
+      <div className="mb-4 rounded-md bg-warning/15 border border-warning/30 p-3 flex items-center gap-3">
+        <Crown className="h-5 w-5 text-warning shrink-0" />
+        <span className="text-sm font-bold text-ink">
+          🏆 1st place wins £60!
+        </span>
+      </div>
+
       {isLoading && <p className="text-sm text-muted-foreground">Loading…</p>}
       {error && <p className="text-sm text-destructive">Failed to load leaderboard.</p>}
 
