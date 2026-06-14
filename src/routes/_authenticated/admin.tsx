@@ -279,7 +279,7 @@ function AdminPage() {
                       "—"
                     )}
                   </td>
-                  <td className="px-3 py-2 text-right font-bold">
+                  <td className="px-3 py-2 text-right font-bold whitespace-nowrap">
                     {r.home_score} – {r.away_score}
                   </td>
                   <td className="px-3 py-2 text-right text-muted-foreground">
