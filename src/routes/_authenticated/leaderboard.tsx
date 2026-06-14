@@ -182,12 +182,14 @@ function PlayerRow({ row, rank, isMe }: { row: Row; rank: number; isMe: boolean 
           </span>
         </td>
         <td className="px-3 py-3 font-bold text-ink">
-          <span className="truncate inline-block max-w-full">{row.name}</span>
-          {isMe && (
-            <span className="ml-2 text-[10px] uppercase tracking-wider bg-primary text-primary-foreground px-1.5 py-0.5 rounded-sm">
-              You
-            </span>
-          )}
+          <span className="inline-flex items-center gap-2 max-w-full">
+            <span className="truncate">{row.name}</span>
+            {isMe && (
+              <span className="shrink-0 text-[10px] uppercase tracking-wider bg-primary text-primary-foreground px-1.5 py-0.5 rounded-sm">
+                You
+              </span>
+            )}
+          </span>
         </td>
         <td className="px-3 py-3 text-right font-extrabold text-ink tabular-nums">{row.points}</td>
         <td className="px-3 py-3 text-right text-muted-foreground tabular-nums">{row.correct_results}</td>
