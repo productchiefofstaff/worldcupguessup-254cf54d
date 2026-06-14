@@ -34,7 +34,7 @@ type Fixture = {
   home_score: number | null;
   away_score: number | null;
 };
-type Profile = { id: string; display_name: string; created_at?: string; show_on_leaderboard?: boolean };
+type Profile = { id: string; display_name: string; created_at?: string; show_on_leaderboard?: boolean; last_visit_at?: string | null };
 
 function AdminPage() {
   const { user, ready } = useAuth();
