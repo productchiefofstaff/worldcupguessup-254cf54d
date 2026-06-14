@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { updateFixtureScore } from "@/lib/admin-fixtures.functions";
+import { updateFixtureScore, setUserLeaderboardVisibility } from "@/lib/admin-fixtures.functions";
 import { db as supabase } from "@/lib/db";
 import { useAuth } from "@/hooks/use-auth";
 import { flagFor } from "@/lib/flags";
@@ -34,13 +34,14 @@ type Fixture = {
   home_score: number | null;
   away_score: number | null;
 };
-type Profile = { id: string; display_name: string; created_at?: string };
+type Profile = { id: string; display_name: string; created_at?: string; show_on_leaderboard?: boolean };
 
 function AdminPage() {
   const { user, ready } = useAuth();
   const [tab, setTab] = useState<"predictions" | "users" | "fixtures">("predictions");
   const qc = useQueryClient();
   const updateScoreFn = useServerFn(updateFixtureScore);
+  const setVisibilityFn = useServerFn(setUserLeaderboardVisibility);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editHome, setEditHome] = useState<string>("");
   const [editAway, setEditAway] = useState<string>("");
@@ -53,6 +54,15 @@ function AdminPage() {
       qc.invalidateQueries({ queryKey: ["leaderboard"] });
       qc.invalidateQueries({ queryKey: ["fixtures"] });
       setEditingId(null);
+    },
+  });
+
+  const visibilityMut = useMutation({
+    mutationFn: (vars: { userId: string; show: boolean }) =>
+      setVisibilityFn({ data: vars }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["users-admin"] });
+      qc.invalidateQueries({ queryKey: ["leaderboard"] });
     },
   });
 
@@ -105,7 +115,7 @@ function AdminPage() {
     queryFn: async () => {
       const { data } = await supabase
         .from("profiles")
-        .select("id, display_name, created_at")
+        .select("id, display_name, created_at, show_on_leaderboard")
         .order("created_at", { ascending: false });
       return (data ?? []) as Profile[];
     },
