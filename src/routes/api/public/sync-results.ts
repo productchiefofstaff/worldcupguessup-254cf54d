@@ -1,10 +1,27 @@
 import { createFileRoute } from "@tanstack/react-router";
 import Firecrawl from "@mendable/firecrawl-js";
 
-const SOURCE_URLS = [
-  "https://www.espn.com/soccer/schedule/_/league/fifa.world",
-  "https://www.espn.com/soccer/results/_/league/fifa.world",
-] as const;
+const SCHEDULE_PROMPT =
+  "From this ESPN FIFA World Cup schedule page, extract every match listed. Return {matches:[...]}. Each match: kickoff_iso (ISO 8601 UTC if a date AND time are clearly shown; otherwise null), team_home, team_away, status_label (EXACT short status text shown next to the match — 'FT','AET','Pens','HT','45\\'','78\\'','LIVE', a kickoff clock like '8:00 PM' or '12:00 AM', or 'Postponed'; null if none visible — DO NOT invent), status ('scheduled'|'live'|'finished' — 'finished' ONLY if status_label is exactly 'FT','AET','Pens','Final','Full Time'. A scoreline alone is NOT enough.), home_score (90-min FT integer; null otherwise — exclude ET/pens), away_score, stage.";
+
+const RESULTS_PROMPT =
+  "From this ESPN FIFA World Cup results page, extract every finished match shown. Return {matches:[...]}. Each match: kickoff_iso (ISO 8601 UTC ONLY if a clear date is visible for THIS match row; if no date is shown, set null — DO NOT guess), team_home (the team shown first), team_away (the team shown second), status_label (EXACT label shown, usually 'FT','AET','Pens'; null if none), status ('finished' when status_label is FT/AET/Pens/Final/Full Time, otherwise 'live'), home_score (integer, 90-min FT score), away_score, stage. Include every match row even if kickoff_iso is null — we match by team names.";
+
+const SOURCES: ReadonlyArray<{ url: string; prompt: string; onlyMainContent: boolean }> = [
+  {
+    url: "https://www.espn.com/soccer/schedule/_/league/fifa.world",
+    prompt: SCHEDULE_PROMPT,
+    onlyMainContent: true,
+  },
+  {
+    url: "https://www.espn.com/soccer/results/_/league/fifa.world",
+    prompt: RESULTS_PROMPT,
+    // The results page renders scores inside a scoreboard widget that the
+    // main-content extractor strips out. Keep full content so the LLM sees
+    // the "FT Australia 2 - Türkiye 0" rows.
+    onlyMainContent: false,
+  },
+];
 
 type SourceMatch = {
   kickoff_iso?: string | null;
@@ -37,17 +54,11 @@ export const Route = createFileRoute("/api/public/sync-results")({
         try {
           const firecrawl = new Firecrawl({ apiKey });
           const results = await Promise.all(
-            SOURCE_URLS.map((url) =>
-              firecrawl.scrape(url, {
-                formats: [
-                  {
-                    type: "json",
-                    prompt:
-                      "From this ESPN FIFA World Cup schedule/results page, extract every football match listed. Return an object with a 'matches' array. Each match has: kickoff_iso (ISO 8601 datetime, prefer UTC; null if unknown), team_home (full nation name as shown, or null/'TBD'), team_away, status_label (copy the EXACT short status text shown on the page next to the match, e.g. 'FT', 'AET', 'Pens', 'HT', \"45'\", \"78'\", 'LIVE', a kickoff time like '8:00 PM', or 'Postponed'; null if no such label is visible — DO NOT invent or infer this), status (one of 'scheduled','live','finished' — return 'finished' ONLY when status_label is exactly 'FT', 'AET', 'Pens', 'Final', or 'Full Time'. A visible scoreline alone is NOT enough — in-progress matches also show a score. If unsure, return 'live'), home_score (the 90-minute full-time score as an integer; null if the match is not yet finished or you cannot determine the 90-minute score — DO NOT include goals scored in extra time or penalty shootouts), away_score (same rules), stage (e.g. 'Group A', 'Round of 32', 'Round of 16', 'Quarter-final', 'Semi-final', 'Third-place Play-off', 'Final'). If a knockout match shows specific team names, return those teams.",
-                  },
-                ],
-                onlyMainContent: true,
-                waitFor: 2000,
+            SOURCES.map((src) =>
+              firecrawl.scrape(src.url, {
+                formats: [{ type: "json", prompt: src.prompt }],
+                onlyMainContent: src.onlyMainContent,
+                waitFor: 3000,
               }),
             ),
           );
@@ -84,42 +95,68 @@ export const Route = createFileRoute("/api/public/sync-results")({
         const details: Array<Record<string, unknown>> = [];
 
         for (const m of matches) {
-          if (!m.kickoff_iso) continue;
-          const mTs = new Date(m.kickoff_iso).getTime();
-          if (!Number.isFinite(mTs)) continue;
-
-          // Find best matching fixture: closest kickoff within 6h on the same UTC day,
-          // preferring exact team match, then TBD slot in the same stage.
-          const sameDay = fixtures.filter((f) => {
-            const fTs = new Date(f.kickoff_at).getTime();
-            return Math.abs(fTs - mTs) <= 6 * 60 * 60 * 1000;
-          });
-          if (!sameDay.length) continue;
-
+          const mTs = m.kickoff_iso ? new Date(m.kickoff_iso).getTime() : NaN;
+          const haveTs = Number.isFinite(mTs);
           const mh = norm(m.team_home);
           const ma = norm(m.team_away);
 
+          // Candidate pool:
+          //  - schedule rows give us a timestamp → restrict to same ±6h window
+          //  - results rows often have no date → fall back to team-name match
+          //    across fixtures kicking off in the last 48h (handles finished
+          //    matches without a printed date)
+          const candidates = haveTs
+            ? fixtures.filter(
+                (f) =>
+                  Math.abs(new Date(f.kickoff_at).getTime() - mTs) <=
+                  6 * 60 * 60 * 1000,
+              )
+            : fixtures.filter((f) => {
+                const ageMin = (Date.now() - new Date(f.kickoff_at).getTime()) / 60000;
+                return ageMin >= 0 && ageMin <= 48 * 60;
+              });
+          if (!candidates.length) continue;
+
           let fixture =
-            sameDay.find(
+            candidates.find(
               (f) => norm(f.team_home) === mh && norm(f.team_away) === ma,
             ) ||
-            sameDay.find(
-              (f) =>
-                (norm(f.team_home) === "tbd" || norm(f.team_away) === "tbd") &&
-                m.stage &&
-                f.stage.toLowerCase().includes(
-                  (m.stage ?? "").toLowerCase().replace("group ", ""),
-                ),
+            // ESPN results page sometimes flips home/away ordering
+            candidates.find(
+              (f) => norm(f.team_home) === ma && norm(f.team_away) === mh,
             ) ||
-            sameDay
-              .slice()
-              .sort(
-                (a, b) =>
-                  Math.abs(new Date(a.kickoff_at).getTime() - mTs) -
-                  Math.abs(new Date(b.kickoff_at).getTime() - mTs),
-              )[0];
+            (haveTs
+              ? candidates.find(
+                  (f) =>
+                    (norm(f.team_home) === "tbd" || norm(f.team_away) === "tbd") &&
+                    m.stage &&
+                    f.stage
+                      .toLowerCase()
+                      .includes((m.stage ?? "").toLowerCase().replace("group ", "")),
+                ) ||
+                candidates
+                  .slice()
+                  .sort(
+                    (a, b) =>
+                      Math.abs(new Date(a.kickoff_at).getTime() - mTs) -
+                      Math.abs(new Date(b.kickoff_at).getTime() - mTs),
+                  )[0]
+              : undefined);
 
           if (!fixture) continue;
+
+          // If the source row flipped home/away, swap the scores to match the
+          // fixture's canonical orientation before we patch.
+          let srcHome = m.home_score;
+          let srcAway = m.away_score;
+          if (
+            mh && ma &&
+            norm(fixture.team_home) === ma &&
+            norm(fixture.team_away) === mh
+          ) {
+            srcHome = m.away_score;
+            srcAway = m.home_score;
+          }
 
           const patch: {
             team_home?: string;
