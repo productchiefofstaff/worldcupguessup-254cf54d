@@ -115,6 +115,34 @@ function norm(s: string | null | undefined): string {
   return TEAM_ALIASES[key] ?? key;
 }
 
+function parseEspnScoreboard(data: EspnScoreboard): SourceMatch[] {
+  const fallbackStage = data.leagues?.[0]?.season?.type?.name ?? null;
+  return (data.events ?? []).flatMap((event) => {
+    const competition = event.competitions?.[0];
+    const home = competition?.competitors?.find((team) => team.homeAway === "home");
+    const away = competition?.competitors?.find((team) => team.homeAway === "away");
+    const statusType = competition?.status?.type;
+    if (!home || !away) return [];
+
+    const statusLabel =
+      statusType?.shortDetail ?? statusType?.detail ?? statusType?.description ?? null;
+    const completed = statusType?.completed === true || statusType?.state === "post";
+
+    return [
+      {
+        kickoff_iso: event.date ?? null,
+        team_home: home.team?.displayName ?? home.team?.abbreviation ?? null,
+        team_away: away.team?.displayName ?? away.team?.abbreviation ?? null,
+        status_label: statusLabel,
+        status: completed ? "finished" : statusType?.state === "in" ? "live" : "scheduled",
+        home_score: completed ? Number.parseInt(home.score ?? "", 10) : null,
+        away_score: completed ? Number.parseInt(away.score ?? "", 10) : null,
+        stage: event.season?.type?.name ?? fallbackStage,
+      },
+    ];
+  });
+}
+
 export const Route = createFileRoute("/api/public/sync-results")({
   server: {
     handlers: {
