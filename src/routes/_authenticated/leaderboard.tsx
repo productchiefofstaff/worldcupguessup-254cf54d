@@ -2,7 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { db as supabase } from "@/lib/db";
 import { useAuth } from "@/hooks/use-auth";
-import { Trophy, Medal, Crown, ChevronDown, Radio } from "lucide-react";
+import { Trophy, Medal, Crown, ChevronDown } from "lucide-react";
 import { flagFor } from "@/lib/flags";
 import { useState } from "react";
 
