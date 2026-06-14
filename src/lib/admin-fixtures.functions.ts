@@ -47,3 +47,35 @@ export const updateFixtureScore = createServerFn({ method: "POST" })
     if (error) throw new Error(error.message);
     return { ok: true };
   });
+
+export const setUserLeaderboardVisibility = createServerFn({ method: "POST" })
+  .inputValidator(
+    (input: { userId: string; show: boolean }) => {
+      if (!input || typeof input.userId !== "string") {
+        throw new Error("userId required");
+      }
+      if (typeof input.show !== "boolean") {
+        throw new Error("show must be boolean");
+      }
+      return input;
+    },
+  )
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ data, context }) => {
+    const { data: isAdmin, error: roleErr } = await context.supabase.rpc(
+      "has_role",
+      { _user_id: context.userId, _role: "admin" },
+    );
+    if (roleErr) throw new Error(roleErr.message);
+    if (!isAdmin) throw new Error("Forbidden");
+
+    const { supabaseAdmin } = await import(
+      "@/integrations/supabase/client.server"
+    );
+    const { error } = await supabaseAdmin
+      .from("profiles")
+      .update({ show_on_leaderboard: data.show })
+      .eq("id", data.userId);
+    if (error) throw new Error(error.message);
+    return { ok: true };
+  });
