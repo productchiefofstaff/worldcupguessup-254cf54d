@@ -135,11 +135,17 @@ function AdminPage() {
 
   const fixtureMap = new Map((fixturesQ.data ?? []).map((f) => [f.id, f]));
   const profileMap = new Map((profilesQ.data ?? []).map((p) => [p.id, p]));
-  const rows = (predsQ.data ?? []).map((r) => ({
-    r,
-    f: fixtureMap.get(r.fixture_id),
-    name: profileMap.get(r.user_id)?.display_name ?? r.user_id.slice(0, 8),
-  }));
+  const rows = (predsQ.data ?? [])
+    .map((r) => ({
+      r,
+      f: fixtureMap.get(r.fixture_id),
+      name: profileMap.get(r.user_id)?.display_name ?? r.user_id.slice(0, 8),
+    }))
+    .sort((a, b) => {
+      const ta = a.f ? new Date(a.f.kickoff_at).getTime() : 0;
+      const tb = b.f ? new Date(b.f.kickoff_at).getTime() : 0;
+      return ta - tb;
+    });
 
   const now = Date.now();
   const editableFixtures = (fixturesQ.data ?? [])
@@ -266,9 +272,7 @@ function AdminPage() {
                     {f ? (
                       <span className="flex items-center gap-1">
                         <span>{flagFor(f.team_home)}</span>
-                        <span>{f.team_home}</span>
                         <span className="text-muted-foreground">v</span>
-                        <span>{f.team_away}</span>
                         <span>{flagFor(f.team_away)}</span>
                       </span>
                     ) : (
