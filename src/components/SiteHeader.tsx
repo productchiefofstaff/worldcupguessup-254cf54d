@@ -25,13 +25,15 @@ export function SiteHeader() {
   }
   return (
     <header className="bg-ink text-primary-foreground sticky top-0 z-40 border-b-4 border-primary">
-      <div className="max-w-3xl mx-auto px-4 h-14 flex items-center gap-3">
-        <Link to="/" className="shrink-0">
-          <span className="bg-primary px-2 py-1 text-xs font-extrabold tracking-wide rounded-sm text-primary-foreground whitespace-nowrap">
-            WC26 Predictor
-          </span>
+      <div className="max-w-3xl mx-auto px-4 pt-3 pb-2">
+        <Link to="/" className="block text-center">
+          <h1 className="text-xl sm:text-2xl font-extrabold tracking-tight text-primary-foreground">
+            World Cup Guess Up
+          </h1>
         </Link>
-        <nav className="flex-1 flex items-center gap-1 sm:gap-3 text-sm font-semibold overflow-x-auto whitespace-nowrap [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+      </div>
+      <div className="max-w-3xl mx-auto px-4 pb-2">
+        <nav className="flex items-center justify-center gap-1 sm:gap-3 text-sm font-semibold overflow-x-auto whitespace-nowrap [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
           <Link
             to="/"
             className="px-2 py-1 hover:text-primary"
