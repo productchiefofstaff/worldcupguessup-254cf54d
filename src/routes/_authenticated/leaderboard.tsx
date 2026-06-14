@@ -2,7 +2,8 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { db as supabase } from "@/lib/db";
 import { useAuth } from "@/hooks/use-auth";
-import { Trophy, Medal } from "lucide-react";
+import { Trophy, Medal, Crown } from "lucide-react";
+
 
 export const Route = createFileRoute("/_authenticated/leaderboard")({
   head: () => ({
