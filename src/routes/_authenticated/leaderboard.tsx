@@ -257,8 +257,8 @@ function PlayerRow({ row, rank, isMe }: { row: Row; rank: number; isMe: boolean 
                         +{pts}
                       </span>
                     ) : (
-                      <span className="inline-flex items-center gap-1 text-xs text-destructive font-semibold">
-                        <Radio className="h-3 w-3" /> Live
+                      <span className="text-xs text-destructive font-semibold">
+                        Live
                       </span>
                     )}
                   </span>
