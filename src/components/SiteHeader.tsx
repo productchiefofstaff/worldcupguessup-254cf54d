@@ -24,16 +24,18 @@ export function SiteHeader() {
     navigate({ to: "/auth" });
   }
   return (
-    <header className="bg-ink text-primary-foreground sticky top-0 z-40 border-b-4 border-primary">
-      <div className="max-w-3xl mx-auto px-4 pt-3 pb-2">
-        <Link to="/" className="block text-center">
-          <h1 className="text-xl sm:text-2xl font-extrabold tracking-tight text-primary-foreground">
-            World Cup Guess Up
-          </h1>
-        </Link>
+    <header className="sticky top-0 z-40 text-primary-foreground border-b-4 border-primary">
+      <div className="bg-primary text-primary-foreground">
+        <div className="max-w-3xl mx-auto px-4 pt-3 pb-2">
+          <Link to="/" className="block text-center">
+            <h1 className="text-xl sm:text-2xl font-extrabold tracking-tight">
+              World Cup Guess Up
+            </h1>
+          </Link>
+        </div>
       </div>
-      <div className="max-w-3xl mx-auto px-4 pb-2">
-        <nav className="flex items-center justify-center gap-1 sm:gap-3 text-sm font-semibold overflow-x-auto whitespace-nowrap [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+      <div className="bg-ink max-w-full px-4 pb-2 pt-2">
+        <nav className="max-w-3xl mx-auto flex items-center justify-start gap-1 sm:gap-3 text-sm font-semibold overflow-x-auto whitespace-nowrap [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
           <Link
             to="/"
             className="px-2 py-1 hover:text-primary"
