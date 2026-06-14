@@ -152,7 +152,7 @@ function MyPredictionsPage() {
                 <span className="text-right">
                   <span
                     className={
-                      "inline-block text-xs font-bold px-1.5 py-0.5 rounded-sm " +
+                      "inline-block text-xs font-bold px-0 py-0.5 rounded-sm " +
                       (pts === 40
                         ? "bg-success text-primary-foreground"
                         : pts === 10
@@ -160,7 +160,7 @@ function MyPredictionsPage() {
                           : "bg-muted text-muted-foreground")
                     }
                   >
-                    +{pts} pts
+                    +{pts}
                   </span>
                 </span>
               )}
