@@ -146,9 +146,24 @@ function MyPredictionsPage() {
               <span className="text-right text-sm font-bold text-ink">
                 {p.home_score} – {p.away_score}
               </span>
-              <span className="text-right text-sm font-extrabold text-ink">
-                {pts === null ? "—" : pts}
-              </span>
+              {pts === null ? (
+                <span className="text-right text-sm font-extrabold text-ink">—</span>
+              ) : (
+                <span className="text-right">
+                  <span
+                    className={
+                      "inline-block text-xs font-bold px-1.5 py-0.5 rounded-sm " +
+                      (pts === 40
+                        ? "bg-success text-primary-foreground"
+                        : pts === 10
+                          ? "bg-warning text-ink"
+                          : "bg-muted text-muted-foreground")
+                    }
+                  >
+                    +{pts} pts
+                  </span>
+                </span>
+              )}
             </div>
           );
         })}
