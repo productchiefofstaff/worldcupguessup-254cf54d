@@ -70,14 +70,14 @@ function LeaderboardPage() {
       {error && <p className="text-sm text-destructive">Failed to load leaderboard.</p>}
 
       <div className="bg-card border border-border rounded-md overflow-x-auto">
-        <table className="w-full text-sm border-collapse table-fixed">
+        <table className="w-full min-w-[640px] text-sm border-collapse table-fixed">
           <colgroup>
-            <col className="w-14" />
-            <col />
-            <col className="w-36" />
-            <col className="w-36" />
+            <col className="w-12" />
+            <col className="w-40" />
+            <col className="w-32" />
             <col className="w-32" />
             <col className="w-28" />
+            <col className="w-24" />
           </colgroup>
           <thead>
             <tr className="bg-surface text-[10px] font-bold uppercase tracking-wider text-muted-foreground border-b border-border">
