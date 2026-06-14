@@ -73,7 +73,7 @@ function LeaderboardPage() {
         <table className="w-full min-w-[640px] text-sm border-collapse table-fixed">
           <colgroup>
             <col className="w-12" />
-            <col className="w-40" />
+            <col className="w-28" />
             <col className="w-32" />
             <col className="w-32" />
             <col className="w-28" />
