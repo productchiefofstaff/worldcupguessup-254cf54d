@@ -2,7 +2,8 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { db as supabase } from "@/lib/db";
 import { useAuth } from "@/hooks/use-auth";
-import { Trophy, Medal } from "lucide-react";
+import { Trophy, Medal, Crown } from "lucide-react";
+
 
 export const Route = createFileRoute("/_authenticated/leaderboard")({
   head: () => ({
@@ -53,6 +54,13 @@ function LeaderboardPage() {
           </h1>
           <p className="text-xs text-muted-foreground mt-1">Updated automatically as results come in</p>
         </div>
+      </div>
+
+      <div className="mb-4 rounded-md bg-warning/15 border border-warning/30 p-3 flex items-center gap-3">
+        <Crown className="h-5 w-5 text-warning shrink-0" />
+        <span className="text-sm font-bold text-ink">
+          🏆 1st place wins £60!
+        </span>
       </div>
 
       {isLoading && <p className="text-sm text-muted-foreground">Loading…</p>}
