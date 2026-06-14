@@ -70,10 +70,18 @@ function LeaderboardPage() {
       {error && <p className="text-sm text-destructive">Failed to load leaderboard.</p>}
 
       <div className="bg-card border border-border rounded-md overflow-x-auto">
-        <table className="w-full text-sm border-collapse">
+        <table className="w-full text-sm border-collapse table-fixed">
+          <colgroup>
+            <col className="w-14" />
+            <col />
+            <col className="w-36" />
+            <col className="w-36" />
+            <col className="w-32" />
+            <col className="w-28" />
+          </colgroup>
           <thead>
             <tr className="bg-surface text-[10px] font-bold uppercase tracking-wider text-muted-foreground border-b border-border">
-              <th className="px-3 py-2 text-left w-10">#</th>
+              <th className="px-3 py-2 text-left">#</th>
               <th className="px-3 py-2 text-left">Player</th>
               <th className="px-3 py-2 text-right">Points</th>
               <th className="px-3 py-2 text-right">Correct Results</th>
@@ -174,7 +182,7 @@ function PlayerRow({ row, rank, isMe }: { row: Row; rank: number; isMe: boolean 
           </span>
         </td>
         <td className="px-3 py-3 font-bold text-ink">
-          <span className="truncate">{row.name}</span>
+          <span className="truncate inline-block max-w-full">{row.name}</span>
           {isMe && (
             <span className="ml-2 text-[10px] uppercase tracking-wider bg-primary text-primary-foreground px-1.5 py-0.5 rounded-sm">
               You
