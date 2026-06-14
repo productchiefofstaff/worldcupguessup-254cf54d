@@ -27,6 +27,34 @@ type SourceMatch = {
   status_label?: string | null;
 };
 
+type EspnCompetitor = {
+  homeAway?: string;
+  score?: string;
+  team?: { displayName?: string; abbreviation?: string };
+};
+
+type EspnEvent = {
+  date?: string;
+  competitions?: Array<{
+    competitors?: EspnCompetitor[];
+    status?: {
+      type?: {
+        completed?: boolean;
+        state?: string;
+        detail?: string;
+        shortDetail?: string;
+        description?: string;
+      };
+    };
+  }>;
+  season?: { type?: { name?: string } };
+};
+
+type EspnScoreboard = {
+  events?: EspnEvent[];
+  leagues?: Array<{ season?: { type?: { name?: string } } }>;
+};
+
 const TEAM_ALIASES: Record<string, string> = {
   alg: "algeria",
   arg: "argentina",
