@@ -115,7 +115,7 @@ function AdminPage() {
     queryFn: async () => {
       const { data } = await supabase
         .from("profiles")
-        .select("id, display_name, created_at, show_on_leaderboard")
+        .select("id, display_name, created_at, show_on_leaderboard, last_visit_at")
         .order("created_at", { ascending: false });
       return (data ?? []) as Profile[];
     },
