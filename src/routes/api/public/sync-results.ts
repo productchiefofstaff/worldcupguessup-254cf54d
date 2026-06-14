@@ -1,18 +1,19 @@
 import { createFileRoute } from "@tanstack/react-router";
-import Firecrawl from "@mendable/firecrawl-js";
 
-const SCOREBOARD_PROMPT =
-  "From this ESPN FIFA World Cup scoreboard page, extract every match shown. Return {matches:[...]}. Each match: team_home (team listed first), team_away (team listed second), status_label (EXACT short status shown next to the match — 'FT','AET','Pens','HT',\"45'\",\"78'\",'LIVE', a kickoff clock like '8:00 PM', or 'Postponed'; null if none — DO NOT invent), status ('finished' ONLY if status_label is exactly FT/AET/Pens/Final/Full Time; otherwise 'live' or 'scheduled'), home_score (integer 90-min score; null if not shown — exclude ET/pens), away_score, stage. kickoff_iso is not required — leave null.";
+const SCOREBOARD_API_BASE =
+  "https://site.api.espn.com/apis/site/v2/sports/soccer/fifa.world/scoreboard";
 
-// ESPN scoreboard shows ONE day at a time. We hit today + yesterday (UTC)
-// so matches finishing late local-time are still picked up promptly.
+// ESPN scoreboard shows ONE day at a time. We hit yesterday/today/tomorrow
+// in UTC so matches around local-time date boundaries are still picked up.
 function scoreboardUrls(): string[] {
   const today = new Date();
   const yesterday = new Date(today.getTime() - 24 * 60 * 60 * 1000);
+  const tomorrow = new Date(today.getTime() + 24 * 60 * 60 * 1000);
   const fmt = (d: Date) =>
     `${d.getUTCFullYear()}${String(d.getUTCMonth() + 1).padStart(2, "0")}${String(d.getUTCDate()).padStart(2, "0")}`;
-  const base = "https://www.espn.co.uk/football/scoreboard/_/league/fifa.world";
-  return [base, `${base}/date/${fmt(yesterday)}`, `${base}/date/${fmt(today)}`];
+  return [yesterday, today, tomorrow].map(
+    (date) => `${SCOREBOARD_API_BASE}?dates=${fmt(date)}`,
+  );
 }
 
 type SourceMatch = {
