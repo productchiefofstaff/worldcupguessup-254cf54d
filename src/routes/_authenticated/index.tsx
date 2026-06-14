@@ -124,9 +124,12 @@ function FixturesPage() {
         ))}
       </div>
 
-      {fixturesQ.isLoading && <p className="text-sm text-muted-foreground">Loading fixtures…</p>}
+      {(fixturesQ.isLoading || (!!user && predsQ.isLoading)) && (
+        <p className="text-sm text-muted-foreground">Loading fixtures…</p>
+      )}
       {fixturesQ.error && <p className="text-sm text-destructive">Failed to load fixtures.</p>}
 
+      {!fixturesQ.isLoading && !predsQ.isLoading && (
       <div className="space-y-6">
         {grouped.map(([k, fixtures]) => (
           <section key={k}>
@@ -149,6 +152,7 @@ function FixturesPage() {
           <p className="text-sm text-muted-foreground">No fixtures match this filter.</p>
         )}
       </div>
+      )}
     </main>
   );
 }
