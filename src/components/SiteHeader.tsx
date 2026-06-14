@@ -56,7 +56,7 @@ export function SiteHeader() {
             className="px-2 py-1 hover:text-primary"
             activeProps={{ className: "px-2 py-1 text-primary underline underline-offset-4" }}
           >
-            My Predictions
+            Predictions
           </Link>
           {isAdmin && (
             <Link
