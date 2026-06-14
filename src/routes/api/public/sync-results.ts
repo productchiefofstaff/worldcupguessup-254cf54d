@@ -206,11 +206,11 @@ export const Route = createFileRoute("/api/public/sync-results")({
             m.status === "finished" &&
             labelConfirmsFinished &&
             minutesSinceKickoff >= 110 &&
-            Number.isInteger(m.home_score) &&
-            Number.isInteger(m.away_score)
+            Number.isInteger(srcHome) &&
+            Number.isInteger(srcAway)
           ) {
-            patch.home_score = m.home_score as number;
-            patch.away_score = m.away_score as number;
+            patch.home_score = srcHome as number;
+            patch.away_score = srcAway as number;
           } else if (
             !alreadyHasScore &&
             m.status === "finished" &&
