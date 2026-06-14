@@ -230,7 +230,7 @@ function PlayerRow({ row, rank, isMe }: { row: Row; rank: number; isMe: boolean 
             return (
               <tr
                 key={f.id}
-                className={"border-b border-border " + bg + " " + (isMe ? "bg-primary/5" : "")}
+                className={"border-b border-border " + (bg ? bg : isMe ? "bg-primary/5" : "")}
               >
                 <td className="px-3 py-1.5" />
                 <td className="px-3 py-1.5">
