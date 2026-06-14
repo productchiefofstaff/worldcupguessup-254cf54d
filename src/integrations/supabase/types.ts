@@ -93,18 +93,21 @@ export type Database = {
           created_at: string
           display_name: string
           id: string
+          show_on_leaderboard: boolean
           updated_at: string
         }
         Insert: {
           created_at?: string
           display_name: string
           id: string
+          show_on_leaderboard?: boolean
           updated_at?: string
         }
         Update: {
           created_at?: string
           display_name?: string
           id?: string
+          show_on_leaderboard?: boolean
           updated_at?: string
         }
         Relationships: []
