@@ -54,6 +54,13 @@ export function FixtureCard({
   const [busy, setBusy] = useState(false);
   const [open, setOpen] = useState(false);
 
+  useEffect(() => {
+    if (prediction) {
+      setHome(String(prediction.home_score));
+      setAway(String(prediction.away_score));
+    }
+  }, [prediction?.id, prediction?.home_score, prediction?.away_score]);
+
   const [now, setNow] = useState(() => Date.now());
   useEffect(() => {
     const t = setInterval(() => setNow(Date.now()), 30_000);
