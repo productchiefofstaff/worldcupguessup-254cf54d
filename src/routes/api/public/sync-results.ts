@@ -46,17 +46,19 @@ export const Route = createFileRoute("/api/public/sync-results")({
         try {
           const firecrawl = new Firecrawl({ apiKey });
           const results = await Promise.all(
-            SOURCES.map((src) =>
-              firecrawl.scrape(src.url, {
-                formats: [{ type: "json", prompt: src.prompt }],
-                onlyMainContent: src.onlyMainContent,
+            scoreboardUrls().map((url) =>
+              firecrawl.scrape(url, {
+                formats: [{ type: "json", prompt: SCOREBOARD_PROMPT }],
+                onlyMainContent: true,
                 waitFor: 3000,
               }),
             ),
           );
 
-          matches = results.flatMap((result) =>
-            ((result as unknown as { json?: { matches?: SourceMatch[] } }).json?.matches ?? []),
+          matches = results.flatMap(
+            (result) =>
+              (result as unknown as { json?: { matches?: SourceMatch[] } })
+                .json?.matches ?? [],
           );
         } catch (e) {
           console.error("Firecrawl scrape failed", e);
