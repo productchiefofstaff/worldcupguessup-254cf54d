@@ -149,9 +149,9 @@ function MyPredictionsPage() {
 
       <Tabs value={activeTab} onValueChange={setActiveTab}>
         <TabsList className="w-full justify-start overflow-x-auto flex-nowrap">
-          <TabsTrigger value="you">You</TabsTrigger>
+          <TabsTrigger value="you" className="flex-1">You</TabsTrigger>
           {others.map((p) => (
-            <TabsTrigger key={p.user_id} value={p.user_id}>
+            <TabsTrigger key={p.user_id} value={p.user_id} className="flex-1">
               {p.name}
             </TabsTrigger>
           ))}
