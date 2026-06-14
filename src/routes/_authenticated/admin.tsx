@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { updateFixtureScore } from "@/lib/admin-fixtures.functions";
+import { updateFixtureScore, setUserLeaderboardVisibility } from "@/lib/admin-fixtures.functions";
 import { db as supabase } from "@/lib/db";
 import { useAuth } from "@/hooks/use-auth";
 import { flagFor } from "@/lib/flags";
@@ -34,13 +34,14 @@ type Fixture = {
   home_score: number | null;
   away_score: number | null;
 };
-type Profile = { id: string; display_name: string; created_at?: string };
+type Profile = { id: string; display_name: string; created_at?: string; show_on_leaderboard?: boolean };
 
 function AdminPage() {
   const { user, ready } = useAuth();
   const [tab, setTab] = useState<"predictions" | "users" | "fixtures">("predictions");
   const qc = useQueryClient();
   const updateScoreFn = useServerFn(updateFixtureScore);
+  const setVisibilityFn = useServerFn(setUserLeaderboardVisibility);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editHome, setEditHome] = useState<string>("");
   const [editAway, setEditAway] = useState<string>("");
@@ -53,6 +54,15 @@ function AdminPage() {
       qc.invalidateQueries({ queryKey: ["leaderboard"] });
       qc.invalidateQueries({ queryKey: ["fixtures"] });
       setEditingId(null);
+    },
+  });
+
+  const visibilityMut = useMutation({
+    mutationFn: (vars: { userId: string; show: boolean }) =>
+      setVisibilityFn({ data: vars }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["users-admin"] });
+      qc.invalidateQueries({ queryKey: ["leaderboard"] });
     },
   });
 
@@ -105,7 +115,7 @@ function AdminPage() {
     queryFn: async () => {
       const { data } = await supabase
         .from("profiles")
-        .select("id, display_name, created_at")
+        .select("id, display_name, created_at, show_on_leaderboard")
         .order("created_at", { ascending: false });
       return (data ?? []) as Profile[];
     },
@@ -300,6 +310,7 @@ function AdminPage() {
             <thead className="bg-surface text-[10px] uppercase tracking-wider text-muted-foreground">
               <tr>
                 <th className="text-left px-3 py-2">Display name</th>
+                <th className="text-center px-3 py-2">Leaderboard</th>
                 <th className="text-right px-3 py-2 whitespace-nowrap">Signed up</th>
               </tr>
             </thead>
@@ -307,6 +318,35 @@ function AdminPage() {
               {(usersQ.data ?? []).map((p) => (
                 <tr key={p.id} className="border-t border-border">
                   <td className="px-3 py-2 font-bold text-ink">{p.display_name}</td>
+                  <td className="px-3 py-2 text-center">
+                    {(() => {
+                      const on = p.show_on_leaderboard !== false;
+                      const pending =
+                        visibilityMut.isPending && visibilityMut.variables?.userId === p.id;
+                      return (
+                        <button
+                          role="switch"
+                          aria-checked={on}
+                          disabled={pending}
+                          onClick={() =>
+                            visibilityMut.mutate({ userId: p.id, show: !on })
+                          }
+                          className={
+                            "relative inline-flex h-5 w-9 items-center rounded-full transition-colors disabled:opacity-50 " +
+                            (on ? "bg-primary" : "bg-muted")
+                          }
+                          title={on ? "Visible on leaderboard" : "Hidden from leaderboard"}
+                        >
+                          <span
+                            className={
+                              "inline-block h-4 w-4 transform rounded-full bg-white transition-transform " +
+                              (on ? "translate-x-4" : "translate-x-0.5")
+                            }
+                          />
+                        </button>
+                      );
+                    })()}
+                  </td>
                   <td className="px-3 py-2 text-right text-[11px] text-muted-foreground whitespace-nowrap">
                     {p.created_at
                       ? new Date(p.created_at).toLocaleString(undefined, {
@@ -322,7 +362,7 @@ function AdminPage() {
               ))}
               {!usersQ.isLoading && (usersQ.data ?? []).length === 0 && (
                 <tr>
-                  <td colSpan={2} className="p-6 text-center text-sm text-muted-foreground">
+                  <td colSpan={3} className="p-6 text-center text-sm text-muted-foreground">
                     No users yet.
                   </td>
                 </tr>
