@@ -179,7 +179,7 @@ function PredictionsTable({
   isOther: boolean;
   loading: boolean;
 }) {
-  const pickedLabel = isOther ? "They picked" : "You picked";
+  const pickedLabel = "Predicted";
   return (
     <div className="bg-card border border-border rounded-md overflow-hidden">
       <div className="grid grid-cols-[1fr_4.5rem_4.5rem_3rem] sm:grid-cols-[1fr_5.5rem_5.5rem_4rem] px-3 py-2 bg-surface text-[10px] font-bold uppercase tracking-wider text-muted-foreground border-b border-border">
