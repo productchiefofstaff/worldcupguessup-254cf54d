@@ -1,0 +1,1 @@
+ALTER TABLE public.profiles ADD COLUMN last_visit_at TIMESTAMP WITH TIME ZONE;
