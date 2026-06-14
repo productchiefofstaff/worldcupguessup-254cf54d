@@ -3,10 +3,8 @@ import { useQuery } from "@tanstack/react-query";
 import { db as supabase } from "@/lib/db";
 import { useAuth } from "@/hooks/use-auth";
 import { Trophy, Medal, Crown, ChevronDown, Radio } from "lucide-react";
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { flagFor } from "@/lib/flags";
 import { useState } from "react";
-
 
 export const Route = createFileRoute("/_authenticated/leaderboard")({
   head: () => ({
@@ -190,72 +188,87 @@ function PlayerRow({ row, rank, isMe }: { row: Row; rank: number; isMe: boolean 
           {row.settled_predictions}/{row.total_predictions}
         </td>
       </tr>
-      <tr className={"border-b border-border last:border-b-0 " + (isMe ? "bg-primary/5" : "")}>
+      <tr className={"border-b border-border " + (isMe ? "bg-primary/5" : "")}>
         <td colSpan={6} className="p-0">
-          <Collapsible open={open} onOpenChange={setOpen}>
-            <CollapsibleTrigger className="w-full flex items-center justify-between px-3 py-2 text-xs font-semibold text-muted-foreground hover:text-ink border-t border-border">
-              <span>See the predictions</span>
-              <ChevronDown className={"h-4 w-4 transition-transform " + (open ? "rotate-180" : "")} />
-            </CollapsibleTrigger>
-            <CollapsibleContent className="px-3 pb-3">
-              {predsQ.isLoading && <p className="text-xs text-muted-foreground py-2">Loading…</p>}
-              {predsQ.error && <p className="text-xs text-destructive py-2">Failed to load predictions.</p>}
-              {predsQ.data && predsQ.data.length === 0 && (
-                <p className="text-xs text-muted-foreground py-2">No predictions for played matches yet.</p>
-              )}
-              {predsQ.data && predsQ.data.length > 0 && (
-                <ul className="divide-y divide-border">
-                  {predsQ.data.map(({ f, p }) => {
-                    const hasResult = f.home_score !== null && f.away_score !== null;
-                    const pts = hasResult
-                      ? pointsFor(p.home_score, p.away_score, f.home_score as number, f.away_score as number)
-                      : null;
-                    const bg =
-                      pts === 40
-                        ? "bg-amber-200/70"
-                        : pts === 10
-                          ? "bg-slate-200/70"
-                          : "";
-                    return (
-                      <li
-                        key={f.id}
-                        className={"flex items-center justify-between py-1.5 px-2 -mx-2 text-sm rounded-sm " + bg}
-                      >
-                        <span className="flex items-center gap-1.5 text-ink truncate">
-                          <span aria-hidden>{flagFor(f.team_home)}</span>
-                          <span className="text-muted-foreground text-xs">v</span>
-                          <span aria-hidden>{flagFor(f.team_away)}</span>
-                        </span>
-                        <span className="flex items-center gap-2 shrink-0">
-                          <span className="font-bold tabular-nums">{p.home_score}-{p.away_score}</span>
-                          {pts !== null ? (
-                            <span
-                              className={
-                                "text-[10px] font-bold px-1.5 py-0.5 rounded-sm " +
-                                (pts === 40
-                                  ? "bg-success text-primary-foreground"
-                                  : pts === 10
-                                    ? "bg-warning text-ink"
-                                    : "bg-muted text-muted-foreground")
-                              }
-                            >
-                              +{pts}
-                            </span>
-                          ) : (
-                            <span className="inline-flex items-center gap-1 text-xs text-destructive font-semibold">
-                              <Radio className="h-3 w-3" /> Live
-                            </span>
-                          )}
-                        </span>
-                      </li>
-                    );
-                  })}
-                </ul>
-              )}
-            </CollapsibleContent>
-          </Collapsible>
+          <button
+            onClick={() => setOpen((v) => !v)}
+            className="w-full flex items-center justify-between px-3 py-2 text-xs font-semibold text-muted-foreground hover:text-ink border-t border-border"
+          >
+            <span>See the predictions</span>
+            <ChevronDown className={"h-4 w-4 transition-transform " + (open ? "rotate-180" : "")} />
+          </button>
         </td>
       </tr>
+      {open && (
+        <>
+          {predsQ.isLoading && (
+            <tr className={isMe ? "bg-primary/5" : ""}>
+              <td colSpan={6} className="px-3 py-2 text-xs text-muted-foreground">Loading…</td>
+            </tr>
+          )}
+          {predsQ.error && (
+            <tr className={isMe ? "bg-primary/5" : ""}>
+              <td colSpan={6} className="px-3 py-2 text-xs text-destructive">Failed to load predictions.</td>
+            </tr>
+          )}
+          {predsQ.data && predsQ.data.length === 0 && (
+            <tr className={isMe ? "bg-primary/5" : ""}>
+              <td colSpan={6} className="px-3 py-2 text-xs text-muted-foreground">No predictions for played matches yet.</td>
+            </tr>
+          )}
+          {predsQ.data && predsQ.data.map(({ f, p }) => {
+            const hasResult = f.home_score !== null && f.away_score !== null;
+            const pts = hasResult
+              ? pointsFor(p.home_score, p.away_score, f.home_score as number, f.away_score as number)
+              : null;
+            const bg =
+              pts === 40
+                ? "bg-amber-200/70"
+                : pts === 10
+                  ? "bg-slate-200/70"
+                  : "";
+            return (
+              <tr
+                key={f.id}
+                className={"border-b border-border " + (bg ? bg : isMe ? "bg-primary/5" : "")}
+              >
+                <td className="px-3 py-1.5" />
+                <td className="px-3 py-1.5">
+                  <span className="flex items-center gap-1.5 text-ink truncate">
+                    <span aria-hidden>{flagFor(f.team_home)}</span>
+                    <span className="text-muted-foreground text-xs">v</span>
+                    <span aria-hidden>{flagFor(f.team_away)}</span>
+                  </span>
+                </td>
+                <td className="px-3 py-1.5 text-right">
+                  <span className="inline-flex items-center justify-end gap-2">
+                    <span className="font-bold tabular-nums">{p.home_score}-{p.away_score}</span>
+                    {pts !== null ? (
+                      <span
+                        className={
+                          "text-[10px] font-bold px-1.5 py-0.5 rounded-sm " +
+                          (pts === 40
+                            ? "bg-success text-primary-foreground"
+                            : pts === 10
+                              ? "bg-warning text-ink"
+                              : "bg-muted text-muted-foreground")
+                        }
+                      >
+                        +{pts}
+                      </span>
+                    ) : (
+                      <span className="inline-flex items-center gap-1 text-xs text-destructive font-semibold">
+                        <Radio className="h-3 w-3" /> Live
+                      </span>
+                    )}
+                  </span>
+                </td>
+                <td colSpan={3} className="px-3 py-1.5" />
+              </tr>
+            );
+          })}
+        </>
+      )}
     </>
   );
 }
