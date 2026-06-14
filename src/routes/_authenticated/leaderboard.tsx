@@ -176,18 +176,12 @@ function PlayerRow({ row, rank, isMe }: { row: Row; rank: number; isMe: boolean 
           </span>
         </td>
         <td className="px-3 py-3 font-bold text-ink">
-          <button
-            onClick={() => setOpen((o) => !o)}
-            className="inline-flex items-center gap-1.5 text-left hover:text-primary transition-colors"
-          >
-            <span className="truncate">{row.name}</span>
-            {isMe && (
-              <span className="text-[10px] uppercase tracking-wider bg-primary text-primary-foreground px-1.5 py-0.5 rounded-sm">
-                You
-              </span>
-            )}
-            <ChevronDown className={"h-3.5 w-3.5 transition-transform " + (open ? "rotate-180" : "")} />
-          </button>
+          <span className="truncate">{row.name}</span>
+          {isMe && (
+            <span className="ml-2 text-[10px] uppercase tracking-wider bg-primary text-primary-foreground px-1.5 py-0.5 rounded-sm">
+              You
+            </span>
+          )}
         </td>
         <td className="px-3 py-3 text-right font-extrabold text-ink tabular-nums">{row.points}</td>
         <td className="px-3 py-3 text-right text-muted-foreground tabular-nums">{row.correct_results}</td>
@@ -199,6 +193,10 @@ function PlayerRow({ row, rank, isMe }: { row: Row; rank: number; isMe: boolean 
       <tr className={"border-b border-border last:border-b-0 " + (isMe ? "bg-primary/5" : "")}>
         <td colSpan={6} className="p-0">
           <Collapsible open={open} onOpenChange={setOpen}>
+            <CollapsibleTrigger className="w-full flex items-center justify-between px-3 py-2 text-xs font-semibold text-muted-foreground hover:text-ink border-t border-border">
+              <span>See the predictions</span>
+              <ChevronDown className={"h-4 w-4 transition-transform " + (open ? "rotate-180" : "")} />
+            </CollapsibleTrigger>
             <CollapsibleContent className="px-3 pb-3">
               {predsQ.isLoading && <p className="text-xs text-muted-foreground py-2">Loading…</p>}
               {predsQ.error && <p className="text-xs text-destructive py-2">Failed to load predictions.</p>}
@@ -212,10 +210,16 @@ function PlayerRow({ row, rank, isMe }: { row: Row; rank: number; isMe: boolean 
                     const pts = hasResult
                       ? pointsFor(p.home_score, p.away_score, f.home_score as number, f.away_score as number)
                       : null;
+                    const bg =
+                      pts === 40
+                        ? "bg-amber-200/70"
+                        : pts === 10
+                          ? "bg-slate-200/70"
+                          : "";
                     return (
                       <li
                         key={f.id}
-                        className="flex items-center justify-between py-1.5 px-2 -mx-2 text-sm rounded-sm"
+                        className={"flex items-center justify-between py-1.5 px-2 -mx-2 text-sm rounded-sm " + bg}
                       >
                         <span className="flex items-center gap-1.5 text-ink truncate">
                           <span aria-hidden>{flagFor(f.team_home)}</span>
