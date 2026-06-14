@@ -3,7 +3,7 @@ import type { User } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
 import { db } from "@/lib/db";
 
-export type Profile = { id: string; display_name: string };
+export type Profile = { id: string; display_name: string; last_visit_at?: string | null };
 
 export function useAuth() {
   const [user, setUser] = useState<User | null>(null);
@@ -30,10 +30,16 @@ export function useAuth() {
     (async () => {
       const { data } = await db
         .from("profiles")
-        .select("id, display_name")
+        .select("id, display_name, last_visit_at")
         .eq("id", user.id)
         .maybeSingle();
       if (!cancelled) setProfile(data as Profile | null);
+
+      // Update last visit time (best-effort, no await to avoid blocking)
+      db.from("profiles")
+        .update({ last_visit_at: new Date().toISOString() })
+        .eq("id", user.id)
+        .then(() => {});
     })();
     return () => {
       cancelled = true;
