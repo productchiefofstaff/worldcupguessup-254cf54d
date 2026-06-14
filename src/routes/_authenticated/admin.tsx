@@ -312,6 +312,7 @@ function AdminPage() {
               <tr>
                 <th className="text-left px-3 py-2">Display name</th>
                 <th className="text-center px-3 py-2">Leaderboard</th>
+                <th className="text-right px-3 py-2 whitespace-nowrap">Last visit</th>
                 <th className="text-right px-3 py-2 whitespace-nowrap">Signed up</th>
               </tr>
             </thead>
