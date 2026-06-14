@@ -1,18 +1,19 @@
 import { createFileRoute } from "@tanstack/react-router";
-import Firecrawl from "@mendable/firecrawl-js";
 
-const SCOREBOARD_PROMPT =
-  "From this ESPN FIFA World Cup scoreboard page, extract every match shown. Return {matches:[...]}. Each match: team_home (team listed first), team_away (team listed second), status_label (EXACT short status shown next to the match — 'FT','AET','Pens','HT',\"45'\",\"78'\",'LIVE', a kickoff clock like '8:00 PM', or 'Postponed'; null if none — DO NOT invent), status ('finished' ONLY if status_label is exactly FT/AET/Pens/Final/Full Time; otherwise 'live' or 'scheduled'), home_score (integer 90-min score; null if not shown — exclude ET/pens), away_score, stage. kickoff_iso is not required — leave null.";
+const SCOREBOARD_API_BASE =
+  "https://site.api.espn.com/apis/site/v2/sports/soccer/fifa.world/scoreboard";
 
-// ESPN scoreboard shows ONE day at a time. We hit today + yesterday (UTC)
-// so matches finishing late local-time are still picked up promptly.
+// ESPN scoreboard shows ONE day at a time. We hit yesterday/today/tomorrow
+// in UTC so matches around local-time date boundaries are still picked up.
 function scoreboardUrls(): string[] {
   const today = new Date();
   const yesterday = new Date(today.getTime() - 24 * 60 * 60 * 1000);
+  const tomorrow = new Date(today.getTime() + 24 * 60 * 60 * 1000);
   const fmt = (d: Date) =>
     `${d.getUTCFullYear()}${String(d.getUTCMonth() + 1).padStart(2, "0")}${String(d.getUTCDate()).padStart(2, "0")}`;
-  const base = "https://www.espn.co.uk/football/scoreboard/_/league/fifa.world";
-  return [base, `${base}/date/${fmt(yesterday)}`, `${base}/date/${fmt(today)}`];
+  return [yesterday, today, tomorrow].map(
+    (date) => `${SCOREBOARD_API_BASE}?dates=${fmt(date)}`,
+  );
 }
 
 type SourceMatch = {
@@ -26,44 +27,155 @@ type SourceMatch = {
   status_label?: string | null;
 };
 
+type EspnCompetitor = {
+  homeAway?: string;
+  score?: string;
+  team?: { displayName?: string; abbreviation?: string };
+};
+
+type EspnEvent = {
+  date?: string;
+  competitions?: Array<{
+    competitors?: EspnCompetitor[];
+    status?: {
+      type?: {
+        completed?: boolean;
+        state?: string;
+        detail?: string;
+        shortDetail?: string;
+        description?: string;
+      };
+    };
+  }>;
+  season?: { type?: { name?: string } };
+};
+
+type EspnScoreboard = {
+  events?: EspnEvent[];
+  leagues?: Array<{ season?: { type?: { name?: string } } }>;
+};
+
+const TEAM_ALIASES: Record<string, string> = {
+  alg: "algeria",
+  arg: "argentina",
+  aus: "australia",
+  aut: "austria",
+  bel: "belgium",
+  bih: "bosniaandherzegovina",
+  bra: "brazil",
+  can: "canada",
+  civ: "ivorycoast",
+  col: "colombia",
+  cro: "croatia",
+  cuw: "curacao",
+  cze: "czechia",
+  cod: "drcongo",
+  ecu: "ecuador",
+  egy: "egypt",
+  eng: "england",
+  fra: "france",
+  ger: "germany",
+  gha: "ghana",
+  hai: "haiti",
+  irn: "iran",
+  irq: "iraq",
+  jpn: "japan",
+  jor: "jordan",
+  mar: "morocco",
+  mex: "mexico",
+  ned: "netherlands",
+  nor: "norway",
+  nzl: "newzealand",
+  pan: "panama",
+  par: "paraguay",
+  por: "portugal",
+  qat: "qatar",
+  ksa: "saudiarabia",
+  sco: "scotland",
+  sen: "senegal",
+  rsa: "southafrica",
+  kor: "southkorea",
+  esp: "spain",
+  swe: "sweden",
+  sui: "switzerland",
+  tun: "tunisia",
+  tur: "turkiye",
+  uru: "uruguay",
+  usa: "usa",
+  unitedstates: "usa",
+  uzb: "uzbekistan",
+};
+
 function norm(s: string | null | undefined): string {
-  return (s ?? "").toLowerCase().replace(/[^a-z]/g, "");
+  const key = (s ?? "")
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .replace(/[^a-z]/g, "");
+  return TEAM_ALIASES[key] ?? key;
+}
+
+function parseEspnScoreboard(data: EspnScoreboard): SourceMatch[] {
+  const fallbackStage = data.leagues?.[0]?.season?.type?.name ?? null;
+  return (data.events ?? []).flatMap((event) => {
+    const competition = event.competitions?.[0];
+    const home = competition?.competitors?.find((team) => team.homeAway === "home");
+    const away = competition?.competitors?.find((team) => team.homeAway === "away");
+    const statusType = competition?.status?.type;
+    if (!home || !away) return [];
+
+    const statusLabel =
+      statusType?.shortDetail ?? statusType?.detail ?? statusType?.description ?? null;
+    const completed = statusType?.completed === true || statusType?.state === "post";
+
+    return [
+      {
+        kickoff_iso: event.date ?? null,
+        team_home: home.team?.displayName ?? home.team?.abbreviation ?? null,
+        team_away: away.team?.displayName ?? away.team?.abbreviation ?? null,
+        status_label: statusLabel,
+        status: completed ? "finished" : statusType?.state === "in" ? "live" : "scheduled",
+        home_score: completed ? Number.parseInt(home.score ?? "", 10) : null,
+        away_score: completed ? Number.parseInt(away.score ?? "", 10) : null,
+        stage: event.season?.type?.name ?? fallbackStage,
+      },
+    ];
+  });
 }
 
 export const Route = createFileRoute("/api/public/sync-results")({
   server: {
     handlers: {
       POST: async () => {
-        const apiKey = process.env.FIRECRAWL_API_KEY;
-        if (!apiKey) {
-          return Response.json(
-            { error: "FIRECRAWL_API_KEY missing" },
-            { status: 500 },
-          );
-        }
-
         let matches: SourceMatch[] = [];
         try {
-          const firecrawl = new Firecrawl({ apiKey });
-          const results = await Promise.all(
-            scoreboardUrls().map((url) =>
-              firecrawl.scrape(url, {
-                formats: [{ type: "json", prompt: SCOREBOARD_PROMPT }],
-                onlyMainContent: true,
-                waitFor: 3000,
-              }),
+          const urls = scoreboardUrls();
+          const results = await Promise.allSettled(
+            urls.map((url) =>
+              fetch(url, { headers: { Accept: "application/json" } }).then(
+                async (response) => {
+                  if (!response.ok) {
+                    throw new Error(`ESPN ${response.status} ${response.statusText}`);
+                  }
+                  return (await response.json()) as EspnScoreboard;
+                },
+              ),
             ),
           );
 
-          matches = results.flatMap(
-            (result) =>
-              (result as unknown as { json?: { matches?: SourceMatch[] } })
-                .json?.matches ?? [],
-          );
+          matches = results.flatMap((result, index) => {
+            if (result.status === "rejected") {
+              console.warn(
+                `[sync-results] ESPN fetch skipped for ${urls[index]} — ${String(result.reason)}`,
+              );
+              return [];
+            }
+            return parseEspnScoreboard(result.value);
+          });
         } catch (e) {
-          console.error("Firecrawl scrape failed", e);
+          console.error("ESPN scoreboard fetch failed", e);
           return Response.json(
-            { error: "scrape_failed", detail: String(e) },
+            { error: "scoreboard_fetch_failed", detail: String(e) },
             { status: 502 },
           );
         }
