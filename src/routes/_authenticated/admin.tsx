@@ -34,7 +34,7 @@ type Fixture = {
   home_score: number | null;
   away_score: number | null;
 };
-type Profile = { id: string; display_name: string; created_at?: string; show_on_leaderboard?: boolean };
+type Profile = { id: string; display_name: string; created_at?: string; show_on_leaderboard?: boolean; last_visit_at?: string | null };
 
 function AdminPage() {
   const { user, ready } = useAuth();
@@ -115,7 +115,7 @@ function AdminPage() {
     queryFn: async () => {
       const { data } = await supabase
         .from("profiles")
-        .select("id, display_name, created_at, show_on_leaderboard")
+        .select("id, display_name, created_at, show_on_leaderboard, last_visit_at")
         .order("created_at", { ascending: false });
       return (data ?? []) as Profile[];
     },
@@ -312,6 +312,7 @@ function AdminPage() {
               <tr>
                 <th className="text-left px-3 py-2">Display name</th>
                 <th className="text-center px-3 py-2">Leaderboard</th>
+                <th className="text-right px-3 py-2 whitespace-nowrap">Last visit</th>
                 <th className="text-right px-3 py-2 whitespace-nowrap">Signed up</th>
               </tr>
             </thead>
@@ -349,6 +350,17 @@ function AdminPage() {
                     })()}
                   </td>
                   <td className="px-3 py-2 text-right text-[11px] text-muted-foreground whitespace-nowrap">
+                    {p.last_visit_at
+                      ? new Date(p.last_visit_at).toLocaleString(undefined, {
+                          day: "numeric",
+                          month: "short",
+                          year: "numeric",
+                          hour: "2-digit",
+                          minute: "2-digit",
+                        })
+                      : "—"}
+                  </td>
+                  <td className="px-3 py-2 text-right text-[11px] text-muted-foreground whitespace-nowrap">
                     {p.created_at
                       ? new Date(p.created_at).toLocaleString(undefined, {
                           day: "numeric",
@@ -363,7 +375,7 @@ function AdminPage() {
               ))}
               {!usersQ.isLoading && (usersQ.data ?? []).length === 0 && (
                 <tr>
-                  <td colSpan={3} className="p-6 text-center text-sm text-muted-foreground">
+                  <td colSpan={4} className="p-6 text-center text-sm text-muted-foreground">
                     No users yet.
                   </td>
                 </tr>
