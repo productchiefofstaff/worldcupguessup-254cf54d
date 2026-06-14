@@ -1,27 +1,19 @@
 import { createFileRoute } from "@tanstack/react-router";
 import Firecrawl from "@mendable/firecrawl-js";
 
-const SCHEDULE_PROMPT =
-  "From this ESPN FIFA World Cup schedule page, extract every match listed. Return {matches:[...]}. Each match: kickoff_iso (ISO 8601 UTC if a date AND time are clearly shown; otherwise null), team_home, team_away, status_label (EXACT short status text shown next to the match — 'FT','AET','Pens','HT','45\\'','78\\'','LIVE', a kickoff clock like '8:00 PM' or '12:00 AM', or 'Postponed'; null if none visible — DO NOT invent), status ('scheduled'|'live'|'finished' — 'finished' ONLY if status_label is exactly 'FT','AET','Pens','Final','Full Time'. A scoreline alone is NOT enough.), home_score (90-min FT integer; null otherwise — exclude ET/pens), away_score, stage.";
+const SCOREBOARD_PROMPT =
+  "From this ESPN FIFA World Cup scoreboard page, extract every match shown. Return {matches:[...]}. Each match: team_home (team listed first), team_away (team listed second), status_label (EXACT short status shown next to the match — 'FT','AET','Pens','HT',\"45'\",\"78'\",'LIVE', a kickoff clock like '8:00 PM', or 'Postponed'; null if none — DO NOT invent), status ('finished' ONLY if status_label is exactly FT/AET/Pens/Final/Full Time; otherwise 'live' or 'scheduled'), home_score (integer 90-min score; null if not shown — exclude ET/pens), away_score, stage. kickoff_iso is not required — leave null.";
 
-const RESULTS_PROMPT =
-  "From this ESPN FIFA World Cup results page, extract every finished match shown. Return {matches:[...]}. Each match: kickoff_iso (ISO 8601 UTC ONLY if a clear date is visible for THIS match row; if no date is shown, set null — DO NOT guess), team_home (the team shown first), team_away (the team shown second), status_label (EXACT label shown, usually 'FT','AET','Pens'; null if none), status ('finished' when status_label is FT/AET/Pens/Final/Full Time, otherwise 'live'), home_score (integer, 90-min FT score), away_score, stage. Include every match row even if kickoff_iso is null — we match by team names.";
-
-const SOURCES: ReadonlyArray<{ url: string; prompt: string; onlyMainContent: boolean }> = [
-  {
-    url: "https://www.espn.com/soccer/schedule/_/league/fifa.world",
-    prompt: SCHEDULE_PROMPT,
-    onlyMainContent: true,
-  },
-  {
-    url: "https://www.espn.com/soccer/results/_/league/fifa.world",
-    prompt: RESULTS_PROMPT,
-    // The results page renders scores inside a scoreboard widget that the
-    // main-content extractor strips out. Keep full content so the LLM sees
-    // the "FT Australia 2 - Türkiye 0" rows.
-    onlyMainContent: false,
-  },
-];
+// ESPN scoreboard shows ONE day at a time. We hit today + yesterday (UTC)
+// so matches finishing late local-time are still picked up promptly.
+function scoreboardUrls(): string[] {
+  const today = new Date();
+  const yesterday = new Date(today.getTime() - 24 * 60 * 60 * 1000);
+  const fmt = (d: Date) =>
+    `${d.getUTCFullYear()}${String(d.getUTCMonth() + 1).padStart(2, "0")}${String(d.getUTCDate()).padStart(2, "0")}`;
+  const base = "https://www.espn.co.uk/football/scoreboard/_/league/fifa.world";
+  return [base, `${base}/date/${fmt(yesterday)}`, `${base}/date/${fmt(today)}`];
+}
 
 type SourceMatch = {
   kickoff_iso?: string | null;
@@ -54,17 +46,19 @@ export const Route = createFileRoute("/api/public/sync-results")({
         try {
           const firecrawl = new Firecrawl({ apiKey });
           const results = await Promise.all(
-            SOURCES.map((src) =>
-              firecrawl.scrape(src.url, {
-                formats: [{ type: "json", prompt: src.prompt }],
-                onlyMainContent: src.onlyMainContent,
+            scoreboardUrls().map((url) =>
+              firecrawl.scrape(url, {
+                formats: [{ type: "json", prompt: SCOREBOARD_PROMPT }],
+                onlyMainContent: true,
                 waitFor: 3000,
               }),
             ),
           );
 
-          matches = results.flatMap((result) =>
-            ((result as unknown as { json?: { matches?: SourceMatch[] } }).json?.matches ?? []),
+          matches = results.flatMap(
+            (result) =>
+              (result as unknown as { json?: { matches?: SourceMatch[] } })
+                .json?.matches ?? [],
           );
         } catch (e) {
           console.error("Firecrawl scrape failed", e);
