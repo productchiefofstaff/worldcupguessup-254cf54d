@@ -49,8 +49,9 @@ export const Route = createFileRoute("/api/public/sync-results")({
         let matches: SourceMatch[] = [];
         try {
           const firecrawl = new Firecrawl({ apiKey });
-          const results = await Promise.all(
-            scoreboardUrls().map((url) =>
+          const urls = scoreboardUrls();
+          const results = await Promise.allSettled(
+            urls.map((url) =>
               firecrawl.scrape(url, {
                 formats: [{ type: "json", prompt: SCOREBOARD_PROMPT }],
                 onlyMainContent: true,
@@ -59,11 +60,18 @@ export const Route = createFileRoute("/api/public/sync-results")({
             ),
           );
 
-          matches = results.flatMap(
-            (result) =>
-              (result as unknown as { json?: { matches?: SourceMatch[] } })
-                .json?.matches ?? [],
-          );
+          matches = results.flatMap((result, index) => {
+            if (result.status === "rejected") {
+              console.warn(
+                `[sync-results] scrape skipped for ${urls[index]} — ${String(result.reason)}`,
+              );
+              return [];
+            }
+            return (
+              (result.value as unknown as { json?: { matches?: SourceMatch[] } })
+                .json?.matches ?? []
+            );
+          });
         } catch (e) {
           console.error("Firecrawl scrape failed", e);
           return Response.json(
