@@ -26,12 +26,64 @@ type SourceMatch = {
   status_label?: string | null;
 };
 
+const TEAM_ALIASES: Record<string, string> = {
+  alg: "algeria",
+  arg: "argentina",
+  aus: "australia",
+  aut: "austria",
+  bel: "belgium",
+  bih: "bosniaandherzegovina",
+  bra: "brazil",
+  can: "canada",
+  civ: "ivorycoast",
+  col: "colombia",
+  cro: "croatia",
+  cuw: "curacao",
+  cze: "czechia",
+  cod: "drcongo",
+  ecu: "ecuador",
+  egy: "egypt",
+  eng: "england",
+  fra: "france",
+  ger: "germany",
+  gha: "ghana",
+  hai: "haiti",
+  irn: "iran",
+  irq: "iraq",
+  jpn: "japan",
+  jor: "jordan",
+  mar: "morocco",
+  mex: "mexico",
+  ned: "netherlands",
+  nor: "norway",
+  nzl: "newzealand",
+  pan: "panama",
+  par: "paraguay",
+  por: "portugal",
+  qat: "qatar",
+  ksa: "saudiarabia",
+  sco: "scotland",
+  sen: "senegal",
+  rsa: "southafrica",
+  kor: "southkorea",
+  esp: "spain",
+  swe: "sweden",
+  sui: "switzerland",
+  tun: "tunisia",
+  tur: "turkiye",
+  uru: "uruguay",
+  usa: "usa",
+  unitedstates: "usa",
+  uzb: "uzbekistan",
+};
+
 function norm(s: string | null | undefined): string {
-  return (s ?? "")
+  const key = (s ?? "")
     .normalize("NFD")
     .replace(/[\u0300-\u036f]/g, "")
     .toLowerCase()
     .replace(/[^a-z]/g, "");
+  return TEAM_ALIASES[key] ?? key;
 }
 
 export const Route = createFileRoute("/api/public/sync-results")({
