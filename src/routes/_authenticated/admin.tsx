@@ -38,7 +38,7 @@ type Profile = { id: string; display_name: string; created_at?: string; show_on_
 
 function AdminPage() {
   const { user, ready } = useAuth();
-  const [tab, setTab] = useState<"predictions" | "users" | "fixtures">("predictions");
+  const [tab, setTab] = useState<"users" | "fixtures" | "predictions">("users");
   const qc = useQueryClient();
   const updateScoreFn = useServerFn(updateFixtureScore);
   const setVisibilityFn = useServerFn(setUserLeaderboardVisibility);
