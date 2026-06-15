@@ -120,6 +120,10 @@ function MyPredictionsPage() {
       })
       .filter(Boolean) as Array<{ f: FixtureRow; p: PredRow; pts: number | null }>;
   }
+  
+  function sortRows(rows: Array<{ f: FixtureRow; p: PredRow; pts: number | null }>) {
+    return [...rows].sort((a, b) => new Date(b.f.kickoff_at).getTime() - new Date(a.f.kickoff_at).getTime());
+  }
 
   return (
     <main className="max-w-3xl mx-auto px-4 py-4 sm:py-6">
