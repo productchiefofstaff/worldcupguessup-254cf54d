@@ -159,11 +159,11 @@ function MyPredictionsPage() {
         </TabsList>
 
         <TabsContent value="you">
-          <PredictionsTable rows={rowsFor(user.id)} isOther={false} loading={allPredsQ.isLoading} />
+          <PredictionsTable rows={sortRows(rowsFor(user.id))} isOther={false} loading={allPredsQ.isLoading} />
         </TabsContent>
         {others.map((p) => (
           <TabsContent key={p.user_id} value={p.user_id}>
-            <PredictionsTable rows={rowsFor(p.user_id)} isOther={true} loading={allPredsQ.isLoading} />
+            <PredictionsTable rows={sortRows(rowsFor(p.user_id))} isOther={true} loading={allPredsQ.isLoading} />
           </TabsContent>
         ))}
       </Tabs>
