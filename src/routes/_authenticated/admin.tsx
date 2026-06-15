@@ -38,7 +38,7 @@ type Profile = { id: string; display_name: string; created_at?: string; show_on_
 
 function AdminPage() {
   const { user, ready } = useAuth();
-  const [tab, setTab] = useState<"predictions" | "users" | "fixtures">("predictions");
+  const [tab, setTab] = useState<"users" | "fixtures" | "predictions">("users");
   const qc = useQueryClient();
   const updateScoreFn = useServerFn(updateFixtureScore);
   const setVisibilityFn = useServerFn(setUserLeaderboardVisibility);
@@ -224,17 +224,6 @@ function AdminPage() {
 
       <div className="mb-4 flex gap-1 border-b border-border">
         <button
-          onClick={() => setTab("predictions")}
-          className={
-            "px-3 py-2 text-sm font-bold border-b-2 -mb-px " +
-            (tab === "predictions"
-              ? "border-primary text-ink"
-              : "border-transparent text-muted-foreground hover:text-ink")
-          }
-        >
-          Predictions
-        </button>
-        <button
           onClick={() => setTab("users")}
           className={
             "px-3 py-2 text-sm font-bold border-b-2 -mb-px " +
@@ -255,6 +244,17 @@ function AdminPage() {
           }
         >
           Fixtures
+        </button>
+        <button
+          onClick={() => setTab("predictions")}
+          className={
+            "px-3 py-2 text-sm font-bold border-b-2 -mb-px " +
+            (tab === "predictions"
+              ? "border-primary text-ink"
+              : "border-transparent text-muted-foreground hover:text-ink")
+          }
+        >
+          Predictions
         </button>
       </div>
 
