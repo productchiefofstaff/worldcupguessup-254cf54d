@@ -140,7 +140,7 @@ export const upsertPredictionForUser = createServerFn({ method: "POST" })
     );
     const { data: existing, error: selErr } = await supabaseAdmin
       .from("predictions")
-      .select("id")
+      .select("id, home_score, away_score")
       .eq("user_id", data.userId)
       .eq("fixture_id", data.fixtureId)
       .maybeSingle();
