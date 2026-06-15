@@ -141,8 +141,7 @@ function LeaderboardPage() {
                       </span>
                     )}
                   </td>
-                  <td className="px-3 py-3 text-right font-extrabold text-ink tabular-nums">{row.points}</td>
-                  <td className="px-2 py-0 h-full"><div className="w-px h-full bg-border mx-auto" /></td>
+                  <td className="px-3 py-3 text-right font-extrabold text-ink tabular-nums border-r border-border">{row.points}</td>
                   <td className="px-3 py-3 text-right text-muted-foreground tabular-nums">{row.settled_predictions}</td>
                   <td className="px-3 py-3 text-right text-muted-foreground tabular-nums">{row.correct_scores}</td>
                   <td className="px-3 py-3 text-right text-muted-foreground tabular-nums">{row.correct_results}</td>
