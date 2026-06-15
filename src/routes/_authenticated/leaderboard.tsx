@@ -143,11 +143,11 @@ function LeaderboardPage() {
                     )}
                   </td>
                   <td className="px-3 py-3 text-right font-extrabold text-ink tabular-nums">{row.points}</td>
-                  <td className="px-2 py-3"><div className="w-px h-4 bg-border mx-auto" /></td>
+                  <td className="px-0 py-3"><div className="w-px h-full bg-border mx-auto" /></td>
                   <td className="px-3 py-3 text-right text-muted-foreground tabular-nums">{row.settled_predictions}</td>
                   <td className="px-3 py-3 text-right text-muted-foreground tabular-nums">{row.correct_scores}</td>
                   <td className="px-3 py-3 text-right text-muted-foreground tabular-nums">{row.correct_results}</td>
-                  <td className="px-3 py-3 text-right font-extrabold text-ink tabular-nums">
+                  <td className="px-3 py-3 text-right text-muted-foreground tabular-nums">
                     {row.settled_predictions > 0
                       ? Math.round(((row.correct_results ?? 0) + (row.correct_scores ?? 0)) / row.settled_predictions * 100) + '%'
                       : '0%'}
