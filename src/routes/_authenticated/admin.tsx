@@ -43,7 +43,7 @@ type Profile = { id: string; display_name: string; created_at?: string; show_on_
 
 function AdminPage() {
   const { user, ready } = useAuth();
-  const [tab, setTab] = useState<"users" | "fixtures" | "predictions">("users");
+  const [tab, setTab] = useState<"users" | "fixtures" | "predictions" | "history">("users");
   const qc = useQueryClient();
   const updateScoreFn = useServerFn(updateFixtureScore);
   const setVisibilityFn = useServerFn(setUserLeaderboardVisibility);
@@ -158,6 +158,33 @@ function AdminPage() {
         .select("id, display_name, created_at, show_on_leaderboard, last_visit_at")
         .order("created_at", { ascending: false });
       return (data ?? []) as Profile[];
+    },
+  });
+
+  const historyQ = useQuery({
+    queryKey: ["prediction-edits"],
+    enabled: isAdmin && tab === "history",
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("prediction_edits")
+        .select(
+          "id, user_id, fixture_id, editor_user_id, action, old_home, old_away, new_home, new_away, created_at",
+        )
+        .order("created_at", { ascending: false })
+        .limit(500);
+      if (error) throw error;
+      return (data ?? []) as Array<{
+        id: string;
+        user_id: string;
+        fixture_id: string;
+        editor_user_id: string;
+        action: "insert" | "update";
+        old_home: number | null;
+        old_away: number | null;
+        new_home: number;
+        new_away: number;
+        created_at: string;
+      }>;
     },
   });
 
@@ -284,6 +311,17 @@ function AdminPage() {
           }
         >
           Predictions
+        </button>
+        <button
+          onClick={() => setTab("history")}
+          className={
+            "px-3 py-2 text-sm font-bold border-b-2 -mb-px " +
+            (tab === "history"
+              ? "border-primary text-ink"
+              : "border-transparent text-muted-foreground hover:text-ink")
+          }
+        >
+          History
         </button>
       </div>
 
