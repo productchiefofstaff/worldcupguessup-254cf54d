@@ -133,6 +133,7 @@ export function FixtureCard({
         <span className="font-semibold">
           {fixture.group_name ? `Group ${fixture.group_name}` : fixture.stage}
         </span>
+        <span className="font-semibold">Match {fixture.match_number}/104</span>
         <span>{kickoffLabel(fixture.kickoff_at)}</span>
       </div>
 
