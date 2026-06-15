@@ -106,3 +106,64 @@ export const deleteUser = createServerFn({ method: "POST" })
     if (error) throw new Error(error.message);
     return { ok: true };
   });
+
+export const upsertPredictionForUser = createServerFn({ method: "POST" })
+  .inputValidator(
+    (input: {
+      userId: string;
+      fixtureId: string;
+      homeScore: number;
+      awayScore: number;
+    }) => {
+      if (!input || typeof input.userId !== "string" || typeof input.fixtureId !== "string") {
+        throw new Error("userId and fixtureId required");
+      }
+      const valid = (v: unknown) =>
+        typeof v === "number" && Number.isInteger(v) && v >= 0 && v <= 50;
+      if (!valid(input.homeScore) || !valid(input.awayScore)) {
+        throw new Error("scores must be non-negative integers");
+      }
+      return input;
+    },
+  )
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ data, context }) => {
+    const { data: isAdmin, error: roleErr } = await context.supabase.rpc(
+      "has_role",
+      { _user_id: context.userId, _role: "admin" },
+    );
+    if (roleErr) throw new Error(roleErr.message);
+    if (!isAdmin) throw new Error("Forbidden");
+
+    const { supabaseAdmin } = await import(
+      "@/integrations/supabase/client.server"
+    );
+    const { data: existing, error: selErr } = await supabaseAdmin
+      .from("predictions")
+      .select("id")
+      .eq("user_id", data.userId)
+      .eq("fixture_id", data.fixtureId)
+      .maybeSingle();
+    if (selErr) throw new Error(selErr.message);
+
+    if (existing) {
+      const { error } = await supabaseAdmin
+        .from("predictions")
+        .update({
+          home_score: data.homeScore,
+          away_score: data.awayScore,
+          updated_at: new Date().toISOString(),
+        })
+        .eq("id", existing.id);
+      if (error) throw new Error(error.message);
+    } else {
+      const { error } = await supabaseAdmin.from("predictions").insert({
+        user_id: data.userId,
+        fixture_id: data.fixtureId,
+        home_score: data.homeScore,
+        away_score: data.awayScore,
+      });
+      if (error) throw new Error(error.message);
+    }
+    return { ok: true };
+  });
