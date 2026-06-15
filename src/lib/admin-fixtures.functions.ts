@@ -154,16 +154,40 @@ export const upsertPredictionForUser = createServerFn({ method: "POST" })
           away_score: data.awayScore,
           updated_at: new Date().toISOString(),
         })
-        .eq("id", existing.id);
+        .eq("id", existing.id)
+        .select("id, home_score, away_score")
+        .single();
       if (error) throw new Error(error.message);
+      await supabaseAdmin.from("prediction_edits").insert({
+        prediction_id: existing.id,
+        user_id: data.userId,
+        fixture_id: data.fixtureId,
+        editor_user_id: context.userId,
+        action: "update",
+        old_home: (existing as { home_score?: number }).home_score ?? null,
+        old_away: (existing as { away_score?: number }).away_score ?? null,
+        new_home: data.homeScore,
+        new_away: data.awayScore,
+      });
     } else {
-      const { error } = await supabaseAdmin.from("predictions").insert({
+      const { data: inserted, error } = await supabaseAdmin.from("predictions").insert({
         user_id: data.userId,
         fixture_id: data.fixtureId,
         home_score: data.homeScore,
         away_score: data.awayScore,
-      });
+      }).select("id").single();
       if (error) throw new Error(error.message);
+      await supabaseAdmin.from("prediction_edits").insert({
+        prediction_id: inserted?.id ?? null,
+        user_id: data.userId,
+        fixture_id: data.fixtureId,
+        editor_user_id: context.userId,
+        action: "insert",
+        old_home: null,
+        old_away: null,
+        new_home: data.homeScore,
+        new_away: data.awayScore,
+      });
     }
     return { ok: true };
   });
