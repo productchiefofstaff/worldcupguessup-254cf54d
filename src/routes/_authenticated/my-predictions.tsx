@@ -222,7 +222,7 @@ function PredictionsTable({
                     (pts === 40
                       ? "bg-success text-primary-foreground"
                       : pts === 10
-                        ? "bg-warning text-ink"
+                        ? "bg-warning text-white"
                         : "bg-muted text-muted-foreground")
                   }
                 >
