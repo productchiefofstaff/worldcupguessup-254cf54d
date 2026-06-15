@@ -1,7 +1,12 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { updateFixtureScore, setUserLeaderboardVisibility, deleteUser } from "@/lib/admin-fixtures.functions";
+import {
+  updateFixtureScore,
+  setUserLeaderboardVisibility,
+  deleteUser,
+  upsertPredictionForUser,
+} from "@/lib/admin-fixtures.functions";
 import { db as supabase } from "@/lib/db";
 import { useAuth } from "@/hooks/use-auth";
 import { flagFor } from "@/lib/flags";
@@ -43,9 +48,17 @@ function AdminPage() {
   const updateScoreFn = useServerFn(updateFixtureScore);
   const setVisibilityFn = useServerFn(setUserLeaderboardVisibility);
   const deleteUserFn = useServerFn(deleteUser);
+  const upsertPredFn = useServerFn(upsertPredictionForUser);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editHome, setEditHome] = useState<string>("");
   const [editAway, setEditAway] = useState<string>("");
+  const [addUserId, setAddUserId] = useState<string>("");
+  const [addFixtureId, setAddFixtureId] = useState<string>("");
+  const [addHome, setAddHome] = useState<string>("");
+  const [addAway, setAddAway] = useState<string>("");
+  const [editPredKey, setEditPredKey] = useState<string | null>(null);
+  const [editPredHome, setEditPredHome] = useState<string>("");
+  const [editPredAway, setEditPredAway] = useState<string>("");
 
   const updateMut = useMutation({
     mutationFn: (vars: { fixtureId: string; homeScore: number | null; awayScore: number | null }) =>
@@ -74,6 +87,22 @@ function AdminPage() {
       qc.invalidateQueries({ queryKey: ["profiles-admin"] });
       qc.invalidateQueries({ queryKey: ["all-predictions"] });
       qc.invalidateQueries({ queryKey: ["leaderboard"] });
+    },
+  });
+
+  const upsertPredMut = useMutation({
+    mutationFn: (vars: {
+      userId: string;
+      fixtureId: string;
+      homeScore: number;
+      awayScore: number;
+    }) => upsertPredFn({ data: vars }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["all-predictions"] });
+      qc.invalidateQueries({ queryKey: ["leaderboard"] });
+      setEditPredKey(null);
+      setAddHome("");
+      setAddAway("");
     },
   });
 
