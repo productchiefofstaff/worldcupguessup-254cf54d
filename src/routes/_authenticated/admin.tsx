@@ -788,6 +788,89 @@ function AdminPage() {
           )}
         </div>
       )}
+
+      {tab === "history" && (
+        <div className="bg-card border border-border rounded-md overflow-x-auto">
+          <p className="px-3 py-2 text-[11px] text-muted-foreground border-b border-border">
+            Every prediction added or edited from the admin panel. Most recent first.
+          </p>
+          {historyQ.isLoading && (
+            <p className="px-3 py-3 text-sm text-muted-foreground">Loading…</p>
+          )}
+          <table className="w-full text-sm">
+            <thead className="bg-surface text-[10px] uppercase tracking-wider text-muted-foreground">
+              <tr>
+                <th className="text-left px-3 py-2 whitespace-nowrap">When</th>
+                <th className="text-left px-3 py-2">Editor</th>
+                <th className="text-left px-3 py-2">Player</th>
+                <th className="text-left px-3 py-2">Match</th>
+                <th className="text-left px-3 py-2">Action</th>
+                <th className="text-right px-3 py-2 whitespace-nowrap">Was</th>
+                <th className="text-right px-3 py-2 whitespace-nowrap">Now</th>
+              </tr>
+            </thead>
+            <tbody>
+              {(historyQ.data ?? []).map((h) => {
+                const f = fixtureMap.get(h.fixture_id);
+                const playerName =
+                  profileMap.get(h.user_id)?.display_name ?? h.user_id.slice(0, 8);
+                const editorName =
+                  profileMap.get(h.editor_user_id)?.display_name ??
+                  h.editor_user_id.slice(0, 8);
+                return (
+                  <tr key={h.id} className="border-t border-border">
+                    <td className="px-3 py-2 text-[11px] text-muted-foreground whitespace-nowrap">
+                      {new Date(h.created_at).toLocaleString(undefined, {
+                        day: "numeric",
+                        month: "short",
+                        hour: "2-digit",
+                        minute: "2-digit",
+                      })}
+                    </td>
+                    <td className="px-3 py-2 whitespace-nowrap">{editorName}</td>
+                    <td className="px-3 py-2 font-bold text-ink whitespace-nowrap">
+                      {playerName}
+                    </td>
+                    <td className="px-3 py-2">
+                      {f ? (
+                        <span className="flex items-center gap-1">
+                          <span>{flagFor(f.team_home)}</span>
+                          <span className="text-muted-foreground">v</span>
+                          <span>{flagFor(f.team_away)}</span>
+                        </span>
+                      ) : (
+                        "—"
+                      )}
+                    </td>
+                    <td className="px-3 py-2 text-[11px] uppercase tracking-wider font-bold">
+                      {h.action === "insert" ? (
+                        <span className="text-primary">Added</span>
+                      ) : (
+                        <span className="text-ink">Edited</span>
+                      )}
+                    </td>
+                    <td className="px-3 py-2 text-right text-muted-foreground whitespace-nowrap">
+                      {h.old_home === null || h.old_away === null
+                        ? "—"
+                        : `${h.old_home} – ${h.old_away}`}
+                    </td>
+                    <td className="px-3 py-2 text-right font-bold whitespace-nowrap">
+                      {h.new_home} – {h.new_away}
+                    </td>
+                  </tr>
+                );
+              })}
+              {!historyQ.isLoading && (historyQ.data ?? []).length === 0 && (
+                <tr>
+                  <td colSpan={7} className="p-6 text-center text-sm text-muted-foreground">
+                    No prediction edits yet.
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        </div>
+      )}
     </main>
   );
 }
