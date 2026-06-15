@@ -111,9 +111,9 @@ function LeaderboardPage() {
             </tr>
           </thead>
           <tbody>
-            {(data ?? []).map((row, i) => {
+            {ranked.map((row) => {
               const isMe = user?.id === row.user_id;
-              const rank = i + 1;
+              const rank = row.rank;
               return (
                 <tr
                   key={row.user_id}
@@ -121,7 +121,7 @@ function LeaderboardPage() {
                 >
                   <td className="px-3 py-3 font-extrabold text-ink">
                     <span className="inline-flex items-center gap-1">
-                      {rank}
+                      {rank}{row.tied && "="}
                       {rank <= 3 && (
                         <Medal
                           className={
