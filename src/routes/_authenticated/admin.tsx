@@ -1,11 +1,11 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { updateFixtureScore, setUserLeaderboardVisibility } from "@/lib/admin-fixtures.functions";
+import { updateFixtureScore, setUserLeaderboardVisibility, deleteUser } from "@/lib/admin-fixtures.functions";
 import { db as supabase } from "@/lib/db";
 import { useAuth } from "@/hooks/use-auth";
 import { flagFor } from "@/lib/flags";
-import { Shield, Download, Pencil } from "lucide-react";
+import { Shield, Download, Pencil, Trash2 } from "lucide-react";
 import { useState } from "react";
 
 export const Route = createFileRoute("/_authenticated/admin")({
@@ -42,6 +42,7 @@ function AdminPage() {
   const qc = useQueryClient();
   const updateScoreFn = useServerFn(updateFixtureScore);
   const setVisibilityFn = useServerFn(setUserLeaderboardVisibility);
+  const deleteUserFn = useServerFn(deleteUser);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editHome, setEditHome] = useState<string>("");
   const [editAway, setEditAway] = useState<string>("");
@@ -62,6 +63,16 @@ function AdminPage() {
       setVisibilityFn({ data: vars }),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["users-admin"] });
+      qc.invalidateQueries({ queryKey: ["leaderboard"] });
+    },
+  });
+
+  const deleteMut = useMutation({
+    mutationFn: (vars: { userId: string }) => deleteUserFn({ data: vars }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["users-admin"] });
+      qc.invalidateQueries({ queryKey: ["profiles-admin"] });
+      qc.invalidateQueries({ queryKey: ["all-predictions"] });
       qc.invalidateQueries({ queryKey: ["leaderboard"] });
     },
   });
@@ -318,6 +329,7 @@ function AdminPage() {
                 <th className="text-center px-3 py-2">Leaderboard</th>
                 <th className="text-right px-3 py-2 whitespace-nowrap">Last visit</th>
                 <th className="text-right px-3 py-2 whitespace-nowrap">Signed up</th>
+                <th className="text-right px-3 py-2">Delete</th>
               </tr>
             </thead>
             <tbody>
@@ -375,17 +387,44 @@ function AdminPage() {
                         })
                       : "—"}
                   </td>
+                  <td className="px-3 py-2 text-right">
+                    {p.id === user.id ? (
+                      <span className="text-[11px] text-muted-foreground">You</span>
+                    ) : (
+                      <button
+                        disabled={deleteMut.isPending && deleteMut.variables?.userId === p.id}
+                        onClick={() => {
+                          if (
+                            confirm(
+                              `Delete ${p.display_name}? This permanently removes the account and all their predictions.`,
+                            )
+                          ) {
+                            deleteMut.mutate({ userId: p.id });
+                          }
+                        }}
+                        className="inline-flex items-center gap-1 text-[11px] font-bold border border-border text-destructive px-2 py-1 rounded-sm hover:bg-destructive hover:text-primary-foreground disabled:opacity-50"
+                      >
+                        <Trash2 className="h-3 w-3" />
+                        Delete
+                      </button>
+                    )}
+                  </td>
                 </tr>
               ))}
               {!usersQ.isLoading && (usersQ.data ?? []).length === 0 && (
                 <tr>
-                  <td colSpan={4} className="p-6 text-center text-sm text-muted-foreground">
+                  <td colSpan={5} className="p-6 text-center text-sm text-muted-foreground">
                     No users yet.
                   </td>
                 </tr>
               )}
             </tbody>
           </table>
+          {deleteMut.isError && (
+            <p className="px-3 py-2 text-[11px] text-destructive border-t border-border">
+              {(deleteMut.error as Error).message}
+            </p>
+          )}
           {isAdmin && tab === "users" && (
             <p className="px-3 py-2 text-[11px] text-muted-foreground border-t border-border">
               {(usersQ.data ?? []).length} total
