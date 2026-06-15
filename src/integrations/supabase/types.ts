@@ -50,6 +50,48 @@ export type Database = {
         }
         Relationships: []
       }
+      prediction_edits: {
+        Row: {
+          action: string
+          created_at: string
+          editor_user_id: string
+          fixture_id: string
+          id: string
+          new_away: number
+          new_home: number
+          old_away: number | null
+          old_home: number | null
+          prediction_id: string | null
+          user_id: string
+        }
+        Insert: {
+          action: string
+          created_at?: string
+          editor_user_id: string
+          fixture_id: string
+          id?: string
+          new_away: number
+          new_home: number
+          old_away?: number | null
+          old_home?: number | null
+          prediction_id?: string | null
+          user_id: string
+        }
+        Update: {
+          action?: string
+          created_at?: string
+          editor_user_id?: string
+          fixture_id?: string
+          id?: string
+          new_away?: number
+          new_home?: number
+          old_away?: number | null
+          old_home?: number | null
+          prediction_id?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       predictions: {
         Row: {
           away_score: number
