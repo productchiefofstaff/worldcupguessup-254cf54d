@@ -107,21 +107,22 @@ function MyPredictionsPage() {
   const players = leaderboardQ.data ?? [];
   const others = players.filter((p) => p.user_id !== user.id);
 
-  function rowsFor(userId: string, isOther = false) {
+  function rowsFor(userId: string) {
     const now = new Date();
     return (allPredsQ.data ?? [])
       .filter((p) => p.user_id === userId)
       .map((p) => {
         const f = fixtureMap.get(p.fixture_id);
         if (!f) return null;
-        if (isOther) {
-          const kickoff = new Date(f.kickoff_at);
-          const hasResult = f.home_score !== null && f.away_score !== null;
-          if (!hasResult && kickoff > now) return null;
-        }
+        const kickoff = new Date(f.kickoff_at);
+        if (kickoff > now) return null;
         return { f, p, pts: pointsFor(p, f) };
       })
       .filter(Boolean) as Array<{ f: FixtureRow; p: PredRow; pts: number | null }>;
+  }
+  
+  function sortRows(rows: Array<{ f: FixtureRow; p: PredRow; pts: number | null }>) {
+    return [...rows].sort((a, b) => new Date(b.f.kickoff_at).getTime() - new Date(a.f.kickoff_at).getTime());
   }
 
   return (
@@ -158,11 +159,11 @@ function MyPredictionsPage() {
         </TabsList>
 
         <TabsContent value="you">
-          <PredictionsTable rows={rowsFor(user.id)} isOther={false} loading={allPredsQ.isLoading} />
+          <PredictionsTable rows={sortRows(rowsFor(user.id))} isOther={false} loading={allPredsQ.isLoading} />
         </TabsContent>
         {others.map((p) => (
           <TabsContent key={p.user_id} value={p.user_id}>
-            <PredictionsTable rows={rowsFor(p.user_id, true)} isOther={true} loading={allPredsQ.isLoading} />
+            <PredictionsTable rows={sortRows(rowsFor(p.user_id))} isOther={true} loading={allPredsQ.isLoading} />
           </TabsContent>
         ))}
       </Tabs>
