@@ -1,7 +1,12 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { updateFixtureScore, setUserLeaderboardVisibility, deleteUser } from "@/lib/admin-fixtures.functions";
+import {
+  updateFixtureScore,
+  setUserLeaderboardVisibility,
+  deleteUser,
+  upsertPredictionForUser,
+} from "@/lib/admin-fixtures.functions";
 import { db as supabase } from "@/lib/db";
 import { useAuth } from "@/hooks/use-auth";
 import { flagFor } from "@/lib/flags";
@@ -43,9 +48,17 @@ function AdminPage() {
   const updateScoreFn = useServerFn(updateFixtureScore);
   const setVisibilityFn = useServerFn(setUserLeaderboardVisibility);
   const deleteUserFn = useServerFn(deleteUser);
+  const upsertPredFn = useServerFn(upsertPredictionForUser);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editHome, setEditHome] = useState<string>("");
   const [editAway, setEditAway] = useState<string>("");
+  const [addUserId, setAddUserId] = useState<string>("");
+  const [addFixtureId, setAddFixtureId] = useState<string>("");
+  const [addHome, setAddHome] = useState<string>("");
+  const [addAway, setAddAway] = useState<string>("");
+  const [editPredKey, setEditPredKey] = useState<string | null>(null);
+  const [editPredHome, setEditPredHome] = useState<string>("");
+  const [editPredAway, setEditPredAway] = useState<string>("");
 
   const updateMut = useMutation({
     mutationFn: (vars: { fixtureId: string; homeScore: number | null; awayScore: number | null }) =>
@@ -74,6 +87,22 @@ function AdminPage() {
       qc.invalidateQueries({ queryKey: ["profiles-admin"] });
       qc.invalidateQueries({ queryKey: ["all-predictions"] });
       qc.invalidateQueries({ queryKey: ["leaderboard"] });
+    },
+  });
+
+  const upsertPredMut = useMutation({
+    mutationFn: (vars: {
+      userId: string;
+      fixtureId: string;
+      homeScore: number;
+      awayScore: number;
+    }) => upsertPredFn({ data: vars }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["all-predictions"] });
+      qc.invalidateQueries({ queryKey: ["leaderboard"] });
+      setEditPredKey(null);
+      setAddHome("");
+      setAddAway("");
     },
   });
 
@@ -262,6 +291,95 @@ function AdminPage() {
       <>
       {predsQ.isLoading && <p className="text-sm text-muted-foreground">Loading…</p>}
 
+      <div className="bg-card border border-border rounded-md p-3 mb-3">
+        <p className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground mb-2">
+          Add or overwrite a prediction
+        </p>
+        <div className="flex flex-wrap items-center gap-2">
+          <select
+            value={addUserId}
+            onChange={(e) => setAddUserId(e.target.value)}
+            className="text-sm border border-border rounded-sm px-2 py-1 bg-background"
+          >
+            <option value="">Player…</option>
+            {(profilesQ.data ?? [])
+              .slice()
+              .sort((a, b) => a.display_name.localeCompare(b.display_name))
+              .map((p) => (
+                <option key={p.id} value={p.id}>
+                  {p.display_name}
+                </option>
+              ))}
+          </select>
+          <select
+            value={addFixtureId}
+            onChange={(e) => setAddFixtureId(e.target.value)}
+            className="text-sm border border-border rounded-sm px-2 py-1 bg-background max-w-[16rem]"
+          >
+            <option value="">Fixture…</option>
+            {(fixturesQ.data ?? [])
+              .slice()
+              .sort(
+                (a, b) =>
+                  new Date(a.kickoff_at).getTime() -
+                  new Date(b.kickoff_at).getTime(),
+              )
+              .map((f) => (
+                <option key={f.id} value={f.id}>
+                  #{f.match_number} {f.team_home} v {f.team_away}
+                </option>
+              ))}
+          </select>
+          <input
+            type="number"
+            min={0}
+            placeholder="H"
+            value={addHome}
+            onChange={(e) => setAddHome(e.target.value)}
+            className="w-14 text-right text-sm border border-border rounded-sm px-1 py-1 bg-background"
+          />
+          <span className="text-sm">–</span>
+          <input
+            type="number"
+            min={0}
+            placeholder="A"
+            value={addAway}
+            onChange={(e) => setAddAway(e.target.value)}
+            className="w-14 text-right text-sm border border-border rounded-sm px-1 py-1 bg-background"
+          />
+          <button
+            disabled={upsertPredMut.isPending}
+            onClick={() => {
+              const h = parseInt(addHome, 10);
+              const a = parseInt(addAway, 10);
+              if (
+                !addUserId ||
+                !addFixtureId ||
+                !Number.isInteger(h) ||
+                !Number.isInteger(a) ||
+                h < 0 ||
+                a < 0
+              )
+                return;
+              upsertPredMut.mutate({
+                userId: addUserId,
+                fixtureId: addFixtureId,
+                homeScore: h,
+                awayScore: a,
+              });
+            }}
+            className="text-xs font-bold bg-primary text-primary-foreground px-3 py-1.5 rounded-sm hover:opacity-90 disabled:opacity-50"
+          >
+            Save
+          </button>
+        </div>
+        {upsertPredMut.isError && (
+          <p className="mt-2 text-[11px] text-destructive">
+            {(upsertPredMut.error as Error).message}
+          </p>
+        )}
+      </div>
+
       <div className="bg-card border border-border rounded-md overflow-x-auto">
         <table className="w-full text-sm">
           <thead className="bg-surface text-[10px] uppercase tracking-wider text-muted-foreground">
@@ -271,11 +389,14 @@ function AdminPage() {
               <th className="text-right px-3 py-2">Pick</th>
               <th className="text-right px-3 py-2">Result</th>
               <th className="text-right px-3 py-2 whitespace-nowrap">Updated</th>
+              <th className="text-right px-3 py-2">Edit</th>
             </tr>
           </thead>
           <tbody>
             {rows.map(({ r, f, name }) => {
               const hasResult = f && f.home_score !== null && f.away_score !== null;
+              const key = r.id;
+              const isEditing = editPredKey === key;
               return (
                 <tr key={r.id} className="border-t border-border">
                   <td className="px-3 py-2 font-bold text-ink whitespace-nowrap">{name}</td>
@@ -291,7 +412,29 @@ function AdminPage() {
                     )}
                   </td>
                   <td className="px-3 py-2 text-right font-bold whitespace-nowrap">
-                    {r.home_score} – {r.away_score}
+                    {isEditing ? (
+                      <span className="inline-flex items-center gap-1 justify-end">
+                        <input
+                          type="number"
+                          min={0}
+                          value={editPredHome}
+                          onChange={(e) => setEditPredHome(e.target.value)}
+                          className="w-12 text-right border border-border rounded-sm px-1 py-0.5 bg-background"
+                        />
+                        <span>–</span>
+                        <input
+                          type="number"
+                          min={0}
+                          value={editPredAway}
+                          onChange={(e) => setEditPredAway(e.target.value)}
+                          className="w-12 text-right border border-border rounded-sm px-1 py-0.5 bg-background"
+                        />
+                      </span>
+                    ) : (
+                      <>
+                        {r.home_score} – {r.away_score}
+                      </>
+                    )}
                   </td>
                   <td className="px-3 py-2 text-right text-muted-foreground">
                     {hasResult ? `${f!.home_score} – ${f!.away_score}` : "—"}
@@ -304,12 +447,60 @@ function AdminPage() {
                       minute: "2-digit",
                     })}
                   </td>
+                  <td className="px-3 py-2 text-right">
+                    {isEditing ? (
+                      <span className="inline-flex gap-1 justify-end">
+                        <button
+                          disabled={upsertPredMut.isPending}
+                          onClick={() => {
+                            const h = parseInt(editPredHome, 10);
+                            const a = parseInt(editPredAway, 10);
+                            if (
+                              !Number.isInteger(h) ||
+                              !Number.isInteger(a) ||
+                              h < 0 ||
+                              a < 0
+                            )
+                              return;
+                            upsertPredMut.mutate({
+                              userId: r.user_id,
+                              fixtureId: r.fixture_id,
+                              homeScore: h,
+                              awayScore: a,
+                            });
+                          }}
+                          className="text-[11px] font-bold bg-primary text-primary-foreground px-2 py-1 rounded-sm hover:opacity-90 disabled:opacity-50"
+                        >
+                          Save
+                        </button>
+                        <button
+                          disabled={upsertPredMut.isPending}
+                          onClick={() => setEditPredKey(null)}
+                          className="text-[11px] font-bold border border-border px-2 py-1 rounded-sm hover:bg-surface"
+                        >
+                          Cancel
+                        </button>
+                      </span>
+                    ) : (
+                      <button
+                        onClick={() => {
+                          setEditPredKey(key);
+                          setEditPredHome(String(r.home_score));
+                          setEditPredAway(String(r.away_score));
+                        }}
+                        className="inline-flex items-center gap-1 text-[11px] font-bold border border-border px-2 py-1 rounded-sm hover:bg-surface"
+                      >
+                        <Pencil className="h-3 w-3" />
+                        Edit
+                      </button>
+                    )}
+                  </td>
                 </tr>
               );
             })}
             {!predsQ.isLoading && rows.length === 0 && (
               <tr>
-                <td colSpan={5} className="p-6 text-center text-sm text-muted-foreground">
+                <td colSpan={6} className="p-6 text-center text-sm text-muted-foreground">
                   No predictions yet.
                 </td>
               </tr>
