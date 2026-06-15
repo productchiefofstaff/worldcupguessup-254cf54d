@@ -104,8 +104,7 @@ function LeaderboardPage() {
             <tr className="bg-surface text-[10px] font-bold uppercase tracking-wider text-muted-foreground border-b border-border">
               <th className="px-3 py-2 text-left w-10">#</th>
               <th className="px-3 py-2 text-left">Player</th>
-              <th className="px-3 py-2 text-right">Points</th>
-              <th className="px-2 py-0 w-[1px] h-full"><div className="w-px h-full bg-border mx-auto" /></th>
+              <th className="px-3 py-2 text-right border-r border-border">Points</th>
               <th className="px-3 py-2 text-right">Matches</th>
               <th className="px-3 py-2 text-right">Correct Scores</th>
               <th className="px-3 py-2 text-right">Correct Results</th>
@@ -142,8 +141,7 @@ function LeaderboardPage() {
                       </span>
                     )}
                   </td>
-                  <td className="px-3 py-3 text-right font-extrabold text-ink tabular-nums">{row.points}</td>
-                  <td className="px-2 py-0 h-full"><div className="w-px h-full bg-border mx-auto" /></td>
+                  <td className="px-3 py-3 text-right font-extrabold text-ink tabular-nums border-r border-border">{row.points}</td>
                   <td className="px-3 py-3 text-right text-muted-foreground tabular-nums">{row.settled_predictions}</td>
                   <td className="px-3 py-3 text-right text-muted-foreground tabular-nums">{row.correct_scores}</td>
                   <td className="px-3 py-3 text-right text-muted-foreground tabular-nums">{row.correct_results}</td>
