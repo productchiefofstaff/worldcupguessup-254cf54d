@@ -232,7 +232,7 @@ export function FixtureCard({
                       <span
                         className={
                           "px-1.5 py-0.5 rounded-sm text-primary-foreground " +
-                          (pts === 40 ? "bg-success" : pts === 10 ? "bg-warning text-ink" : "bg-muted text-ink")
+                          (pts === 40 ? "bg-success" : pts === 10 ? "bg-warning text-ink" : "bg-muted text-gray-700")
                         }
                       >
                         +{pts} pts
@@ -299,7 +299,7 @@ export function FixtureCard({
                             <span
                               className={
                                 "text-[10px] font-bold px-1.5 py-0.5 rounded-sm " +
-                                (rowPts === 40 ? "bg-success text-primary-foreground" : rowPts === 10 ? "bg-warning text-ink" : "bg-muted text-ink")
+                                (rowPts === 40 ? "bg-success text-primary-foreground" : rowPts === 10 ? "bg-warning text-ink" : "bg-muted text-gray-700")
                               }
                             >
                               +{rowPts}
