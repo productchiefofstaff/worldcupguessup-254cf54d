@@ -159,7 +159,7 @@ function MyPredictionsPage() {
         </TabsContent>
         {others.map((p) => (
           <TabsContent key={p.user_id} value={p.user_id}>
-            <PredictionsTable rows={rowsFor(p.user_id, true)} isOther={true} loading={allPredsQ.isLoading} />
+            <PredictionsTable rows={rowsFor(p.user_id)} isOther={true} loading={allPredsQ.isLoading} />
           </TabsContent>
         ))}
       </Tabs>
