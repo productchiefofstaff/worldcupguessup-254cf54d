@@ -231,8 +231,8 @@ export function FixtureCard({
                     {prediction && pts !== null && (
                       <span
                         className={
-                          "px-1.5 py-0.5 rounded-sm text-primary-foreground " +
-                          (pts === 40 ? "bg-success" : pts === 10 ? "bg-warning text-ink" : "bg-muted text-gray-700")
+                          "px-1.5 py-0.5 rounded-sm " +
+                          (pts === 40 ? "bg-success text-primary-foreground" : pts === 10 ? "bg-warning text-ink" : "bg-muted text-gray-700")
                         }
                       >
                         +{pts} pts
