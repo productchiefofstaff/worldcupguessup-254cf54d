@@ -105,6 +105,8 @@ function LeaderboardPage() {
               <th className="px-3 py-2 text-left w-10">#</th>
               <th className="px-3 py-2 text-left">Player</th>
               <th className="px-3 py-2 text-right">Points</th>
+              <th className="px-2 py-2 w-[1px]"><div className="w-px h-4 bg-border mx-auto" /></th>
+              <th className="px-3 py-2 text-right">Matches</th>
               <th className="px-3 py-2 text-right">Correct Scores</th>
               <th className="px-3 py-2 text-right">Correct Results</th>
               <th className="px-3 py-2 text-right">Correct %</th>
@@ -141,6 +143,8 @@ function LeaderboardPage() {
                     )}
                   </td>
                   <td className="px-3 py-3 text-right font-extrabold text-ink tabular-nums">{row.points}</td>
+                  <td className="px-2 py-3"><div className="w-px h-4 bg-border mx-auto" /></td>
+                  <td className="px-3 py-3 text-right text-muted-foreground tabular-nums">{row.settled_predictions}</td>
                   <td className="px-3 py-3 text-right text-muted-foreground tabular-nums">{row.correct_scores}</td>
                   <td className="px-3 py-3 text-right text-muted-foreground tabular-nums">{row.correct_results}</td>
                   <td className="px-3 py-3 text-right font-extrabold text-ink tabular-nums">
