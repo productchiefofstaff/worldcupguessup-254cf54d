@@ -34,6 +34,8 @@ function LeaderboardPage() {
         .from("leaderboard")
         .select("*")
         .order("points", { ascending: false })
+        .order("correct_scores", { ascending: false })
+        .order("correct_results", { ascending: false })
         .order("settled_predictions", { ascending: false })
         .order("name");
       if (error) throw error;
@@ -41,6 +43,33 @@ function LeaderboardPage() {
     },
     refetchInterval: 30_000,
   });
+
+  const ranked = React.useMemo(() => {
+    if (!data) return [];
+    const out: (Row & { rank: number; tied: boolean })[] = [];
+    let currentRank = 0;
+    for (let i = 0; i < data.length; i++) {
+      const prev = data[i - 1];
+      const row = data[i];
+      if (
+        i > 0 &&
+        row.points === prev.points &&
+        row.correct_scores === prev.correct_scores
+      ) {
+        // tied with previous
+        out.push({ ...row, rank: currentRank, tied: true });
+      } else {
+        currentRank = i + 1;
+        const next = data[i + 1];
+        const tiedWithNext =
+          next !== undefined &&
+          row.points === next.points &&
+          row.correct_scores === next.correct_scores;
+        out.push({ ...row, rank: currentRank, tied: tiedWithNext });
+      }
+    }
+    return out;
+  }, [data]);
 
   return (
     <main className="max-w-3xl mx-auto px-4 py-4 sm:py-6">
