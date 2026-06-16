@@ -82,6 +82,9 @@ function FixturesPage() {
       if (error) throw error;
       return data as Fixture[];
     },
+    staleTime: 5 * 60 * 1000,
+    gcTime: 60 * 60 * 1000,
+    refetchOnWindowFocus: false,
   });
 
   const predsQ = useQuery({
@@ -95,6 +98,8 @@ function FixturesPage() {
       if (error) throw error;
       return data as Prediction[];
     },
+    staleTime: 30 * 1000,
+    refetchOnWindowFocus: false,
   });
 
   const teamNames = useMemo(() => {
@@ -108,11 +113,13 @@ function FixturesPage() {
 
   const fetchFormBatch = useServerFn(getTeamFormBatch);
   const formsQ = useQuery({
-    queryKey: ["team-form-batch", teamNames],
+    queryKey: ["team-form-batch"],
     enabled: teamNames.length > 0,
     queryFn: () => fetchFormBatch({ data: { teamNames } }),
-    staleTime: 60 * 60 * 1000,
+    staleTime: 24 * 60 * 60 * 1000,
     gcTime: 24 * 60 * 60 * 1000,
+    refetchOnWindowFocus: false,
+    refetchOnMount: false,
   });
   const formsByTeam: Record<string, FormMatch[]> = formsQ.data ?? {};
 
