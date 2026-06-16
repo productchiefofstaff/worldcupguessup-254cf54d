@@ -137,7 +137,8 @@ function FixturesPage() {
         <p className="text-xs text-muted-foreground mt-1">Enter your predictions below</p>
         <Collapsible className="mt-2">
           <CollapsibleTrigger className="flex items-center gap-1 text-xs font-semibold text-muted-foreground hover:text-ink">
-            Game rules
+            <Info className="h-3 w-3 text-muted-foreground" />
+            Game Rules
             <ChevronDown className="h-3 w-3" />
           </CollapsibleTrigger>
           <CollapsibleContent className="text-xs text-muted-foreground mt-1 space-y-1">
