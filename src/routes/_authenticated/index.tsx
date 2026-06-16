@@ -3,6 +3,8 @@ import { useQuery } from "@tanstack/react-query";
 import { db as supabase } from "@/lib/db";
 import { useAuth } from "@/hooks/use-auth";
 import { FixtureCard, type Fixture, type Prediction } from "@/components/FixtureCard";
+import { getAllTeamForms, type FormMatch } from "@/lib/team-form.functions";
+import { useServerFn } from "@tanstack/react-start";
 import { useMemo, useState } from "react";
 import {
   Dialog,
@@ -17,6 +19,7 @@ import { Lightbulb, CalendarDays, ChevronDown, Info } from "lucide-react";
 
 const WHATS_NEW_KEY = "wcg-whats-new-dismissed-v1";
 const FIXTURES_CACHE_KEY = "wcg-fixtures-cache-v1";
+const TEAM_FORMS_CACHE_KEY = "wcg-team-forms-cache-v1";
 
 // Returns a stable key that changes once per day at 09:00 Europe/London.
 function fixturesCacheKey(): string {
@@ -59,6 +62,29 @@ function writeFixturesCache(data: Fixture[]) {
   try {
     localStorage.setItem(
       FIXTURES_CACHE_KEY,
+      JSON.stringify({ key: fixturesCacheKey(), data }),
+    );
+  } catch {
+    // ignore
+  }
+}
+
+function readTeamFormsCache(): Record<string, FormMatch[]> | null {
+  try {
+    const raw = localStorage.getItem(TEAM_FORMS_CACHE_KEY);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw) as { key: string; data: Record<string, FormMatch[]> };
+    if (parsed.key !== fixturesCacheKey()) return null;
+    return parsed.data;
+  } catch {
+    return null;
+  }
+}
+
+function writeTeamFormsCache(data: Record<string, FormMatch[]>) {
+  try {
+    localStorage.setItem(
+      TEAM_FORMS_CACHE_KEY,
       JSON.stringify({ key: fixturesCacheKey(), data }),
     );
   } catch {
@@ -111,6 +137,7 @@ function FixturesPage() {
   const { user } = useAuth();
   const [tab, setTab] = useState<(typeof TABS)[number]>("Upcoming");
   const [whatsNewOpen, setWhatsNewOpen] = useState(!hasDismissedWhatsNew());
+  const fetchAllForms = useServerFn(getAllTeamForms);
 
   const dismissWhatsNew = () => {
     markWhatsNewDismissed();
@@ -145,6 +172,19 @@ function FixturesPage() {
         .eq("user_id", user!.id);
       if (error) throw error;
       return data as Prediction[];
+    },
+  });
+
+  const formsQ = useQuery({
+    queryKey: ["team-forms", fixturesCacheKey()],
+    staleTime: Infinity,
+    gcTime: Infinity,
+    queryFn: async () => {
+      const cached = readTeamFormsCache();
+      if (cached) return cached;
+      const data = await fetchAllForms();
+      writeTeamFormsCache(data);
+      return data;
     },
   });
 
@@ -235,6 +275,8 @@ function FixturesPage() {
                   fixture={f}
                   prediction={predByFixture.get(f.id) ?? null}
                   userId={user.id}
+                  homeForm={formsQ.data?.[f.team_home] ?? []}
+                  awayForm={formsQ.data?.[f.team_away] ?? []}
                 />
               ))}
             </div>
