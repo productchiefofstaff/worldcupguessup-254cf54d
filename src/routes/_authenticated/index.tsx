@@ -69,14 +69,19 @@ function FixturesPage() {
   };
 
   const fixturesQ = useQuery({
-    queryKey: ["fixtures"],
+    queryKey: ["fixtures", fixturesCacheKey()],
+    staleTime: Infinity,
+    gcTime: Infinity,
     queryFn: async () => {
+      const cached = readFixturesCache();
+      if (cached) return cached;
       const { data, error } = await supabase
         .from("fixtures")
         .select("*")
         .order("kickoff_at", { ascending: true })
         .order("match_number", { ascending: true });
       if (error) throw error;
+      writeFixturesCache(data as Fixture[]);
       return data as Fixture[];
     },
   });
