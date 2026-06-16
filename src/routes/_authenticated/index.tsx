@@ -143,7 +143,6 @@ function FixturesPage() {
                   fixture={f}
                   prediction={predByFixture.get(f.id) ?? null}
                   userId={user.id}
-                  allFixtures={fixturesQ.data ?? []}
                 />
               ))}
             </div>
