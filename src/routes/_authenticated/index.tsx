@@ -11,7 +11,7 @@ import {
   DialogTitle,
   DialogDescription,
 } from "@/components/ui/dialog";
-import { Sparkles } from "lucide-react";
+import { Lightbulb } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/")({
   head: () => ({
