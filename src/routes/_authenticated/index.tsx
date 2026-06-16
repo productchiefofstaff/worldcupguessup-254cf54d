@@ -11,7 +11,7 @@ import {
   DialogTitle,
   DialogDescription,
 } from "@/components/ui/dialog";
-import { Lightbulb } from "lucide-react";
+import { Lightbulb, CalendarDays } from "lucide-react";
 
 const WHATS_NEW_KEY = "wcg-whats-new-dismissed-v1";
 
@@ -129,7 +129,10 @@ function FixturesPage() {
   return (
     <main className="max-w-3xl mx-auto px-4 py-4 sm:py-6">
       <div className="mb-4">
-        <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-ink">Fixtures</h1>
+        <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-ink flex items-center gap-2">
+          <CalendarDays className="h-6 w-6 text-primary" />
+          Fixtures
+        </h1>
         <p className="text-sm text-muted-foreground mt-1">
           <span className="font-bold text-success">40 pts</span> exact score ·{" "}
           <span className="font-bold text-warning">10 pts</span> correct result · predictions lock at kickoff
