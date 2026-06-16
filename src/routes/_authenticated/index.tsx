@@ -41,17 +41,9 @@ const TABS = ["Upcoming", "Completed"] as const;
 function FixturesPage() {
   const { user } = useAuth();
   const [tab, setTab] = useState<(typeof TABS)[number]>("Upcoming");
-  const [whatsNewOpen, setWhatsNewOpen] = useState(false);
-
-  useEffect(() => {
-    const seen = localStorage.getItem("wc2026-whats-new-seen-v1");
-    if (!seen) {
-      setWhatsNewOpen(true);
-    }
-  }, []);
+  const [whatsNewOpen, setWhatsNewOpen] = useState(true);
 
   const dismissWhatsNew = () => {
-    localStorage.setItem("wc2026-whats-new-seen-v1", "1");
     setWhatsNewOpen(false);
   };
 
