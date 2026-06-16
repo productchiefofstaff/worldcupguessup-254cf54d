@@ -189,3 +189,73 @@ export const getTeamForm = createServerFn({ method: "POST" })
       return { team: teamName, matches: (cached?.matches as FormMatch[] | undefined) ?? [] };
     }
   });
+
+export const getTeamFormBatch = createServerFn({ method: "POST" })
+  .inputValidator((input: { teamNames: string[] }) =>
+    z.object({ teamNames: z.array(z.string().min(1)) }).parse(input),
+  )
+  .handler(async ({ data }): Promise<Record<string, FormMatch[]>> => {
+    const names = Array.from(new Set(data.teamNames));
+    if (names.length === 0) return {};
+    const { createClient } = await import("@supabase/supabase-js");
+    const supabaseUrl = process.env.SUPABASE_URL!;
+    const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
+    const admin = createClient(supabaseUrl, serviceKey, {
+      auth: { storage: undefined, persistSession: false, autoRefreshToken: false },
+    });
+
+    const { data: cachedRows } = await admin
+      .from("team_form_cache")
+      .select("team_name, matches, fetched_at")
+      .in("team_name", names);
+
+    const cacheMap = new Map<string, { matches: FormMatch[]; fetched_at: string }>();
+    (cachedRows ?? []).forEach((r) => {
+      cacheMap.set(r.team_name as string, {
+        matches: (r.matches as FormMatch[]) ?? [],
+        fetched_at: r.fetched_at as string,
+      });
+    });
+
+    const out: Record<string, FormMatch[]> = {};
+    const stale: string[] = [];
+    const now = Date.now();
+    for (const name of names) {
+      const c = cacheMap.get(name);
+      if (c && now - new Date(c.fetched_at).getTime() < CACHE_TTL_MS) {
+        out[name] = c.matches;
+      } else {
+        stale.push(name);
+        // seed with stale data while we refresh
+        if (c) out[name] = c.matches;
+        else out[name] = [];
+      }
+    }
+
+    // Refresh stale entries in parallel (bounded) — but do not block the response.
+    // For simplicity, await them too so callers get fresh data within the call.
+    await Promise.all(
+      stale.map(async (name) => {
+        const espn = ESPN_TEAMS[name];
+        if (!espn) {
+          out[name] = [];
+          return;
+        }
+        try {
+          const markdown = await scrapeEspnResults(espn.id, espn.slug);
+          const matches = parseEspnResultsMarkdown(markdown, espn.id);
+          out[name] = matches;
+          await admin.from("team_form_cache").upsert({
+            team_name: name,
+            external_team_id: espn.id,
+            matches,
+            fetched_at: new Date().toISOString(),
+          });
+        } catch (err) {
+          console.error("getTeamFormBatch error", name, err);
+        }
+      }),
+    );
+
+    return out;
+  });

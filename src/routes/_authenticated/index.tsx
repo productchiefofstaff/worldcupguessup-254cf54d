@@ -4,6 +4,8 @@ import { db as supabase } from "@/lib/db";
 import { useAuth } from "@/hooks/use-auth";
 import { FixtureCard, type Fixture, type Prediction } from "@/components/FixtureCard";
 import { useMemo, useState } from "react";
+import { useServerFn } from "@tanstack/react-start";
+import { getTeamFormBatch, type FormMatch } from "@/lib/team-form.functions";
 import {
   Dialog,
   DialogContent,
@@ -92,6 +94,25 @@ function FixturesPage() {
       return data as Prediction[];
     },
   });
+
+  const teamNames = useMemo(() => {
+    const set = new Set<string>();
+    (fixturesQ.data ?? []).forEach((f) => {
+      set.add(f.team_home);
+      set.add(f.team_away);
+    });
+    return Array.from(set).sort();
+  }, [fixturesQ.data]);
+
+  const fetchFormBatch = useServerFn(getTeamFormBatch);
+  const formsQ = useQuery({
+    queryKey: ["team-form-batch", teamNames],
+    enabled: teamNames.length > 0,
+    queryFn: () => fetchFormBatch({ data: { teamNames } }),
+    staleTime: 60 * 60 * 1000,
+    gcTime: 24 * 60 * 60 * 1000,
+  });
+  const formsByTeam: Record<string, FormMatch[]> = formsQ.data ?? {};
 
   const predByFixture = useMemo(() => {
     const map = new Map<string, Prediction>();
@@ -187,6 +208,8 @@ function FixturesPage() {
                   fixture={f}
                   prediction={predByFixture.get(f.id) ?? null}
                   userId={user.id}
+                  homeForm={formsByTeam[f.team_home] ?? []}
+                  awayForm={formsByTeam[f.team_away] ?? []}
                 />
               ))}
             </div>
