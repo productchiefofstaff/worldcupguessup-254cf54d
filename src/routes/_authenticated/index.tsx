@@ -12,6 +12,7 @@ import {
   DialogDescription,
 } from "@/components/ui/dialog";
 import { Collapsible, CollapsibleTrigger, CollapsibleContent } from "@/components/ui/collapsible";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Lightbulb, CalendarDays, ChevronDown, Info } from "lucide-react";
 
 const WHATS_NEW_KEY = "wcg-whats-new-dismissed-v1";
@@ -151,22 +152,15 @@ function FixturesPage() {
         </Collapsible>
       </div>
 
-      <div className="flex items-center gap-2 mb-4 overflow-x-auto pb-1 -mx-1 px-1">
-        {TABS.map((s) => (
-          <button
-            key={s}
-            onClick={() => setTab(s)}
-            className={
-              "shrink-0 text-xs font-semibold px-3 py-1.5 rounded-full border transition-colors " +
-              (tab === s
-                ? "bg-ink text-primary-foreground border-ink"
-                : "bg-card text-ink border-border hover:bg-surface")
-            }
-          >
-            {s}
-          </button>
-        ))}
-      </div>
+      <Tabs value={tab} onValueChange={(v) => setTab(v as (typeof TABS)[number])}>
+        <TabsList className="w-full justify-start overflow-x-auto flex-nowrap mb-4">
+          {TABS.map((s) => (
+            <TabsTrigger key={s} value={s} className="flex-1">
+              {s}
+            </TabsTrigger>
+          ))}
+        </TabsList>
+      </Tabs>
 
       {(fixturesQ.isLoading || (!!user && predsQ.isLoading)) && (
         <p className="text-sm text-muted-foreground">Loading fixtures…</p>
