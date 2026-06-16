@@ -3,7 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { db as supabase } from "@/lib/db";
 import { useAuth } from "@/hooks/use-auth";
 import { FixtureCard, type Fixture, type Prediction } from "@/components/FixtureCard";
-import { useMemo, useState, useEffect } from "react";
+import { useMemo, useState } from "react";
 import {
   Dialog,
   DialogContent,
@@ -41,17 +41,9 @@ const TABS = ["Upcoming", "Completed"] as const;
 function FixturesPage() {
   const { user } = useAuth();
   const [tab, setTab] = useState<(typeof TABS)[number]>("Upcoming");
-  const [whatsNewOpen, setWhatsNewOpen] = useState(false);
-
-  useEffect(() => {
-    const seen = localStorage.getItem("wc2026-whats-new-seen-v1");
-    if (!seen) {
-      setWhatsNewOpen(true);
-    }
-  }, []);
+  const [whatsNewOpen, setWhatsNewOpen] = useState(true);
 
   const dismissWhatsNew = () => {
-    localStorage.setItem("wc2026-whats-new-seen-v1", "1");
     setWhatsNewOpen(false);
   };
 
