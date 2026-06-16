@@ -67,7 +67,7 @@ function FormBadge({ match }: { match: FormMatch }) {
       </PopoverTrigger>
       <PopoverContent className="w-56 p-3 text-xs" align="center">
         <div className="font-semibold text-ink mb-1">
-          {match.homeAway === "H" ? "vs" : "away to"} {match.opponent}
+          versus {match.opponent}
         </div>
         <div className="text-base font-extrabold tabular-nums mb-1">
           {match.scoreFor}-{match.scoreAgainst}
