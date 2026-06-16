@@ -157,6 +157,33 @@ export type Database = {
         }
         Relationships: []
       }
+      team_form_cache: {
+        Row: {
+          created_at: string
+          external_team_id: number | null
+          fetched_at: string
+          matches: Json
+          team_name: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          external_team_id?: number | null
+          fetched_at?: string
+          matches?: Json
+          team_name: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          external_team_id?: number | null
+          fetched_at?: string
+          matches?: Json
+          team_name?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       user_roles: {
         Row: {
           created_at: string
