@@ -2,7 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { db as supabase } from "@/lib/db";
 import { useAuth } from "@/hooks/use-auth";
-import { FixtureCard, type Fixture, type Prediction } from "@/components/FixtureCard";
+import { FixtureCard, NowProvider, type Fixture, type Prediction } from "@/components/FixtureCard";
 import { useMemo, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { getTeamFormBatch, type FormMatch } from "@/lib/team-form.functions";
@@ -82,6 +82,9 @@ function FixturesPage() {
       if (error) throw error;
       return data as Fixture[];
     },
+    staleTime: 5 * 60 * 1000,
+    gcTime: 60 * 60 * 1000,
+    refetchOnWindowFocus: false,
   });
 
   const predsQ = useQuery({
@@ -95,6 +98,8 @@ function FixturesPage() {
       if (error) throw error;
       return data as Prediction[];
     },
+    staleTime: 30 * 1000,
+    refetchOnWindowFocus: false,
   });
 
   const teamNames = useMemo(() => {
@@ -108,11 +113,13 @@ function FixturesPage() {
 
   const fetchFormBatch = useServerFn(getTeamFormBatch);
   const formsQ = useQuery({
-    queryKey: ["team-form-batch", teamNames],
+    queryKey: ["team-form-batch"],
     enabled: teamNames.length > 0,
     queryFn: () => fetchFormBatch({ data: { teamNames } }),
-    staleTime: 60 * 60 * 1000,
+    staleTime: 24 * 60 * 60 * 1000,
     gcTime: 24 * 60 * 60 * 1000,
+    refetchOnWindowFocus: false,
+    refetchOnMount: false,
   });
   const formsByTeam: Record<string, FormMatch[]> = formsQ.data ?? {};
 
@@ -152,6 +159,7 @@ function FixturesPage() {
 
   return (
     <main className="max-w-3xl mx-auto px-4 py-4 sm:py-6">
+      <NowProvider>
       <div className="mb-4">
         <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-ink flex items-center gap-2">
           <CalendarDays className="h-6 w-6 text-primary" />
@@ -267,6 +275,7 @@ function FixturesPage() {
           </div>
         </DialogContent>
       </Dialog>
+      </NowProvider>
     </main>
   );
 }

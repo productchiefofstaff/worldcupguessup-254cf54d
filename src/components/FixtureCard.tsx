@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { createContext, useContext, useEffect, useState } from "react";
 import { db as supabase } from "@/lib/db";
 import { Button } from "@/components/ui/button";
 import { Lock, Check, ChevronDown, Radio } from "lucide-react";
@@ -8,6 +8,18 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/component
 import { flagFor } from "@/lib/flags";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { type FormMatch } from "@/lib/team-form.functions";
+
+// Shared clock — one interval for the whole fixtures page instead of 100+.
+const NowContext = createContext<number>(Date.now());
+
+export function NowProvider({ children }: { children: React.ReactNode }) {
+  const [now, setNow] = useState(() => Date.now());
+  useEffect(() => {
+    const t = setInterval(() => setNow(Date.now()), 30_000);
+    return () => clearInterval(t);
+  }, []);
+  return <NowContext.Provider value={now}>{children}</NowContext.Provider>;
+}
 
 export type Fixture = {
   id: string;
@@ -122,11 +134,7 @@ export function FixtureCard({
     }
   }, [prediction?.id, prediction?.home_score, prediction?.away_score]);
 
-  const [now, setNow] = useState(() => Date.now());
-  useEffect(() => {
-    const t = setInterval(() => setNow(Date.now()), 30_000);
-    return () => clearInterval(t);
-  }, []);
+  const now = useContext(NowContext);
 
   const locked = new Date(fixture.kickoff_at).getTime() <= now;
   const hasResult = fixture.home_score !== null && fixture.away_score !== null;

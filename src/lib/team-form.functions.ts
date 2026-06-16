@@ -1,7 +1,8 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 
-const CACHE_TTL_MS = 24 * 60 * 60 * 1000; // 24h
+// Read path is cache-only; freshness handled out of band so user requests stay fast.
+const CACHE_TTL_MS = 24 * 60 * 60 * 1000; // 24h (used by single-team getTeamForm only)
 
 export type FormMatch = {
   date: string;
@@ -206,56 +207,15 @@ export const getTeamFormBatch = createServerFn({ method: "POST" })
 
     const { data: cachedRows } = await admin
       .from("team_form_cache")
-      .select("team_name, matches, fetched_at")
+      .select("team_name, matches")
       .in("team_name", names);
 
-    const cacheMap = new Map<string, { matches: FormMatch[]; fetched_at: string }>();
-    (cachedRows ?? []).forEach((r) => {
-      cacheMap.set(r.team_name as string, {
-        matches: (r.matches as FormMatch[]) ?? [],
-        fetched_at: r.fetched_at as string,
-      });
-    });
-
     const out: Record<string, FormMatch[]> = {};
-    const stale: string[] = [];
-    const now = Date.now();
-    for (const name of names) {
-      const c = cacheMap.get(name);
-      if (c && now - new Date(c.fetched_at).getTime() < CACHE_TTL_MS) {
-        out[name] = c.matches;
-      } else {
-        stale.push(name);
-        // seed with stale data while we refresh
-        if (c) out[name] = c.matches;
-        else out[name] = [];
-      }
-    }
-
-    // Refresh stale entries in parallel (bounded) — but do not block the response.
-    // For simplicity, await them too so callers get fresh data within the call.
-    await Promise.all(
-      stale.map(async (name) => {
-        const espn = ESPN_TEAMS[name];
-        if (!espn) {
-          out[name] = [];
-          return;
-        }
-        try {
-          const markdown = await scrapeEspnResults(espn.id, espn.slug);
-          const matches = parseEspnResultsMarkdown(markdown, espn.id);
-          out[name] = matches;
-          await admin.from("team_form_cache").upsert({
-            team_name: name,
-            external_team_id: espn.id,
-            matches,
-            fetched_at: new Date().toISOString(),
-          });
-        } catch (err) {
-          console.error("getTeamFormBatch error", name, err);
-        }
-      }),
-    );
-
+    (cachedRows ?? []).forEach((r) => {
+      out[r.team_name as string] = (r.matches as FormMatch[]) ?? [];
+    });
+    // Read path is cache-only. Refreshing is handled by getTeamForm / cron so
+    // the fixtures page is always fast and never blocks on 40+ scrapes.
+    for (const name of names) if (!(name in out)) out[name] = [];
     return out;
   });
