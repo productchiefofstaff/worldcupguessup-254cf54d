@@ -3,7 +3,15 @@ import { useQuery } from "@tanstack/react-query";
 import { db as supabase } from "@/lib/db";
 import { useAuth } from "@/hooks/use-auth";
 import { FixtureCard, type Fixture, type Prediction } from "@/components/FixtureCard";
-import { useMemo, useState } from "react";
+import { useMemo, useState, useEffect } from "react";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from "@/components/ui/dialog";
+import { Sparkles } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/")({
   head: () => ({
@@ -33,6 +41,19 @@ const TABS = ["Upcoming", "Completed"] as const;
 function FixturesPage() {
   const { user } = useAuth();
   const [tab, setTab] = useState<(typeof TABS)[number]>("Upcoming");
+  const [whatsNewOpen, setWhatsNewOpen] = useState(false);
+
+  useEffect(() => {
+    const seen = localStorage.getItem("wc2026-whats-new-seen-v1");
+    if (!seen) {
+      setWhatsNewOpen(true);
+    }
+  }, []);
+
+  const dismissWhatsNew = () => {
+    localStorage.setItem("wc2026-whats-new-seen-v1", "1");
+    setWhatsNewOpen(false);
+  };
 
   const fixturesQ = useQuery({
     queryKey: ["fixtures"],
@@ -153,6 +174,29 @@ function FixturesPage() {
         )}
       </div>
       )}
+
+      <Dialog open={whatsNewOpen} onOpenChange={(open) => { if (!open) dismissWhatsNew(); }}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Sparkles className="h-5 w-5 text-warning" />
+              What's new?
+            </DialogTitle>
+            <DialogDescription className="text-muted-foreground pt-2 space-y-2">
+              <p>Each fixture now shows the recent form for both teams — a quick-read row of W, D and L results from their last five matches.</p>
+              <p>Tap or click any badge to see the full match details: opponent, score, competition and date.</p>
+            </DialogDescription>
+          </DialogHeader>
+          <div className="flex justify-end mt-2">
+            <button
+              onClick={dismissWhatsNew}
+              className="text-xs font-semibold px-4 py-2 rounded-md bg-primary text-primary-foreground hover:bg-primary/90 transition-colors"
+            >
+              Got it
+            </button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </main>
   );
 }
