@@ -11,7 +11,7 @@ import {
   DialogTitle,
   DialogDescription,
 } from "@/components/ui/dialog";
-import { Lightbulb } from "lucide-react";
+import { Lightbulb, CalendarDays } from "lucide-react";
 
 const WHATS_NEW_KEY = "wcg-whats-new-dismissed-v1";
 
