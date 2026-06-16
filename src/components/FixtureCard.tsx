@@ -73,6 +73,16 @@ function useNow() {
   );
 }
 
+export const FixtureCard = memo(FixtureCardImpl, (a, b) => {
+  return (
+    a.fixture === b.fixture &&
+    a.prediction === b.prediction &&
+    a.userId === b.userId &&
+    a.homeForm === b.homeForm &&
+    a.awayForm === b.awayForm
+  );
+});
+
 function FormBadge({ match }: { match: FormMatch }) {
   const [open, setOpen] = useState(false);
   const cls =
