@@ -1,4 +1,4 @@
-import { memo, useEffect, useState, useSyncExternalStore } from "react";
+import { useEffect, useState } from "react";
 import { db as supabase } from "@/lib/db";
 import { Button } from "@/components/ui/button";
 import { Lock, Check, ChevronDown, Radio } from "lucide-react";
@@ -7,7 +7,8 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { flagFor } from "@/lib/flags";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { type FormMatch } from "@/lib/team-form.functions";
+import { useServerFn } from "@tanstack/react-start";
+import { getTeamForm, type FormMatch } from "@/lib/team-form.functions";
 
 export type Fixture = {
   id: string;
@@ -45,43 +46,6 @@ function formatMatchDate(iso: string) {
   const d = new Date(iso);
   return d.toLocaleDateString(undefined, { day: "2-digit", month: "short", year: "numeric" });
 }
-
-// Shared ticker — one setInterval for the whole page instead of one per card.
-let tickerNow = Date.now();
-const tickerListeners = new Set<() => void>();
-let tickerStarted = false;
-function startTicker() {
-  if (tickerStarted) return;
-  tickerStarted = true;
-  setInterval(() => {
-    tickerNow = Date.now();
-    tickerListeners.forEach((l) => l());
-  }, 60_000);
-}
-function subscribeTicker(cb: () => void) {
-  startTicker();
-  tickerListeners.add(cb);
-  return () => {
-    tickerListeners.delete(cb);
-  };
-}
-function useNow() {
-  return useSyncExternalStore(
-    subscribeTicker,
-    () => tickerNow,
-    () => tickerNow,
-  );
-}
-
-export const FixtureCard = memo(FixtureCardImpl, (a, b) => {
-  return (
-    a.fixture === b.fixture &&
-    a.prediction === b.prediction &&
-    a.userId === b.userId &&
-    a.homeForm === b.homeForm &&
-    a.awayForm === b.awayForm
-  );
-});
 
 function FormBadge({ match }: { match: FormMatch }) {
   const [open, setOpen] = useState(false);
@@ -133,20 +97,27 @@ function FormRow({ matches }: { matches: FormMatch[] }) {
   );
 }
 
-function FixtureCardImpl({
+export function FixtureCard({
   fixture,
   prediction,
   userId,
-  homeForm,
-  awayForm,
 }: {
   fixture: Fixture;
   prediction: Prediction | null;
   userId: string;
-  homeForm: FormMatch[];
-  awayForm: FormMatch[];
 }) {
   const queryClient = useQueryClient();
+  const fetchForm = useServerFn(getTeamForm);
+  const homeFormQ = useQuery({
+    queryKey: ["team-form", fixture.team_home],
+    queryFn: () => fetchForm({ data: { teamName: fixture.team_home } }),
+    staleTime: 60 * 60 * 1000,
+  });
+  const awayFormQ = useQuery({
+    queryKey: ["team-form", fixture.team_away],
+    queryFn: () => fetchForm({ data: { teamName: fixture.team_away } }),
+    staleTime: 60 * 60 * 1000,
+  });
   const [home, setHome] = useState<string>(prediction ? String(prediction.home_score) : "");
   const [away, setAway] = useState<string>(prediction ? String(prediction.away_score) : "");
   const [busy, setBusy] = useState(false);
@@ -159,7 +130,11 @@ function FixtureCardImpl({
     }
   }, [prediction?.id, prediction?.home_score, prediction?.away_score]);
 
-  const now = useNow();
+  const [now, setNow] = useState(() => Date.now());
+  useEffect(() => {
+    const t = setInterval(() => setNow(Date.now()), 30_000);
+    return () => clearInterval(t);
+  }, []);
 
   const locked = new Date(fixture.kickoff_at).getTime() <= now;
   const hasResult = fixture.home_score !== null && fixture.away_score !== null;
@@ -231,8 +206,8 @@ function FixtureCardImpl({
         <span>{kickoffLabel(fixture.kickoff_at)}</span>
       </div>
       {(() => {
-        const hm = homeForm;
-        const am = awayForm;
+        const hm = homeFormQ.data?.matches ?? [];
+        const am = awayFormQ.data?.matches ?? [];
         if (hm.length === 0 && am.length === 0) return null;
         return (
           <div className="flex items-center justify-between px-3 py-1 bg-surface/50 border-b border-border">
@@ -309,7 +284,9 @@ function FixtureCardImpl({
               <>
                 <span className="text-xs text-muted-foreground">
                   {prediction ? (
-                    <Check className="h-3 w-3 text-success" />
+                    <span className="inline-flex items-center gap-1 text-success">
+                      <Check className="h-3 w-3" /> Saved – update before kickoff
+                    </span>
                   ) : (
                     "Enter your prediction"
                   )}

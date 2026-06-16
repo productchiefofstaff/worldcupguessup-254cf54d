@@ -189,25 +189,3 @@ export const getTeamForm = createServerFn({ method: "POST" })
       return { team: teamName, matches: (cached?.matches as FormMatch[] | undefined) ?? [] };
     }
   });
-
-export const getAllTeamForms = createServerFn({ method: "GET" })
-  .handler(async (): Promise<Record<string, FormMatch[]>> => {
-    const { createClient } = await import("@supabase/supabase-js");
-    const supabaseUrl = process.env.SUPABASE_URL!;
-    const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
-    const admin = createClient(supabaseUrl, serviceKey, {
-      auth: { storage: undefined, persistSession: false, autoRefreshToken: false },
-    });
-    const { data, error } = await admin
-      .from("team_form_cache")
-      .select("team_name, matches");
-    if (error) {
-      console.error("getAllTeamForms error", error);
-      return {};
-    }
-    const out: Record<string, FormMatch[]> = {};
-    for (const row of (data ?? []) as Array<{ team_name: string; matches: FormMatch[] | null }>) {
-      out[row.team_name] = row.matches ?? [];
-    }
-    return out;
-  });
