@@ -63,6 +63,7 @@ const TABS = ["Upcoming", "Completed"] as const;
 function FixturesPage() {
   const { user } = useAuth();
   const [tab, setTab] = useState<(typeof TABS)[number]>("Upcoming");
+  const activeTabValue = tab.toLowerCase();
   const [whatsNewOpen, setWhatsNewOpen] = useState(!hasDismissedWhatsNew());
 
   const dismissWhatsNew = () => {
