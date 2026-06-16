@@ -6,10 +6,14 @@ export const Route = createFileRoute("/api/odds-test")({
     handlers: {
       GET: async () => {
         try {
+          const k = process.env.ODDS_API_KEY ?? "";
+          // Don't echo the key, just metadata
+          const meta = { hasKey: !!k, len: k.length };
           const data = await getWorldCupCorrectScoreOdds();
-          return Response.json({ ok: true, count: Object.keys(data).length, data });
+          return Response.json({ ok: true, meta, count: Object.keys(data).length, data });
         } catch (e) {
-          return Response.json({ ok: false, error: String(e instanceof Error ? e.message : e) }, { status: 500 });
+          const k = process.env.ODDS_API_KEY ?? "";
+          return Response.json({ ok: false, meta: { hasKey: !!k, len: k.length }, error: String(e instanceof Error ? e.message : e) }, { status: 500 });
         }
       },
     },
