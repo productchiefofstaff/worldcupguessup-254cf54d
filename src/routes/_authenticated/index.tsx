@@ -13,6 +13,24 @@ import {
 } from "@/components/ui/dialog";
 import { Lightbulb } from "lucide-react";
 
+const WHATS_NEW_KEY = "wcg-whats-new-dismissed-v1";
+
+function hasDismissedWhatsNew() {
+  try {
+    return localStorage.getItem(WHATS_NEW_KEY) === "1";
+  } catch {
+    return false;
+  }
+}
+
+function markWhatsNewDismissed() {
+  try {
+    localStorage.setItem(WHATS_NEW_KEY, "1");
+  } catch {
+    // ignore
+  }
+}
+
 export const Route = createFileRoute("/_authenticated/")({
   head: () => ({
     meta: [
