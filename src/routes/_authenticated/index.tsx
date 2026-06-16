@@ -2,10 +2,8 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { db as supabase } from "@/lib/db";
 import { useAuth } from "@/hooks/use-auth";
-import { FixtureCard, NowProvider, type Fixture, type Prediction } from "@/components/FixtureCard";
+import { FixtureCard, type Fixture, type Prediction } from "@/components/FixtureCard";
 import { useMemo, useState } from "react";
-import { useServerFn } from "@tanstack/react-start";
-import { getTeamFormBatch, type FormMatch } from "@/lib/team-form.functions";
 import {
   Dialog,
   DialogContent,
@@ -14,7 +12,6 @@ import {
   DialogDescription,
 } from "@/components/ui/dialog";
 import { Collapsible, CollapsibleTrigger, CollapsibleContent } from "@/components/ui/collapsible";
-import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Lightbulb, CalendarDays, ChevronDown, Info } from "lucide-react";
 
 const WHATS_NEW_KEY = "wcg-whats-new-dismissed-v1";
@@ -63,7 +60,6 @@ const TABS = ["Upcoming", "Completed"] as const;
 function FixturesPage() {
   const { user } = useAuth();
   const [tab, setTab] = useState<(typeof TABS)[number]>("Upcoming");
-  const activeTabValue = tab.toLowerCase();
   const [whatsNewOpen, setWhatsNewOpen] = useState(!hasDismissedWhatsNew());
 
   const dismissWhatsNew = () => {
@@ -82,9 +78,6 @@ function FixturesPage() {
       if (error) throw error;
       return data as Fixture[];
     },
-    staleTime: 5 * 60 * 1000,
-    gcTime: 60 * 60 * 1000,
-    refetchOnWindowFocus: false,
   });
 
   const predsQ = useQuery({
@@ -98,30 +91,7 @@ function FixturesPage() {
       if (error) throw error;
       return data as Prediction[];
     },
-    staleTime: 30 * 1000,
-    refetchOnWindowFocus: false,
   });
-
-  const teamNames = useMemo(() => {
-    const set = new Set<string>();
-    (fixturesQ.data ?? []).forEach((f) => {
-      set.add(f.team_home);
-      set.add(f.team_away);
-    });
-    return Array.from(set).sort();
-  }, [fixturesQ.data]);
-
-  const fetchFormBatch = useServerFn(getTeamFormBatch);
-  const formsQ = useQuery({
-    queryKey: ["team-form-batch"],
-    enabled: teamNames.length > 0,
-    queryFn: () => fetchFormBatch({ data: { teamNames } }),
-    staleTime: 24 * 60 * 60 * 1000,
-    gcTime: 24 * 60 * 60 * 1000,
-    refetchOnWindowFocus: false,
-    refetchOnMount: false,
-  });
-  const formsByTeam: Record<string, FormMatch[]> = formsQ.data ?? {};
 
   const predByFixture = useMemo(() => {
     const map = new Map<string, Prediction>();
@@ -159,7 +129,6 @@ function FixturesPage() {
 
   return (
     <main className="max-w-3xl mx-auto px-4 py-4 sm:py-6">
-      <NowProvider>
       <div className="mb-4">
         <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-ink flex items-center gap-2">
           <CalendarDays className="h-6 w-6 text-primary" />
@@ -182,75 +151,52 @@ function FixturesPage() {
         </Collapsible>
       </div>
 
-      <Tabs value={activeTabValue} onValueChange={(v) => setTab(v === "upcoming" ? "Upcoming" : "Completed")}>
-        <TabsList className="w-full justify-start overflow-x-auto flex-nowrap mb-4">
-          <TabsTrigger value="upcoming" className="flex-1">Upcoming</TabsTrigger>
-          <TabsTrigger value="completed" className="flex-1">Completed</TabsTrigger>
-        </TabsList>
+      <div className="flex items-center gap-2 mb-4 overflow-x-auto pb-1 -mx-1 px-1">
+        {TABS.map((s) => (
+          <button
+            key={s}
+            onClick={() => setTab(s)}
+            className={
+              "shrink-0 text-xs font-semibold px-3 py-1.5 rounded-full border transition-colors " +
+              (tab === s
+                ? "bg-ink text-primary-foreground border-ink"
+                : "bg-card text-ink border-border hover:bg-surface")
+            }
+          >
+            {s}
+          </button>
+        ))}
+      </div>
 
-        {(fixturesQ.isLoading || (!!user && predsQ.isLoading)) && (
-          <p className="text-sm text-muted-foreground">Loading fixtures…</p>
+      {(fixturesQ.isLoading || (!!user && predsQ.isLoading)) && (
+        <p className="text-sm text-muted-foreground">Loading fixtures…</p>
+      )}
+      {fixturesQ.error && <p className="text-sm text-destructive">Failed to load fixtures.</p>}
+
+      {!fixturesQ.isLoading && !predsQ.isLoading && (
+      <div className="space-y-6">
+        {grouped.map(([k, fixtures]) => (
+          <section key={k}>
+            <h2 className="text-xs uppercase tracking-wider font-bold text-muted-foreground mb-2">
+              {formatDay(fixtures[0].kickoff_at)}
+            </h2>
+            <div className="space-y-2">
+              {fixtures.map((f) => (
+                <FixtureCard
+                  key={f.id}
+                  fixture={f}
+                  prediction={predByFixture.get(f.id) ?? null}
+                  userId={user.id}
+                />
+              ))}
+            </div>
+          </section>
+        ))}
+        {!fixturesQ.isLoading && grouped.length === 0 && (
+          <p className="text-sm text-muted-foreground">No fixtures match this filter.</p>
         )}
-        {fixturesQ.error && <p className="text-sm text-destructive">Failed to load fixtures.</p>}
-
-        <TabsContent value="upcoming">
-          {!fixturesQ.isLoading && !predsQ.isLoading && (
-            <div className="space-y-6">
-              {grouped.map(([k, fixtures]) => (
-                <section key={k}>
-                  <h2 className="text-xs uppercase tracking-wider font-bold text-muted-foreground mb-2">
-                    {formatDay(fixtures[0].kickoff_at)}
-                  </h2>
-                  <div className="space-y-2">
-                    {fixtures.map((f) => (
-                      <FixtureCard
-                        key={f.id}
-                        fixture={f}
-                        prediction={predByFixture.get(f.id) ?? null}
-                        userId={user.id}
-                        homeForm={formsByTeam[f.team_home] ?? []}
-                        awayForm={formsByTeam[f.team_away] ?? []}
-                      />
-                    ))}
-                  </div>
-                </section>
-              ))}
-              {grouped.length === 0 && (
-                <p className="text-sm text-muted-foreground">No fixtures match this filter.</p>
-              )}
-            </div>
-          )}
-        </TabsContent>
-
-        <TabsContent value="completed">
-          {!fixturesQ.isLoading && !predsQ.isLoading && (
-            <div className="space-y-6">
-              {grouped.map(([k, fixtures]) => (
-                <section key={k}>
-                  <h2 className="text-xs uppercase tracking-wider font-bold text-muted-foreground mb-2">
-                    {formatDay(fixtures[0].kickoff_at)}
-                  </h2>
-                  <div className="space-y-2">
-                    {fixtures.map((f) => (
-                      <FixtureCard
-                        key={f.id}
-                        fixture={f}
-                        prediction={predByFixture.get(f.id) ?? null}
-                        userId={user.id}
-                        homeForm={formsByTeam[f.team_home] ?? []}
-                        awayForm={formsByTeam[f.team_away] ?? []}
-                      />
-                    ))}
-                  </div>
-                </section>
-              ))}
-              {grouped.length === 0 && (
-                <p className="text-sm text-muted-foreground">No fixtures match this filter.</p>
-              )}
-            </div>
-          )}
-        </TabsContent>
-      </Tabs>
+      </div>
+      )}
 
       <Dialog open={whatsNewOpen} onOpenChange={(open) => { if (!open) dismissWhatsNew(); }}>
         <DialogContent className="sm:max-w-md bg-white/70 backdrop-blur-xl border-white/40 shadow-2xl">
@@ -275,7 +221,6 @@ function FixturesPage() {
           </div>
         </DialogContent>
       </Dialog>
-      </NowProvider>
     </main>
   );
 }

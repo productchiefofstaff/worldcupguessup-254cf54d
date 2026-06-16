@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { db as supabase } from "@/lib/db";
 import { Button } from "@/components/ui/button";
 import { Lock, Check, ChevronDown, Radio } from "lucide-react";
@@ -7,19 +7,8 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { flagFor } from "@/lib/flags";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { type FormMatch } from "@/lib/team-form.functions";
-
-// Shared clock — one interval for the whole fixtures page instead of 100+.
-const NowContext = createContext<number>(Date.now());
-
-export function NowProvider({ children }: { children: React.ReactNode }) {
-  const [now, setNow] = useState(() => Date.now());
-  useEffect(() => {
-    const t = setInterval(() => setNow(Date.now()), 30_000);
-    return () => clearInterval(t);
-  }, []);
-  return <NowContext.Provider value={now}>{children}</NowContext.Provider>;
-}
+import { useServerFn } from "@tanstack/react-start";
+import { getTeamForm, type FormMatch } from "@/lib/team-form.functions";
 
 export type Fixture = {
   id: string;
@@ -112,16 +101,23 @@ export function FixtureCard({
   fixture,
   prediction,
   userId,
-  homeForm,
-  awayForm,
 }: {
   fixture: Fixture;
   prediction: Prediction | null;
   userId: string;
-  homeForm: FormMatch[];
-  awayForm: FormMatch[];
 }) {
   const queryClient = useQueryClient();
+  const fetchForm = useServerFn(getTeamForm);
+  const homeFormQ = useQuery({
+    queryKey: ["team-form", fixture.team_home],
+    queryFn: () => fetchForm({ data: { teamName: fixture.team_home } }),
+    staleTime: 60 * 60 * 1000,
+  });
+  const awayFormQ = useQuery({
+    queryKey: ["team-form", fixture.team_away],
+    queryFn: () => fetchForm({ data: { teamName: fixture.team_away } }),
+    staleTime: 60 * 60 * 1000,
+  });
   const [home, setHome] = useState<string>(prediction ? String(prediction.home_score) : "");
   const [away, setAway] = useState<string>(prediction ? String(prediction.away_score) : "");
   const [busy, setBusy] = useState(false);
@@ -134,7 +130,11 @@ export function FixtureCard({
     }
   }, [prediction?.id, prediction?.home_score, prediction?.away_score]);
 
-  const now = useContext(NowContext);
+  const [now, setNow] = useState(() => Date.now());
+  useEffect(() => {
+    const t = setInterval(() => setNow(Date.now()), 30_000);
+    return () => clearInterval(t);
+  }, []);
 
   const locked = new Date(fixture.kickoff_at).getTime() <= now;
   const hasResult = fixture.home_score !== null && fixture.away_score !== null;
@@ -200,15 +200,22 @@ export function FixtureCard({
     <div className="bg-card border border-border rounded-md overflow-hidden flex flex-col h-full">
       <div className="flex items-center justify-between px-3 py-1.5 bg-surface text-xs text-muted-foreground border-b border-border">
         <span className="font-semibold">
-          {fixture.stage}
+          {fixture.group_name ? `Group ${fixture.group_name}` : fixture.stage}
         </span>
         <span className="font-semibold">Match {fixture.match_number}/104</span>
         <span>{kickoffLabel(fixture.kickoff_at)}</span>
       </div>
-      <div className="flex items-center justify-between px-3 py-1 bg-surface/50 border-b border-border min-h-[1.75rem]">
-        <FormRow matches={homeForm} />
-        <FormRow matches={awayForm} />
-      </div>
+      {(() => {
+        const hm = homeFormQ.data?.matches ?? [];
+        const am = awayFormQ.data?.matches ?? [];
+        if (hm.length === 0 && am.length === 0) return null;
+        return (
+          <div className="flex items-center justify-between px-3 py-1 bg-surface/50 border-b border-border">
+            <FormRow matches={hm} />
+            <FormRow matches={am} />
+          </div>
+        );
+      })()}
 
       <div className="p-3 flex-1 flex flex-col">
         <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-2 flex-1">

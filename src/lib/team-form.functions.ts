@@ -1,8 +1,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 
-// Read path is cache-only; freshness handled out of band so user requests stay fast.
-const CACHE_TTL_MS = 24 * 60 * 60 * 1000; // 24h (used by single-team getTeamForm only)
+const CACHE_TTL_MS = 24 * 60 * 60 * 1000; // 24h
 
 export type FormMatch = {
   date: string;
@@ -16,7 +15,7 @@ export type FormMatch = {
 
 // Hardcoded ESPN team IDs for the 48 World Cup teams.
 // Slug is included for the URL path; ESPN ignores it but it's nicer in logs.
-export const ESPN_TEAMS: Record<string, { id: number; slug: string }> = {
+const ESPN_TEAMS: Record<string, { id: number; slug: string }> = {
   Algeria: { id: 624, slug: "algeria" },
   Argentina: { id: 202, slug: "argentina" },
   Australia: { id: 628, slug: "australia" },
@@ -81,7 +80,7 @@ function parseEspnDate(dayLabel: string, year: number): string {
   return new Date(Date.UTC(year, month, day)).toISOString();
 }
 
-export async function scrapeEspnResults(teamId: number, slug: string): Promise<string> {
+async function scrapeEspnResults(teamId: number, slug: string): Promise<string> {
   const apiKey = process.env.FIRECRAWL_API_KEY;
   if (!apiKey) throw new Error("FIRECRAWL_API_KEY missing");
   const url = `https://www.espn.com/soccer/team/results/_/id/${teamId}/${slug}`;
@@ -98,7 +97,7 @@ export async function scrapeEspnResults(teamId: number, slug: string): Promise<s
   return json.data?.markdown ?? "";
 }
 
-export function parseEspnResultsMarkdown(
+function parseEspnResultsMarkdown(
   markdown: string,
   teamId: number,
 ): FormMatch[] {
@@ -189,33 +188,4 @@ export const getTeamForm = createServerFn({ method: "POST" })
       console.error("getTeamForm error", teamName, err);
       return { team: teamName, matches: (cached?.matches as FormMatch[] | undefined) ?? [] };
     }
-  });
-
-export const getTeamFormBatch = createServerFn({ method: "POST" })
-  .inputValidator((input: { teamNames: string[] }) =>
-    z.object({ teamNames: z.array(z.string().min(1)) }).parse(input),
-  )
-  .handler(async ({ data }): Promise<Record<string, FormMatch[]>> => {
-    const names = Array.from(new Set(data.teamNames));
-    if (names.length === 0) return {};
-    const { createClient } = await import("@supabase/supabase-js");
-    const supabaseUrl = process.env.SUPABASE_URL!;
-    const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
-    const admin = createClient(supabaseUrl, serviceKey, {
-      auth: { storage: undefined, persistSession: false, autoRefreshToken: false },
-    });
-
-    const { data: cachedRows } = await admin
-      .from("team_form_cache")
-      .select("team_name, matches")
-      .in("team_name", names);
-
-    const out: Record<string, FormMatch[]> = {};
-    (cachedRows ?? []).forEach((r) => {
-      out[r.team_name as string] = (r.matches as FormMatch[]) ?? [];
-    });
-    // Read path is cache-only. Refreshing is handled by getTeamForm / cron so
-    // the fixtures page is always fast and never blocks on 40+ scrapes.
-    for (const name of names) if (!(name in out)) out[name] = [];
-    return out;
   });
