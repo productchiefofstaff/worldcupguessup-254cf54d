@@ -180,26 +180,67 @@ function FixturesPage() {
           <TabsTrigger value="completed" className="flex-1">Completed</TabsTrigger>
         </TabsList>
 
+        {(fixturesQ.isLoading || (!!user && predsQ.isLoading)) && (
+          <p className="text-sm text-muted-foreground">Loading fixtures…</p>
+        )}
+        {fixturesQ.error && <p className="text-sm text-destructive">Failed to load fixtures.</p>}
+
         <TabsContent value="upcoming">
-          <FixtureList
-            grouped={grouped}
-            fixturesQ={fixturesQ}
-            predByFixture={predByFixture}
-            user={user}
-            formsByTeam={formsByTeam}
-            tab={tab}
-          />
+          {!fixturesQ.isLoading && !predsQ.isLoading && (
+            <div className="space-y-6">
+              {grouped.map(([k, fixtures]) => (
+                <section key={k}>
+                  <h2 className="text-xs uppercase tracking-wider font-bold text-muted-foreground mb-2">
+                    {formatDay(fixtures[0].kickoff_at)}
+                  </h2>
+                  <div className="space-y-2">
+                    {fixtures.map((f) => (
+                      <FixtureCard
+                        key={f.id}
+                        fixture={f}
+                        prediction={predByFixture.get(f.id) ?? null}
+                        userId={user.id}
+                        homeForm={formsByTeam[f.team_home] ?? []}
+                        awayForm={formsByTeam[f.team_away] ?? []}
+                      />
+                    ))}
+                  </div>
+                </section>
+              ))}
+              {grouped.length === 0 && (
+                <p className="text-sm text-muted-foreground">No fixtures match this filter.</p>
+              )}
+            </div>
+          )}
         </TabsContent>
 
         <TabsContent value="completed">
-          <FixtureList
-            grouped={grouped}
-            fixturesQ={fixturesQ}
-            predByFixture={predByFixture}
-            user={user}
-            formsByTeam={formsByTeam}
-            tab={tab}
-          />
+          {!fixturesQ.isLoading && !predsQ.isLoading && (
+            <div className="space-y-6">
+              {grouped.map(([k, fixtures]) => (
+                <section key={k}>
+                  <h2 className="text-xs uppercase tracking-wider font-bold text-muted-foreground mb-2">
+                    {formatDay(fixtures[0].kickoff_at)}
+                  </h2>
+                  <div className="space-y-2">
+                    {fixtures.map((f) => (
+                      <FixtureCard
+                        key={f.id}
+                        fixture={f}
+                        prediction={predByFixture.get(f.id) ?? null}
+                        userId={user.id}
+                        homeForm={formsByTeam[f.team_home] ?? []}
+                        awayForm={formsByTeam[f.team_away] ?? []}
+                      />
+                    ))}
+                  </div>
+                </section>
+              ))}
+              {grouped.length === 0 && (
+                <p className="text-sm text-muted-foreground">No fixtures match this filter.</p>
+              )}
+            </div>
+          )}
         </TabsContent>
       </Tabs>
 
