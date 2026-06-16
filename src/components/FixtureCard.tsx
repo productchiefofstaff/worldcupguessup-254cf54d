@@ -48,18 +48,20 @@ function formatMatchDate(iso: string) {
 }
 
 function FormBadge({ match }: { match: FormMatch }) {
+  const [open, setOpen] = useState(false);
   const cls =
     match.result === "W"
       ? "bg-emerald-100 text-emerald-700"
       : match.result === "D"
         ? "bg-amber-100 text-amber-700"
         : "bg-rose-100 text-rose-700";
+  const openCls = open ? " ring-2 ring-red-500 ring-offset-1" : "";
   return (
-    <Popover>
+    <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
         <button
           type="button"
-          className={`inline-flex items-center justify-center w-5 h-5 text-[10px] font-bold rounded-sm ${cls} focus:outline-none focus:ring-2 focus:ring-ring`}
+          className={`inline-flex items-center justify-center w-5 h-5 text-[10px] font-bold rounded-sm ${cls}${openCls} focus:outline-none focus:ring-2 focus:ring-ring`}
           aria-label={`${match.result} vs ${match.opponent} ${match.scoreFor}-${match.scoreAgainst}`}
         >
           {match.result}
