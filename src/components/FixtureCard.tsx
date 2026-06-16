@@ -202,6 +202,7 @@ export function FixtureCard({
         </div>
 
         {showStatusRow && (
+          {/* odds inserted below via separate block */}
           <div className="mt-3 flex items-center justify-between gap-2 min-h-[2rem]">
             {!locked ? (
               <>
