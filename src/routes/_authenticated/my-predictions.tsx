@@ -127,18 +127,14 @@ function MyPredictionsPage() {
 
   return (
     <main className="max-w-3xl mx-auto px-4 py-4 sm:py-6">
-      <div className="mb-4 flex items-center gap-3">
-        <div className="bg-primary text-primary-foreground p-2 rounded-sm">
-          <ClipboardList className="h-5 w-5" />
-        </div>
-        <div>
-          <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-ink leading-none">
-            Predictions
-          </h1>
-          <p className="text-xs text-muted-foreground mt-1">
-            Every prediction made so far
-          </p>
-        </div>
+      <div className="mb-4">
+        <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-ink flex items-center gap-2">
+          <ClipboardList className="h-6 w-6 text-primary" />
+          Predictions
+        </h1>
+        <p className="text-xs text-muted-foreground mt-1">
+          Every prediction made so far
+        </p>
       </div>
 
       {(allPredsQ.isLoading || leaderboardQ.isLoading) && (
