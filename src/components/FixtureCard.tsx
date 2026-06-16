@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { memo, useEffect, useState, useSyncExternalStore } from "react";
 import { db as supabase } from "@/lib/db";
 import { Button } from "@/components/ui/button";
 import { Lock, Check, ChevronDown, Radio } from "lucide-react";
@@ -45,6 +45,43 @@ function formatMatchDate(iso: string) {
   const d = new Date(iso);
   return d.toLocaleDateString(undefined, { day: "2-digit", month: "short", year: "numeric" });
 }
+
+// Shared ticker — one setInterval for the whole page instead of one per card.
+let tickerNow = Date.now();
+const tickerListeners = new Set<() => void>();
+let tickerStarted = false;
+function startTicker() {
+  if (tickerStarted) return;
+  tickerStarted = true;
+  setInterval(() => {
+    tickerNow = Date.now();
+    tickerListeners.forEach((l) => l());
+  }, 60_000);
+}
+function subscribeTicker(cb: () => void) {
+  startTicker();
+  tickerListeners.add(cb);
+  return () => {
+    tickerListeners.delete(cb);
+  };
+}
+function useNow() {
+  return useSyncExternalStore(
+    subscribeTicker,
+    () => tickerNow,
+    () => tickerNow,
+  );
+}
+
+export const FixtureCard = memo(FixtureCardImpl, (a, b) => {
+  return (
+    a.fixture === b.fixture &&
+    a.prediction === b.prediction &&
+    a.userId === b.userId &&
+    a.homeForm === b.homeForm &&
+    a.awayForm === b.awayForm
+  );
+});
 
 function FormBadge({ match }: { match: FormMatch }) {
   const [open, setOpen] = useState(false);
@@ -96,7 +133,7 @@ function FormRow({ matches }: { matches: FormMatch[] }) {
   );
 }
 
-export function FixtureCard({
+function FixtureCardImpl({
   fixture,
   prediction,
   userId,
@@ -122,11 +159,7 @@ export function FixtureCard({
     }
   }, [prediction?.id, prediction?.home_score, prediction?.away_score]);
 
-  const [now, setNow] = useState(() => Date.now());
-  useEffect(() => {
-    const t = setInterval(() => setNow(Date.now()), 30_000);
-    return () => clearInterval(t);
-  }, []);
+  const now = useNow();
 
   const locked = new Date(fixture.kickoff_at).getTime() <= now;
   const hasResult = fixture.home_score !== null && fixture.away_score !== null;
