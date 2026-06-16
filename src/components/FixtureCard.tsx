@@ -50,10 +50,10 @@ function formatMatchDate(iso: string) {
 function FormBadge({ match }: { match: FormMatch }) {
   const cls =
     match.result === "W"
-      ? "bg-success text-primary-foreground"
+      ? "bg-emerald-100 text-emerald-700"
       : match.result === "D"
-        ? "bg-warning text-white"
-        : "bg-destructive text-white";
+        ? "bg-amber-100 text-amber-700"
+        : "bg-rose-100 text-rose-700";
   return (
     <Popover>
       <PopoverTrigger asChild>
