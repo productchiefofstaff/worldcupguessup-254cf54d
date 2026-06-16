@@ -16,6 +16,55 @@ import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Lightbulb, CalendarDays, ChevronDown, Info } from "lucide-react";
 
 const WHATS_NEW_KEY = "wcg-whats-new-dismissed-v1";
+const FIXTURES_CACHE_KEY = "wcg-fixtures-cache-v1";
+
+// Returns a stable key that changes once per day at 09:00 Europe/London.
+function fixturesCacheKey(): string {
+  const now = new Date();
+  const parts = new Intl.DateTimeFormat("en-GB", {
+    timeZone: "Europe/London",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+    hour: "2-digit",
+    hour12: false,
+  }).formatToParts(now);
+  const get = (t: string) => parts.find((p) => p.type === t)?.value ?? "";
+  const y = get("year");
+  const m = get("month");
+  const d = get("day");
+  const h = parseInt(get("hour"), 10);
+  // Before 9am UK, the cache day is still the previous calendar day.
+  if (h < 9) {
+    const prev = new Date(Date.UTC(Number(y), Number(m) - 1, Number(d)));
+    prev.setUTCDate(prev.getUTCDate() - 1);
+    return `${prev.getUTCFullYear()}-${String(prev.getUTCMonth() + 1).padStart(2, "0")}-${String(prev.getUTCDate()).padStart(2, "0")}`;
+  }
+  return `${y}-${m}-${d}`;
+}
+
+function readFixturesCache(): Fixture[] | null {
+  try {
+    const raw = localStorage.getItem(FIXTURES_CACHE_KEY);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw) as { key: string; data: Fixture[] };
+    if (parsed.key !== fixturesCacheKey()) return null;
+    return parsed.data;
+  } catch {
+    return null;
+  }
+}
+
+function writeFixturesCache(data: Fixture[]) {
+  try {
+    localStorage.setItem(
+      FIXTURES_CACHE_KEY,
+      JSON.stringify({ key: fixturesCacheKey(), data }),
+    );
+  } catch {
+    // ignore
+  }
+}
 
 function hasDismissedWhatsNew() {
   try {
