@@ -16,7 +16,7 @@ export type FormMatch = {
 
 // Hardcoded ESPN team IDs for the 48 World Cup teams.
 // Slug is included for the URL path; ESPN ignores it but it's nicer in logs.
-const ESPN_TEAMS: Record<string, { id: number; slug: string }> = {
+export const ESPN_TEAMS: Record<string, { id: number; slug: string }> = {
   Algeria: { id: 624, slug: "algeria" },
   Argentina: { id: 202, slug: "argentina" },
   Australia: { id: 628, slug: "australia" },
@@ -81,7 +81,7 @@ function parseEspnDate(dayLabel: string, year: number): string {
   return new Date(Date.UTC(year, month, day)).toISOString();
 }
 
-async function scrapeEspnResults(teamId: number, slug: string): Promise<string> {
+export async function scrapeEspnResults(teamId: number, slug: string): Promise<string> {
   const apiKey = process.env.FIRECRAWL_API_KEY;
   if (!apiKey) throw new Error("FIRECRAWL_API_KEY missing");
   const url = `https://www.espn.com/soccer/team/results/_/id/${teamId}/${slug}`;
@@ -98,7 +98,7 @@ async function scrapeEspnResults(teamId: number, slug: string): Promise<string> 
   return json.data?.markdown ?? "";
 }
 
-function parseEspnResultsMarkdown(
+export function parseEspnResultsMarkdown(
   markdown: string,
   teamId: number,
 ): FormMatch[] {
