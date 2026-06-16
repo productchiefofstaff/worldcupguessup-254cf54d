@@ -11,7 +11,7 @@ import {
   DialogTitle,
   DialogDescription,
 } from "@/components/ui/dialog";
-import { Sparkles } from "lucide-react";
+import { Lightbulb } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/")({
   head: () => ({
@@ -176,15 +176,15 @@ function FixturesPage() {
       )}
 
       <Dialog open={whatsNewOpen} onOpenChange={(open) => { if (!open) dismissWhatsNew(); }}>
-        <DialogContent className="sm:max-w-md">
+        <DialogContent className="sm:max-w-md bg-white/70 backdrop-blur-xl border-white/40 shadow-2xl">
           <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
-              <Sparkles className="h-5 w-5 text-warning" />
+            <DialogTitle className="flex items-center gap-2 text-ink">
+              <Lightbulb className="h-5 w-5 text-warning" />
               What's new?
             </DialogTitle>
-            <DialogDescription className="text-muted-foreground pt-2 space-y-2">
-              <p>Each fixture now shows the recent form for both teams — a quick-read row of W, D and L results from their last five matches.</p>
-              <p>Tap or click any badge to see the full match details: opponent, score, competition and date.</p>
+            <DialogDescription className="text-ink/80 pt-2 space-y-2">
+              <p>We've added form to each of the fixtures cards to help you pick, as well as Laura.</p>
+              <p>Click on any of the win, draw or loss icons to see more details about the match.</p>
             </DialogDescription>
           </DialogHeader>
           <div className="flex justify-end mt-2">
