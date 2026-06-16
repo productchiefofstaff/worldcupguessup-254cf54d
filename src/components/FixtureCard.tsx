@@ -6,6 +6,9 @@ import { toast } from "sonner";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { flagFor } from "@/lib/flags";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { useServerFn } from "@tanstack/react-start";
+import { getTeamForm, type FormMatch } from "@/lib/team-form.functions";
 
 export type Fixture = {
   id: string;
@@ -39,44 +42,51 @@ function kickoffLabel(iso: string) {
   return d.toLocaleTimeString(undefined, { hour: "2-digit", minute: "2-digit" });
 }
 
-function teamForm(team: string, fixture: Fixture, allFixtures: Fixture[]): Array<"W" | "D" | "L"> {
-  const results: Array<"W" | "D" | "L"> = [];
-  const matches = allFixtures
-    .filter((f) => f.id !== fixture.id)
-    .filter((f) => f.home_score !== null && f.away_score !== null)
-    .filter((f) => f.team_home === team || f.team_away === team)
-    .filter((f) => new Date(f.kickoff_at).getTime() < new Date(fixture.kickoff_at).getTime())
-    .sort((a, b) => new Date(a.kickoff_at).getTime() - new Date(b.kickoff_at).getTime());
-
-  for (const f of matches) {
-    if (f.team_home === team) {
-      const diff = (f.home_score ?? 0) - (f.away_score ?? 0);
-      results.push(diff > 0 ? "W" : diff < 0 ? "L" : "D");
-    } else {
-      const diff = (f.away_score ?? 0) - (f.home_score ?? 0);
-      results.push(diff > 0 ? "W" : diff < 0 ? "L" : "D");
-    }
-  }
-  return results.slice(-5);
+function formatMatchDate(iso: string) {
+  const d = new Date(iso);
+  return d.toLocaleDateString(undefined, { day: "2-digit", month: "short", year: "numeric" });
 }
 
-function FormDots({ results }: { results: Array<"W" | "D" | "L"> }) {
-  if (results.length === 0) return null;
+function FormBadge({ match }: { match: FormMatch }) {
+  const cls =
+    match.result === "W"
+      ? "bg-success text-primary-foreground"
+      : match.result === "D"
+        ? "bg-warning text-white"
+        : "bg-destructive text-white";
+  return (
+    <Popover>
+      <PopoverTrigger asChild>
+        <button
+          type="button"
+          className={`inline-flex items-center justify-center w-5 h-5 text-[10px] font-bold rounded-sm ${cls} focus:outline-none focus:ring-2 focus:ring-ring`}
+          aria-label={`${match.result} vs ${match.opponent} ${match.scoreFor}-${match.scoreAgainst}`}
+        >
+          {match.result}
+        </button>
+      </PopoverTrigger>
+      <PopoverContent className="w-56 p-3 text-xs" align="center">
+        <div className="font-semibold text-ink mb-1">
+          {match.homeAway === "H" ? "vs" : "away to"} {match.opponent}
+        </div>
+        <div className="text-base font-extrabold tabular-nums mb-1">
+          {match.scoreFor}-{match.scoreAgainst}
+        </div>
+        <div className="text-muted-foreground">{match.competition}</div>
+        <div className="text-muted-foreground">{formatMatchDate(match.date)}</div>
+      </PopoverContent>
+    </Popover>
+  );
+}
+
+function FormRow({ matches }: { matches: FormMatch[] }) {
+  if (matches.length === 0) return <div className="h-5" />;
+  // Render oldest -> newest (left to right)
+  const ordered = [...matches].reverse();
   return (
     <div className="flex items-center gap-0.5">
-      {results.map((r, i) => (
-        <span
-          key={i}
-          className={`inline-flex items-center justify-center w-5 h-5 text-[10px] font-bold rounded-sm ${
-            r === "W"
-              ? "bg-success text-primary-foreground"
-              : r === "D"
-                ? "bg-warning text-white"
-                : "bg-destructive text-white"
-          }`}
-        >
-          {r}
-        </span>
+      {ordered.map((m, i) => (
+        <FormBadge key={i} match={m} />
       ))}
     </div>
   );
@@ -86,14 +96,23 @@ export function FixtureCard({
   fixture,
   prediction,
   userId,
-  allFixtures,
 }: {
   fixture: Fixture;
   prediction: Prediction | null;
   userId: string;
-  allFixtures?: Fixture[];
 }) {
   const queryClient = useQueryClient();
+  const fetchForm = useServerFn(getTeamForm);
+  const homeFormQ = useQuery({
+    queryKey: ["team-form", fixture.team_home],
+    queryFn: () => fetchForm({ data: { teamName: fixture.team_home } }),
+    staleTime: 60 * 60 * 1000,
+  });
+  const awayFormQ = useQuery({
+    queryKey: ["team-form", fixture.team_away],
+    queryFn: () => fetchForm({ data: { teamName: fixture.team_away } }),
+    staleTime: 60 * 60 * 1000,
+  });
   const [home, setHome] = useState<string>(prediction ? String(prediction.home_score) : "");
   const [away, setAway] = useState<string>(prediction ? String(prediction.away_score) : "");
   const [busy, setBusy] = useState(false);
@@ -182,13 +201,13 @@ export function FixtureCard({
         <span>{kickoffLabel(fixture.kickoff_at)}</span>
       </div>
       {(() => {
-        const hf = allFixtures ? teamForm(fixture.team_home, fixture, allFixtures) : [];
-        const af = allFixtures ? teamForm(fixture.team_away, fixture, allFixtures) : [];
-        if (hf.length === 0 && af.length === 0) return null;
+        const hm = homeFormQ.data?.matches ?? [];
+        const am = awayFormQ.data?.matches ?? [];
+        if (hm.length === 0 && am.length === 0) return null;
         return (
           <div className="flex items-center justify-between px-3 py-1 bg-surface/50 border-b border-border">
-            <FormDots results={hf} />
-            <FormDots results={af} />
+            <FormRow matches={hm} />
+            <FormRow matches={am} />
           </div>
         );
       })()}
