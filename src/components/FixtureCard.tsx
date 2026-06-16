@@ -67,7 +67,7 @@ function FormDots({ results }: { results: Array<"W" | "D" | "L"> }) {
       {results.map((r, i) => (
         <span
           key={i}
-          className={`inline-flex items-center justify-center w-3.5 h-3.5 text-[8px] font-bold rounded-sm ${
+          className={`inline-flex items-center justify-center w-5 h-5 text-[10px] font-bold rounded-sm ${
             r === "W"
               ? "bg-success text-primary-foreground"
               : r === "D"
@@ -181,12 +181,17 @@ export function FixtureCard({
         <span className="font-semibold">Match {fixture.match_number}/104</span>
         <span>{kickoffLabel(fixture.kickoff_at)}</span>
       </div>
-      {allFixtures && allFixtures.length > 0 && (
-        <div className="flex items-center justify-between px-3 py-1 bg-surface/50 border-b border-border">
-          <FormDots results={teamForm(fixture.team_home, fixture, allFixtures)} />
-          <FormDots results={teamForm(fixture.team_away, fixture, allFixtures)} />
-        </div>
-      )}
+      {(() => {
+        const hf = allFixtures ? teamForm(fixture.team_home, fixture, allFixtures) : [];
+        const af = allFixtures ? teamForm(fixture.team_away, fixture, allFixtures) : [];
+        if (hf.length === 0 && af.length === 0) return null;
+        return (
+          <div className="flex items-center justify-between px-3 py-1 bg-surface/50 border-b border-border">
+            <FormDots results={hf} />
+            <FormDots results={af} />
+          </div>
+        );
+      })()}
 
       <div className="p-3 flex-1 flex flex-col">
         <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-2 flex-1">
