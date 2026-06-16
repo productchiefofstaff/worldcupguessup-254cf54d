@@ -6,6 +6,7 @@ import { toast } from "sonner";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { flagFor } from "@/lib/flags";
+import type { ScoreOdd } from "@/lib/odds.functions";
 
 export type Fixture = {
   id: string;
@@ -43,10 +44,12 @@ export function FixtureCard({
   fixture,
   prediction,
   userId,
+  odds,
 }: {
   fixture: Fixture;
   prediction: Prediction | null;
   userId: string;
+  odds?: { top: ScoreOdd[] } | null;
 }) {
   const queryClient = useQueryClient();
   const [home, setHome] = useState<string>(prediction ? String(prediction.home_score) : "");
