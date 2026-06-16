@@ -1,7 +1,6 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 
-const API_BASE = "https://api.football-data.org/v4";
 const CACHE_TTL_MS = 24 * 60 * 60 * 1000; // 24h
 
 export type FormMatch = {
@@ -14,87 +13,154 @@ export type FormMatch = {
   result: "W" | "D" | "L";
 };
 
-// Manual override map for tricky name mismatches between our fixtures
-// and football-data.org. Extend as needed.
-const NAME_ALIASES: Record<string, string> = {
-  "United States": "USA",
-  USA: "USA",
-  "Korea Republic": "South Korea",
-  "IR Iran": "Iran",
-  "Türkiye": "Turkey",
-  Turkiye: "Turkey",
-  "Côte d'Ivoire": "Ivory Coast",
-  "Czechia": "Czech Republic",
+// Hardcoded ESPN team IDs for the 48 World Cup teams.
+// Slug is included for the URL path; ESPN ignores it but it's nicer in logs.
+const ESPN_TEAMS: Record<string, { id: number; slug: string }> = {
+  Algeria: { id: 624, slug: "algeria" },
+  Argentina: { id: 202, slug: "argentina" },
+  Australia: { id: 628, slug: "australia" },
+  Austria: { id: 474, slug: "austria" },
+  Belgium: { id: 459, slug: "belgium" },
+  "Bosnia and Herzegovina": { id: 452, slug: "bosnia-herzegovina" },
+  Brazil: { id: 205, slug: "brazil" },
+  Canada: { id: 206, slug: "canada" },
+  "Cape Verde": { id: 2597, slug: "cape-verde" },
+  Colombia: { id: 208, slug: "colombia" },
+  Croatia: { id: 477, slug: "croatia" },
+  Curacao: { id: 11678, slug: "curacao" },
+  Czechia: { id: 450, slug: "czechia" },
+  "DR Congo": { id: 2850, slug: "congo-dr" },
+  Ecuador: { id: 209, slug: "ecuador" },
+  Egypt: { id: 2620, slug: "egypt" },
+  England: { id: 448, slug: "england" },
+  France: { id: 478, slug: "france" },
+  Germany: { id: 481, slug: "germany" },
+  Ghana: { id: 4469, slug: "ghana" },
+  Haiti: { id: 2654, slug: "haiti" },
+  Iran: { id: 469, slug: "iran" },
+  Iraq: { id: 4375, slug: "iraq" },
+  "Ivory Coast": { id: 4789, slug: "ivory-coast" },
+  Japan: { id: 627, slug: "japan" },
+  Jordan: { id: 2917, slug: "jordan" },
+  Mexico: { id: 203, slug: "mexico" },
+  Morocco: { id: 2869, slug: "morocco" },
+  Netherlands: { id: 449, slug: "netherlands" },
+  "New Zealand": { id: 2666, slug: "new-zealand" },
+  Norway: { id: 464, slug: "norway" },
+  Panama: { id: 2659, slug: "panama" },
+  Paraguay: { id: 210, slug: "paraguay" },
+  Portugal: { id: 482, slug: "portugal" },
+  Qatar: { id: 4398, slug: "qatar" },
+  "Saudi Arabia": { id: 655, slug: "saudi-arabia" },
+  Scotland: { id: 580, slug: "scotland" },
+  Senegal: { id: 654, slug: "senegal" },
+  "South Africa": { id: 467, slug: "south-africa" },
+  "South Korea": { id: 451, slug: "south-korea" },
+  Spain: { id: 164, slug: "spain" },
+  Sweden: { id: 466, slug: "sweden" },
+  Switzerland: { id: 475, slug: "switzerland" },
+  Tunisia: { id: 659, slug: "tunisia" },
+  Turkiye: { id: 465, slug: "turkiye" },
+  USA: { id: 660, slug: "united-states" },
+  Uruguay: { id: 212, slug: "uruguay" },
+  Uzbekistan: { id: 2570, slug: "uzbekistan" },
 };
 
-async function fdFetch(path: string, apiKey: string) {
-  const res = await fetch(`${API_BASE}${path}`, {
-    headers: { "X-Auth-Token": apiKey },
+const MONTHS: Record<string, number> = {
+  Jan: 0, Feb: 1, Mar: 2, Apr: 3, May: 4, Jun: 5,
+  Jul: 6, Aug: 7, Sep: 8, Oct: 9, Nov: 10, Dec: 11,
+};
+
+function parseEspnDate(dayLabel: string, year: number): string {
+  // dayLabel = "Tue, Jun 9"
+  const m = /^\w{3},\s*(\w{3})\s*(\d+)$/.exec(dayLabel.trim());
+  if (!m) return new Date(year, 0, 1).toISOString();
+  const month = MONTHS[m[1]] ?? 0;
+  const day = parseInt(m[2], 10);
+  return new Date(Date.UTC(year, month, day)).toISOString();
+}
+
+async function scrapeEspnResults(teamId: number, slug: string): Promise<string> {
+  const apiKey = process.env.FIRECRAWL_API_KEY;
+  if (!apiKey) throw new Error("FIRECRAWL_API_KEY missing");
+  const url = `https://www.espn.com/soccer/team/results/_/id/${teamId}/${slug}`;
+  const res = await fetch("https://api.firecrawl.dev/v2/scrape", {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${apiKey}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ url, formats: ["markdown"], onlyMainContent: true }),
   });
-  if (!res.ok) {
-    throw new Error(`football-data ${path} ${res.status}`);
-  }
-  return res.json();
+  if (!res.ok) throw new Error(`firecrawl ${res.status}`);
+  const json = (await res.json()) as { data?: { markdown?: string } };
+  return json.data?.markdown ?? "";
 }
 
-async function resolveTeamId(name: string, apiKey: string): Promise<number | null> {
-  const queryName = NAME_ALIASES[name] ?? name;
-  // Search across all teams; free tier allows /v4/teams?name=
-  const data = (await fdFetch(`/teams?name=${encodeURIComponent(queryName)}&limit=20`, apiKey)) as {
-    teams?: Array<{ id: number; name: string; shortName?: string; tla?: string }>;
-  };
-  const teams = data.teams ?? [];
-  if (teams.length === 0) return null;
-  // Prefer exact match on name/shortName
-  const exact = teams.find(
-    (t) => t.name === queryName || t.shortName === queryName || t.name === name,
-  );
-  return (exact ?? teams[0]).id;
-}
+function parseEspnResultsMarkdown(
+  markdown: string,
+  teamCanonical: string,
+): FormMatch[] {
+  // Row format:
+  // | Tue, Jun 9 | [Home](url) | [logo](u)[3 - 0](url) [logo](u) | [Away](url) | [FT](url) | International Friendly |
+  const rowRe =
+    /\|\s*(\w{3},\s*\w{3}\s*\d+)\s*\|\s*\[([^\]]+)\]\([^)]+\)\s*\|\s*[^|]*?\[(\d+)\s*-\s*(\d+)\][^|]*?\|\s*\[([^\]]+)\]\([^)]+\)\s*\|\s*\[FT\]\([^)]+\)\s*\|\s*([^|]+?)\s*\|/;
+  const yearRe = /^\s*(\w+),\s*(\d{4})\s*$/;
 
-async function fetchTeamMatches(teamId: number, apiKey: string): Promise<FormMatch[]> {
-  const data = (await fdFetch(`/teams/${teamId}/matches?status=FINISHED&limit=10`, apiKey)) as {
-    matches?: Array<{
-      utcDate: string;
-      competition?: { name?: string };
-      homeTeam?: { id: number; name: string };
-      awayTeam?: { id: number; name: string };
-      score?: { fullTime?: { home: number | null; away: number | null } };
-    }>;
-  };
+  let year = new Date().getUTCFullYear();
   const out: FormMatch[] = [];
-  for (const m of data.matches ?? []) {
-    const h = m.score?.fullTime?.home;
-    const a = m.score?.fullTime?.away;
-    if (h === null || h === undefined || a === null || a === undefined) continue;
-    const isHome = m.homeTeam?.id === teamId;
-    const scoreFor = isHome ? h : a;
-    const scoreAgainst = isHome ? a : h;
-    const opponent = (isHome ? m.awayTeam?.name : m.homeTeam?.name) ?? "Unknown";
+
+  for (const rawLine of markdown.split("\n")) {
+    const line = rawLine.trim();
+    const ym = yearRe.exec(line);
+    if (ym) {
+      year = parseInt(ym[2], 10);
+      continue;
+    }
+    const m = rowRe.exec(line);
+    if (!m) continue;
+    const [, dayLabel, home, shStr, saStr, away, comp] = m;
+    const sh = parseInt(shStr, 10);
+    const sa = parseInt(saStr, 10);
+    const isHome = home.trim() === teamCanonical;
+    const isAway = away.trim() === teamCanonical;
+    if (!isHome && !isAway) continue; // safety
+    const scoreFor = isHome ? sh : sa;
+    const scoreAgainst = isHome ? sa : sh;
+    const opponent = (isHome ? away : home).trim();
     out.push({
-      date: m.utcDate,
-      competition: m.competition?.name ?? "—",
+      date: parseEspnDate(dayLabel, year),
+      competition: comp.trim(),
       opponent,
       homeAway: isHome ? "H" : "A",
       scoreFor,
       scoreAgainst,
-      result: scoreFor > scoreAgainst ? "W" : scoreFor < scoreAgainst ? "L" : "D",
+      result:
+        scoreFor > scoreAgainst ? "W" : scoreFor < scoreAgainst ? "L" : "D",
     });
   }
-  return out.sort((x, y) => new Date(y.date).getTime() - new Date(x.date).getTime()).slice(0, 5);
+
+  return out
+    .sort((x, y) => new Date(y.date).getTime() - new Date(x.date).getTime())
+    .slice(0, 5);
 }
 
 export const getTeamForm = createServerFn({ method: "POST" })
   .inputValidator((input: { teamName: string }) => z.object({ teamName: z.string().min(1) }).parse(input))
   .handler(async ({ data }): Promise<{ team: string; matches: FormMatch[] }> => {
     const { teamName } = data;
-    const apiKey = process.env.FOOTBALL_DATA_API_KEY;
     const { createClient } = await import("@supabase/supabase-js");
     const supabaseUrl = process.env.SUPABASE_URL!;
     const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
     const admin = createClient(supabaseUrl, serviceKey, {
       auth: { storage: undefined, persistSession: false, autoRefreshToken: false },
     });
+
+    const espn = ESPN_TEAMS[teamName];
+    if (!espn) {
+      // Not a known WC team (e.g. "QF1 TBD") — skip
+      return { team: teamName, matches: [] };
+    }
 
     // 1. Read cache
     const { data: cached } = await admin
@@ -109,29 +175,12 @@ export const getTeamForm = createServerFn({ method: "POST" })
       return { team: teamName, matches: (cached!.matches as FormMatch[]) ?? [] };
     }
 
-    if (!apiKey) {
-      // No key configured — fall back to whatever's cached (possibly empty)
-      return { team: teamName, matches: (cached?.matches as FormMatch[] | undefined) ?? [] };
-    }
-
     try {
-      let teamId = (cached?.external_team_id as number | null) ?? null;
-      if (!teamId) {
-        teamId = await resolveTeamId(teamName, apiKey);
-      }
-      if (!teamId) {
-        await admin.from("team_form_cache").upsert({
-          team_name: teamName,
-          external_team_id: null,
-          matches: [],
-          fetched_at: new Date().toISOString(),
-        });
-        return { team: teamName, matches: [] };
-      }
-      const matches = await fetchTeamMatches(teamId, apiKey);
+      const markdown = await scrapeEspnResults(espn.id, espn.slug);
+      const matches = parseEspnResultsMarkdown(markdown, teamName);
       await admin.from("team_form_cache").upsert({
         team_name: teamName,
-        external_team_id: teamId,
+        external_team_id: espn.id,
         matches,
         fetched_at: new Date().toISOString(),
       });
