@@ -1,8 +1,10 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
+import { useServerFn } from "@tanstack/react-start";
 import { db as supabase } from "@/lib/db";
 import { useAuth } from "@/hooks/use-auth";
 import { FixtureCard, type Fixture, type Prediction } from "@/components/FixtureCard";
+import { getCorrectScoreOdds, oddsKeyFor } from "@/lib/odds.functions";
 import { useMemo, useState } from "react";
 
 export const Route = createFileRoute("/_authenticated/")({
@@ -65,6 +67,15 @@ function FixturesPage() {
     (predsQ.data ?? []).forEach((p) => map.set(p.fixture_id, p));
     return map;
   }, [predsQ.data]);
+
+  const oddsFn = useServerFn(getCorrectScoreOdds);
+  const oddsQ = useQuery({
+    queryKey: ["correct-score-odds"],
+    queryFn: () => oddsFn(),
+    staleTime: 30 * 60 * 1000,
+    gcTime: 60 * 60 * 1000,
+    retry: 1,
+  });
 
   const filtered = useMemo(() => {
     const all = fixturesQ.data ?? [];
@@ -143,6 +154,7 @@ function FixturesPage() {
                   fixture={f}
                   prediction={predByFixture.get(f.id) ?? null}
                   userId={user.id}
+                  odds={oddsQ.data?.events[oddsKeyFor(f.team_home, f.team_away)] ?? null}
                 />
               ))}
             </div>

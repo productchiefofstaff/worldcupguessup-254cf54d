@@ -6,6 +6,7 @@ import { toast } from "sonner";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { flagFor } from "@/lib/flags";
+import type { ScoreOdd } from "@/lib/odds.functions";
 
 export type Fixture = {
   id: string;
@@ -43,10 +44,12 @@ export function FixtureCard({
   fixture,
   prediction,
   userId,
+  odds,
 }: {
   fixture: Fixture;
   prediction: Prediction | null;
   userId: string;
+  odds?: { top: ScoreOdd[] } | null;
 }) {
   const queryClient = useQueryClient();
   const [home, setHome] = useState<string>(prediction ? String(prediction.home_score) : "");
@@ -197,6 +200,32 @@ export function FixtureCard({
             <span className="truncate">{fixture.team_away}</span>
           </div>
         </div>
+
+        {!locked && odds && odds.top.length > 0 && (
+          <div className="mt-2 flex items-center gap-1.5 flex-wrap text-[11px]">
+            <span className="text-muted-foreground font-semibold uppercase tracking-wide">Likely</span>
+            {odds.top.slice(0, 3).map((o) => {
+              const clickable = !locked;
+              return (
+                <button
+                  key={o.score}
+                  type="button"
+                  disabled={!clickable}
+                  onClick={() => {
+                    const [h, a] = o.score.split("-");
+                    setHome(h);
+                    setAway(a);
+                  }}
+                  className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-sm border border-border bg-surface hover:bg-muted disabled:opacity-60 disabled:hover:bg-surface"
+                  title={`Modelled probability ${(o.prob * 100).toFixed(1)}%`}
+                >
+                  <span className="font-bold tabular-nums text-ink">{o.score}</span>
+                  <span className="text-muted-foreground tabular-nums">{o.price.toFixed(2)}</span>
+                </button>
+              );
+            })}
+          </div>
+        )}
 
         {showStatusRow && (
           <div className="mt-3 flex items-center justify-between gap-2 min-h-[2rem]">
