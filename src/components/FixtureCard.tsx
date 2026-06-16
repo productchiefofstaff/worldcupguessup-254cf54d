@@ -7,8 +7,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { flagFor } from "@/lib/flags";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { useServerFn } from "@tanstack/react-start";
-import { getTeamForm, type FormMatch } from "@/lib/team-form.functions";
+import { type FormMatch } from "@/lib/team-form.functions";
 
 export type Fixture = {
   id: string;
@@ -101,23 +100,16 @@ export function FixtureCard({
   fixture,
   prediction,
   userId,
+  homeForm,
+  awayForm,
 }: {
   fixture: Fixture;
   prediction: Prediction | null;
   userId: string;
+  homeForm: FormMatch[];
+  awayForm: FormMatch[];
 }) {
   const queryClient = useQueryClient();
-  const fetchForm = useServerFn(getTeamForm);
-  const homeFormQ = useQuery({
-    queryKey: ["team-form", fixture.team_home],
-    queryFn: () => fetchForm({ data: { teamName: fixture.team_home } }),
-    staleTime: 60 * 60 * 1000,
-  });
-  const awayFormQ = useQuery({
-    queryKey: ["team-form", fixture.team_away],
-    queryFn: () => fetchForm({ data: { teamName: fixture.team_away } }),
-    staleTime: 60 * 60 * 1000,
-  });
   const [home, setHome] = useState<string>(prediction ? String(prediction.home_score) : "");
   const [away, setAway] = useState<string>(prediction ? String(prediction.away_score) : "");
   const [busy, setBusy] = useState(false);
@@ -206,8 +198,8 @@ export function FixtureCard({
         <span>{kickoffLabel(fixture.kickoff_at)}</span>
       </div>
       {(() => {
-        const hm = homeFormQ.data?.matches ?? [];
-        const am = awayFormQ.data?.matches ?? [];
+        const hm = homeForm;
+        const am = awayForm;
         if (hm.length === 0 && am.length === 0) return null;
         return (
           <div className="flex items-center justify-between px-3 py-1 bg-surface/50 border-b border-border">
