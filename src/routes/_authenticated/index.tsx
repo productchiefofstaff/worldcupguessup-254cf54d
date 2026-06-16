@@ -13,6 +13,24 @@ import {
 } from "@/components/ui/dialog";
 import { Lightbulb } from "lucide-react";
 
+const WHATS_NEW_KEY = "wcg-whats-new-dismissed-v1";
+
+function hasDismissedWhatsNew() {
+  try {
+    return localStorage.getItem(WHATS_NEW_KEY) === "1";
+  } catch {
+    return false;
+  }
+}
+
+function markWhatsNewDismissed() {
+  try {
+    localStorage.setItem(WHATS_NEW_KEY, "1");
+  } catch {
+    // ignore
+  }
+}
+
 export const Route = createFileRoute("/_authenticated/")({
   head: () => ({
     meta: [
@@ -41,9 +59,10 @@ const TABS = ["Upcoming", "Completed"] as const;
 function FixturesPage() {
   const { user } = useAuth();
   const [tab, setTab] = useState<(typeof TABS)[number]>("Upcoming");
-  const [whatsNewOpen, setWhatsNewOpen] = useState(true);
+  const [whatsNewOpen, setWhatsNewOpen] = useState(!hasDismissedWhatsNew());
 
   const dismissWhatsNew = () => {
+    markWhatsNewDismissed();
     setWhatsNewOpen(false);
   };
 
