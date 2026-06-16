@@ -3,7 +3,15 @@ import { useQuery } from "@tanstack/react-query";
 import { db as supabase } from "@/lib/db";
 import { useAuth } from "@/hooks/use-auth";
 import { FixtureCard, type Fixture, type Prediction } from "@/components/FixtureCard";
-import { useMemo, useState } from "react";
+import { useMemo, useState, useEffect } from "react";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from "@/components/ui/dialog";
+import { Sparkles } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/")({
   head: () => ({
