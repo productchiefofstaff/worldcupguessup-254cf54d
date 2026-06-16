@@ -39,14 +39,59 @@ function kickoffLabel(iso: string) {
   return d.toLocaleTimeString(undefined, { hour: "2-digit", minute: "2-digit" });
 }
 
+function teamForm(team: string, fixture: Fixture, allFixtures: Fixture[]): Array<"W" | "D" | "L"> {
+  const results: Array<"W" | "D" | "L"> = [];
+  const matches = allFixtures
+    .filter((f) => f.id !== fixture.id)
+    .filter((f) => f.home_score !== null && f.away_score !== null)
+    .filter((f) => f.team_home === team || f.team_away === team)
+    .filter((f) => new Date(f.kickoff_at).getTime() < new Date(fixture.kickoff_at).getTime())
+    .sort((a, b) => new Date(a.kickoff_at).getTime() - new Date(b.kickoff_at).getTime());
+
+  for (const f of matches) {
+    if (f.team_home === team) {
+      const diff = (f.home_score ?? 0) - (f.away_score ?? 0);
+      results.push(diff > 0 ? "W" : diff < 0 ? "L" : "D");
+    } else {
+      const diff = (f.away_score ?? 0) - (f.home_score ?? 0);
+      results.push(diff > 0 ? "W" : diff < 0 ? "L" : "D");
+    }
+  }
+  return results.slice(-5);
+}
+
+function FormDots({ results }: { results: Array<"W" | "D" | "L"> }) {
+  if (results.length === 0) return null;
+  return (
+    <div className="flex items-center gap-0.5">
+      {results.map((r, i) => (
+        <span
+          key={i}
+          className={`inline-flex items-center justify-center w-3.5 h-3.5 text-[8px] font-bold rounded-sm ${
+            r === "W"
+              ? "bg-success text-primary-foreground"
+              : r === "D"
+                ? "bg-warning text-white"
+                : "bg-destructive text-white"
+          }`}
+        >
+          {r}
+        </span>
+      ))}
+    </div>
+  );
+}
+
 export function FixtureCard({
   fixture,
   prediction,
   userId,
+  allFixtures,
 }: {
   fixture: Fixture;
   prediction: Prediction | null;
   userId: string;
+  allFixtures?: Fixture[];
 }) {
   const queryClient = useQueryClient();
   const [home, setHome] = useState<string>(prediction ? String(prediction.home_score) : "");
@@ -136,6 +181,12 @@ export function FixtureCard({
         <span className="font-semibold">Match {fixture.match_number}/104</span>
         <span>{kickoffLabel(fixture.kickoff_at)}</span>
       </div>
+      {allFixtures && allFixtures.length > 0 && (
+        <div className="flex items-center justify-between px-3 py-1 bg-surface/50 border-b border-border">
+          <FormDots results={teamForm(fixture.team_home, fixture, allFixtures)} />
+          <FormDots results={teamForm(fixture.team_away, fixture, allFixtures)} />
+        </div>
+      )}
 
       <div className="p-3 flex-1 flex flex-col">
         <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-2 flex-1">
