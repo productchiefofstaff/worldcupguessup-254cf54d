@@ -284,9 +284,7 @@ export function FixtureCard({
               <>
                 <span className="text-xs text-muted-foreground">
                   {prediction ? (
-                    <span className="inline-flex items-center gap-1 text-success">
-                      <Check className="h-3 w-3" /> Saved – update before kickoff
-                    </span>
+                    <Check className="h-3 w-3 text-success" />
                   ) : (
                     "Enter your prediction"
                   )}
