@@ -34,7 +34,7 @@ export const getWorldCupCorrectScoreOdds = createServerFn({ method: "GET" }).han
 
     // Discover the active World Cup sport key
     const sportsRes = await fetch(
-      `https://api.the-odds-api.com/v4/sports/?apiKey=${apiKey}&all=true`,
+      `https://api.the-odds-api.com/v4/sports/?apiKey=${apiKey}`,
     );
     if (!sportsRes.ok) throw new Error(`sports: ${sportsRes.status}`);
     const sports: Array<{ key: string; title: string; active: boolean }> = await sportsRes.json();
