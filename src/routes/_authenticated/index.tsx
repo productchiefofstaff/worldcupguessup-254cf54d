@@ -12,7 +12,7 @@ import {
   DialogDescription,
 } from "@/components/ui/dialog";
 import { Collapsible, CollapsibleTrigger, CollapsibleContent } from "@/components/ui/collapsible";
-import { Lightbulb, CalendarDays, ChevronDown } from "lucide-react";
+import { Lightbulb, CalendarDays, ChevronDown, Info } from "lucide-react";
 
 const WHATS_NEW_KEY = "wcg-whats-new-dismissed-v1";
 
@@ -137,7 +137,8 @@ function FixturesPage() {
         <p className="text-xs text-muted-foreground mt-1">Enter your predictions below</p>
         <Collapsible className="mt-2">
           <CollapsibleTrigger className="flex items-center gap-1 text-xs font-semibold text-muted-foreground hover:text-ink">
-            Game rules
+            <Info className="h-3 w-3 text-muted-foreground" />
+            Game Rules
             <ChevronDown className="h-3 w-3" />
           </CollapsibleTrigger>
           <CollapsibleContent className="text-xs text-muted-foreground mt-1 space-y-1">
