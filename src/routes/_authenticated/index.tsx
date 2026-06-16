@@ -14,6 +14,7 @@ import {
   DialogDescription,
 } from "@/components/ui/dialog";
 import { Collapsible, CollapsibleTrigger, CollapsibleContent } from "@/components/ui/collapsible";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Lightbulb, CalendarDays, ChevronDown, Info } from "lucide-react";
 
 const WHATS_NEW_KEY = "wcg-whats-new-dismissed-v1";
@@ -62,6 +63,7 @@ const TABS = ["Upcoming", "Completed"] as const;
 function FixturesPage() {
   const { user } = useAuth();
   const [tab, setTab] = useState<(typeof TABS)[number]>("Upcoming");
+  const activeTabValue = tab.toLowerCase();
   const [whatsNewOpen, setWhatsNewOpen] = useState(!hasDismissedWhatsNew());
 
   const dismissWhatsNew = () => {
@@ -172,54 +174,75 @@ function FixturesPage() {
         </Collapsible>
       </div>
 
-      <div className="flex items-center gap-2 mb-4 overflow-x-auto pb-1 -mx-1 px-1">
-        {TABS.map((s) => (
-          <button
-            key={s}
-            onClick={() => setTab(s)}
-            className={
-              "shrink-0 text-xs font-semibold px-3 py-1.5 rounded-full border transition-colors " +
-              (tab === s
-                ? "bg-ink text-primary-foreground border-ink"
-                : "bg-card text-ink border-border hover:bg-surface")
-            }
-          >
-            {s}
-          </button>
-        ))}
-      </div>
+      <Tabs value={activeTabValue} onValueChange={(v) => setTab(v === "upcoming" ? "Upcoming" : "Completed")}>
+        <TabsList className="w-full justify-start overflow-x-auto flex-nowrap mb-4">
+          <TabsTrigger value="upcoming" className="flex-1">Upcoming</TabsTrigger>
+          <TabsTrigger value="completed" className="flex-1">Completed</TabsTrigger>
+        </TabsList>
 
-      {(fixturesQ.isLoading || (!!user && predsQ.isLoading)) && (
-        <p className="text-sm text-muted-foreground">Loading fixtures…</p>
-      )}
-      {fixturesQ.error && <p className="text-sm text-destructive">Failed to load fixtures.</p>}
-
-      {!fixturesQ.isLoading && !predsQ.isLoading && (
-      <div className="space-y-6">
-        {grouped.map(([k, fixtures]) => (
-          <section key={k}>
-            <h2 className="text-xs uppercase tracking-wider font-bold text-muted-foreground mb-2">
-              {formatDay(fixtures[0].kickoff_at)}
-            </h2>
-            <div className="space-y-2">
-              {fixtures.map((f) => (
-                <FixtureCard
-                  key={f.id}
-                  fixture={f}
-                  prediction={predByFixture.get(f.id) ?? null}
-                  userId={user.id}
-                  homeForm={formsByTeam[f.team_home] ?? []}
-                  awayForm={formsByTeam[f.team_away] ?? []}
-                />
-              ))}
-            </div>
-          </section>
-        ))}
-        {!fixturesQ.isLoading && grouped.length === 0 && (
-          <p className="text-sm text-muted-foreground">No fixtures match this filter.</p>
+        {(fixturesQ.isLoading || (!!user && predsQ.isLoading)) && (
+          <p className="text-sm text-muted-foreground">Loading fixtures…</p>
         )}
-      </div>
-      )}
+        {fixturesQ.error && <p className="text-sm text-destructive">Failed to load fixtures.</p>}
+
+        <TabsContent value="upcoming">
+          {!fixturesQ.isLoading && !predsQ.isLoading && (
+            <div className="space-y-6">
+              {grouped.map(([k, fixtures]) => (
+                <section key={k}>
+                  <h2 className="text-xs uppercase tracking-wider font-bold text-muted-foreground mb-2">
+                    {formatDay(fixtures[0].kickoff_at)}
+                  </h2>
+                  <div className="space-y-2">
+                    {fixtures.map((f) => (
+                      <FixtureCard
+                        key={f.id}
+                        fixture={f}
+                        prediction={predByFixture.get(f.id) ?? null}
+                        userId={user.id}
+                        homeForm={formsByTeam[f.team_home] ?? []}
+                        awayForm={formsByTeam[f.team_away] ?? []}
+                      />
+                    ))}
+                  </div>
+                </section>
+              ))}
+              {grouped.length === 0 && (
+                <p className="text-sm text-muted-foreground">No fixtures match this filter.</p>
+              )}
+            </div>
+          )}
+        </TabsContent>
+
+        <TabsContent value="completed">
+          {!fixturesQ.isLoading && !predsQ.isLoading && (
+            <div className="space-y-6">
+              {grouped.map(([k, fixtures]) => (
+                <section key={k}>
+                  <h2 className="text-xs uppercase tracking-wider font-bold text-muted-foreground mb-2">
+                    {formatDay(fixtures[0].kickoff_at)}
+                  </h2>
+                  <div className="space-y-2">
+                    {fixtures.map((f) => (
+                      <FixtureCard
+                        key={f.id}
+                        fixture={f}
+                        prediction={predByFixture.get(f.id) ?? null}
+                        userId={user.id}
+                        homeForm={formsByTeam[f.team_home] ?? []}
+                        awayForm={formsByTeam[f.team_away] ?? []}
+                      />
+                    ))}
+                  </div>
+                </section>
+              ))}
+              {grouped.length === 0 && (
+                <p className="text-sm text-muted-foreground">No fixtures match this filter.</p>
+              )}
+            </div>
+          )}
+        </TabsContent>
+      </Tabs>
 
       <Dialog open={whatsNewOpen} onOpenChange={(open) => { if (!open) dismissWhatsNew(); }}>
         <DialogContent className="sm:max-w-md bg-white/70 backdrop-blur-xl border-white/40 shadow-2xl">
