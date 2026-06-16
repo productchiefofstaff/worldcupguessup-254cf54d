@@ -7,8 +7,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { flagFor } from "@/lib/flags";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { useServerFn } from "@tanstack/react-start";
-import { getTeamForm, type FormMatch } from "@/lib/team-form.functions";
+import { type FormMatch } from "@/lib/team-form.functions";
 
 export type Fixture = {
   id: string;
@@ -101,23 +100,16 @@ export function FixtureCard({
   fixture,
   prediction,
   userId,
+  homeForm,
+  awayForm,
 }: {
   fixture: Fixture;
   prediction: Prediction | null;
   userId: string;
+  homeForm: FormMatch[];
+  awayForm: FormMatch[];
 }) {
   const queryClient = useQueryClient();
-  const fetchForm = useServerFn(getTeamForm);
-  const homeFormQ = useQuery({
-    queryKey: ["team-form", fixture.team_home],
-    queryFn: () => fetchForm({ data: { teamName: fixture.team_home } }),
-    staleTime: 60 * 60 * 1000,
-  });
-  const awayFormQ = useQuery({
-    queryKey: ["team-form", fixture.team_away],
-    queryFn: () => fetchForm({ data: { teamName: fixture.team_away } }),
-    staleTime: 60 * 60 * 1000,
-  });
   const [home, setHome] = useState<string>(prediction ? String(prediction.home_score) : "");
   const [away, setAway] = useState<string>(prediction ? String(prediction.away_score) : "");
   const [busy, setBusy] = useState(false);
@@ -200,22 +192,17 @@ export function FixtureCard({
     <div className="bg-card border border-border rounded-md overflow-hidden flex flex-col h-full">
       <div className="flex items-center justify-between px-3 py-1.5 bg-surface text-xs text-muted-foreground border-b border-border">
         <span className="font-semibold">
-          {fixture.group_name ? `Group ${fixture.group_name}` : fixture.stage}
+          {fixture.stage}
         </span>
         <span className="font-semibold">Match {fixture.match_number}/104</span>
         <span>{kickoffLabel(fixture.kickoff_at)}</span>
       </div>
-      {(() => {
-        const hm = homeFormQ.data?.matches ?? [];
-        const am = awayFormQ.data?.matches ?? [];
-        if (hm.length === 0 && am.length === 0) return null;
-        return (
-          <div className="flex items-center justify-between px-3 py-1 bg-surface/50 border-b border-border">
-            <FormRow matches={hm} />
-            <FormRow matches={am} />
-          </div>
-        );
-      })()}
+      {(homeForm.length > 0 || awayForm.length > 0) && (
+        <div className="flex items-center justify-between px-3 py-1 bg-surface/50 border-b border-border">
+          <FormRow matches={homeForm} />
+          <FormRow matches={awayForm} />
+        </div>
+      )}
 
       <div className="p-3 flex-1 flex flex-col">
         <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-2 flex-1">
