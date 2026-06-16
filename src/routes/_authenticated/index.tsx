@@ -175,8 +175,9 @@ function FixturesPage() {
               What's new?
             </DialogTitle>
             <DialogDescription className="text-ink/80 pt-2 space-y-2">
-              <p>We've added form to each of the fixtures cards to help you pick, as well as Laura.</p>
-              <p>Click on any of the win, draw or loss icons to see more details about the match.</p>
+              <p>We've added form to each of the fixture cards.</p>
+              <p>You can click on any of the win, draw or loss icons to see more details too!</p>
+              <p>Happy predicting 🔮</p>
             </DialogDescription>
           </DialogHeader>
           <div className="flex justify-end mt-2">
