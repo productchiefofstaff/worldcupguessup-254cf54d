@@ -13,7 +13,6 @@ import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as AuthenticatedIndexRouteImport } from './routes/_authenticated/index'
-import { Route as ApiOddsTestRouteImport } from './routes/api/odds-test'
 import { Route as AuthenticatedMyPredictionsRouteImport } from './routes/_authenticated/my-predictions'
 import { Route as AuthenticatedLeaderboardRouteImport } from './routes/_authenticated/leaderboard'
 import { Route as AuthenticatedAdminRouteImport } from './routes/_authenticated/admin'
@@ -37,11 +36,6 @@ const AuthenticatedIndexRoute = AuthenticatedIndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => AuthenticatedRouteRoute,
-} as any)
-const ApiOddsTestRoute = ApiOddsTestRouteImport.update({
-  id: '/api/odds-test',
-  path: '/api/odds-test',
-  getParentRoute: () => rootRouteImport,
 } as any)
 const AuthenticatedMyPredictionsRoute =
   AuthenticatedMyPredictionsRouteImport.update({
@@ -73,7 +67,6 @@ export interface FileRoutesByFullPath {
   '/admin': typeof AuthenticatedAdminRoute
   '/leaderboard': typeof AuthenticatedLeaderboardRoute
   '/my-predictions': typeof AuthenticatedMyPredictionsRoute
-  '/api/odds-test': typeof ApiOddsTestRoute
   '/api/public/sync-results': typeof ApiPublicSyncResultsRoute
 }
 export interface FileRoutesByTo {
@@ -82,7 +75,6 @@ export interface FileRoutesByTo {
   '/admin': typeof AuthenticatedAdminRoute
   '/leaderboard': typeof AuthenticatedLeaderboardRoute
   '/my-predictions': typeof AuthenticatedMyPredictionsRoute
-  '/api/odds-test': typeof ApiOddsTestRoute
   '/': typeof AuthenticatedIndexRoute
   '/api/public/sync-results': typeof ApiPublicSyncResultsRoute
 }
@@ -94,7 +86,6 @@ export interface FileRoutesById {
   '/_authenticated/admin': typeof AuthenticatedAdminRoute
   '/_authenticated/leaderboard': typeof AuthenticatedLeaderboardRoute
   '/_authenticated/my-predictions': typeof AuthenticatedMyPredictionsRoute
-  '/api/odds-test': typeof ApiOddsTestRoute
   '/_authenticated/': typeof AuthenticatedIndexRoute
   '/api/public/sync-results': typeof ApiPublicSyncResultsRoute
 }
@@ -107,7 +98,6 @@ export interface FileRouteTypes {
     | '/admin'
     | '/leaderboard'
     | '/my-predictions'
-    | '/api/odds-test'
     | '/api/public/sync-results'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -116,7 +106,6 @@ export interface FileRouteTypes {
     | '/admin'
     | '/leaderboard'
     | '/my-predictions'
-    | '/api/odds-test'
     | '/'
     | '/api/public/sync-results'
   id:
@@ -127,7 +116,6 @@ export interface FileRouteTypes {
     | '/_authenticated/admin'
     | '/_authenticated/leaderboard'
     | '/_authenticated/my-predictions'
-    | '/api/odds-test'
     | '/_authenticated/'
     | '/api/public/sync-results'
   fileRoutesById: FileRoutesById
@@ -136,7 +124,6 @@ export interface RootRouteChildren {
   AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
   AuthRoute: typeof AuthRoute
   ResetPasswordRoute: typeof ResetPasswordRoute
-  ApiOddsTestRoute: typeof ApiOddsTestRoute
   ApiPublicSyncResultsRoute: typeof ApiPublicSyncResultsRoute
 }
 
@@ -169,13 +156,6 @@ declare module '@tanstack/react-router' {
       fullPath: '/'
       preLoaderRoute: typeof AuthenticatedIndexRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/api/odds-test': {
-      id: '/api/odds-test'
-      path: '/api/odds-test'
-      fullPath: '/api/odds-test'
-      preLoaderRoute: typeof ApiOddsTestRouteImport
-      parentRoute: typeof rootRouteImport
     }
     '/_authenticated/my-predictions': {
       id: '/_authenticated/my-predictions'
@@ -229,7 +209,6 @@ const rootRouteChildren: RootRouteChildren = {
   AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
   AuthRoute: AuthRoute,
   ResetPasswordRoute: ResetPasswordRoute,
-  ApiOddsTestRoute: ApiOddsTestRoute,
   ApiPublicSyncResultsRoute: ApiPublicSyncResultsRoute,
 }
 export const routeTree = rootRouteImport
