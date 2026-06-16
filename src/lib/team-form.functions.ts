@@ -99,16 +99,15 @@ async function scrapeEspnResults(teamId: number, slug: string): Promise<string> 
 
 function parseEspnResultsMarkdown(
   markdown: string,
-  teamCanonical: string,
+  teamId: number,
 ): FormMatch[] {
-  // Row format:
-  // | Tue, Jun 9 | [Home](url) | [logo](u)[3 - 0](url) [logo](u) | [Away](url) | [FT](url) | International Friendly |
   const rowRe =
-    /\|\s*(\w{3},\s*\w{3}\s*\d+)\s*\|\s*\[([^\]]+)\]\([^)]+\)\s*\|\s*[^|]*?\[(\d+)\s*-\s*(\d+)\][^|]*?\|\s*\[([^\]]+)\]\([^)]+\)\s*\|\s*\[FT\]\([^)]+\)\s*\|\s*([^|]+?)\s*\|/;
+    /\|\s*(\w{3},\s*\w{3}\s*\d+)\s*\|\s*\[([^\]]+)\]\(([^)]+)\)\s*\|\s*[^|]*?\[(\d+)\s*-\s*(\d+)\][^|]*?\|\s*\[([^\]]+)\]\(([^)]+)\)\s*\|\s*\[FT\]\([^)]+\)\s*\|\s*([^|]+?)\s*\|/;
   const yearRe = /^\s*(\w+),\s*(\d{4})\s*$/;
 
   let year = new Date().getUTCFullYear();
   const out: FormMatch[] = [];
+  const idMarker = `/id/${teamId}/`;
 
   for (const rawLine of markdown.split("\n")) {
     const line = rawLine.trim();
@@ -119,12 +118,12 @@ function parseEspnResultsMarkdown(
     }
     const m = rowRe.exec(line);
     if (!m) continue;
-    const [, dayLabel, home, shStr, saStr, away, comp] = m;
+    const [, dayLabel, home, homeUrl, shStr, saStr, away, awayUrl, comp] = m;
     const sh = parseInt(shStr, 10);
     const sa = parseInt(saStr, 10);
-    const isHome = home.trim() === teamCanonical;
-    const isAway = away.trim() === teamCanonical;
-    if (!isHome && !isAway) continue; // safety
+    const isHome = homeUrl.includes(idMarker);
+    const isAway = awayUrl.includes(idMarker);
+    if (!isHome && !isAway) continue;
     const scoreFor = isHome ? sh : sa;
     const scoreAgainst = isHome ? sa : sh;
     const opponent = (isHome ? away : home).trim();
@@ -177,7 +176,7 @@ export const getTeamForm = createServerFn({ method: "POST" })
 
     try {
       const markdown = await scrapeEspnResults(espn.id, espn.slug);
-      const matches = parseEspnResultsMarkdown(markdown, teamName);
+      const matches = parseEspnResultsMarkdown(markdown, espn.id);
       await admin.from("team_form_cache").upsert({
         team_name: teamName,
         external_team_id: espn.id,
