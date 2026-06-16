@@ -2,7 +2,7 @@ import { Link, useNavigate, useRouterState } from "@tanstack/react-router";
 import { useAuth } from "@/hooks/use-auth";
 import { useQuery } from "@tanstack/react-query";
 import { db } from "@/lib/db";
-import { LogOut } from "lucide-react";
+import { LogOut, CalendarDays, Trophy, ClipboardList, Shield } from "lucide-react";
 
 export function SiteHeader() {
   const { user, profile, signOut } = useAuth();
@@ -24,46 +24,51 @@ export function SiteHeader() {
     navigate({ to: "/auth" });
   }
   return (
-    <header className="sticky top-0 z-40 text-primary-foreground border-b-4 border-primary">
-      <div className="bg-primary text-primary-foreground">
+    <header className="sticky top-0 z-40 text-primary-foreground border-b border-white/5">
+      <div className="bg-ink text-primary-foreground">
         <div className="max-w-3xl mx-auto px-4 pt-3 pb-2">
           <Link to="/" className="block text-center">
             <h1 className="text-xl sm:text-2xl font-extrabold tracking-tight">
-              🏆 2026 World Cup Guess Up
+              <span className="text-primary">🏆</span> 2026 World Cup{" "}
+              <span className="text-primary">Guess Up</span>
             </h1>
           </Link>
         </div>
       </div>
-      <div className="bg-ink max-w-full px-4 pb-2 pt-2">
-        <nav className="max-w-3xl mx-auto flex items-center justify-start gap-1 sm:gap-3 text-sm font-semibold overflow-x-auto whitespace-nowrap [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+      <div className="bg-ink/95 max-w-full px-4 pb-2 pt-1 border-t border-white/5">
+        <nav className="max-w-3xl mx-auto flex items-center justify-start gap-1 sm:gap-2 text-sm font-semibold overflow-x-auto whitespace-nowrap [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
           <Link
             to="/"
-            className="px-2 py-1 hover:text-primary"
+            className="inline-flex items-center gap-1.5 px-2 py-1 rounded-md text-primary-foreground/80 hover:text-primary-foreground hover:bg-white/5"
             activeOptions={{ exact: true }}
-            activeProps={{ className: "px-2 py-1 text-primary underline underline-offset-4" }}
+            activeProps={{ className: "inline-flex items-center gap-1.5 px-2 py-1 rounded-md bg-primary/15 text-primary" }}
           >
+            <CalendarDays className="h-4 w-4" />
             Fixtures
           </Link>
           <Link
             to="/leaderboard"
-            className="px-2 py-1 hover:text-primary"
-            activeProps={{ className: "px-2 py-1 text-primary underline underline-offset-4" }}
+            className="inline-flex items-center gap-1.5 px-2 py-1 rounded-md text-primary-foreground/80 hover:text-primary-foreground hover:bg-white/5"
+            activeProps={{ className: "inline-flex items-center gap-1.5 px-2 py-1 rounded-md bg-primary/15 text-primary" }}
           >
+            <Trophy className="h-4 w-4" />
             Leaderboard
           </Link>
           <Link
             to="/my-predictions"
-            className="px-2 py-1 hover:text-primary"
-            activeProps={{ className: "px-2 py-1 text-primary underline underline-offset-4" }}
+            className="inline-flex items-center gap-1.5 px-2 py-1 rounded-md text-primary-foreground/80 hover:text-primary-foreground hover:bg-white/5"
+            activeProps={{ className: "inline-flex items-center gap-1.5 px-2 py-1 rounded-md bg-primary/15 text-primary" }}
           >
+            <ClipboardList className="h-4 w-4" />
             Predictions
           </Link>
           {isAdmin && (
             <Link
               to="/admin"
-              className="px-2 py-1 hover:text-primary"
-              activeProps={{ className: "px-2 py-1 text-primary underline underline-offset-4" }}
+              className="inline-flex items-center gap-1.5 px-2 py-1 rounded-md text-primary-foreground/80 hover:text-primary-foreground hover:bg-white/5"
+              activeProps={{ className: "inline-flex items-center gap-1.5 px-2 py-1 rounded-md bg-primary/15 text-primary" }}
             >
+              <Shield className="h-4 w-4" />
               Admin
             </Link>
           )}
