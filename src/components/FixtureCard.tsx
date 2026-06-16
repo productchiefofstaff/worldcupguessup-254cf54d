@@ -55,7 +55,7 @@ function FormBadge({ match }: { match: FormMatch }) {
       : match.result === "D"
         ? "bg-amber-100 text-amber-700"
         : "bg-rose-100 text-rose-700";
-  const openCls = open ? " ring-2 ring-ring ring-offset-1" : "";
+  const openCls = open ? " outline-2 outline-offset-[-2px] outline-ring" : "";
   return (
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
