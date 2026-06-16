@@ -11,7 +11,8 @@ import {
   DialogTitle,
   DialogDescription,
 } from "@/components/ui/dialog";
-import { Lightbulb, CalendarDays } from "lucide-react";
+import { Collapsible, CollapsibleTrigger, CollapsibleContent } from "@/components/ui/collapsible";
+import { Lightbulb, CalendarDays, ChevronDown } from "lucide-react";
 
 const WHATS_NEW_KEY = "wcg-whats-new-dismissed-v1";
 
@@ -133,13 +134,20 @@ function FixturesPage() {
           <CalendarDays className="h-6 w-6 text-primary" />
           Fixtures
         </h1>
-        <p className="text-sm text-muted-foreground mt-1">
-          <span className="font-bold text-success">40 pts</span> exact score ·{" "}
-          <span className="font-bold text-warning">10 pts</span> correct result · predictions lock at kickoff
-        </p>
-        <p className="text-xs text-muted-foreground mt-1">
-          Knockout scores are based on the 90-minute result (extra time and penalties do not count).
-        </p>
+        <p className="text-xs text-muted-foreground mt-1">Enter your predictions below</p>
+        <Collapsible className="mt-2">
+          <CollapsibleTrigger className="flex items-center gap-1 text-xs font-semibold text-muted-foreground hover:text-ink">
+            Game rules
+            <ChevronDown className="h-3 w-3" />
+          </CollapsibleTrigger>
+          <CollapsibleContent className="text-xs text-muted-foreground mt-1 space-y-1">
+            <p>
+              <span className="font-bold text-success">40 pts</span> exact score ·{" "}
+              <span className="font-bold text-warning">10 pts</span> correct result · predictions lock at kickoff
+            </p>
+            <p>Knockout scores are based on the 90-minute result (extra time and penalties do not count).</p>
+          </CollapsibleContent>
+        </Collapsible>
       </div>
 
       <div className="flex items-center gap-2 mb-4 overflow-x-auto pb-1 -mx-1 px-1">
