@@ -2,7 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { db as supabase } from "@/lib/db";
 import { useAuth } from "@/hooks/use-auth";
-import { FixtureCard, type Fixture, type Prediction } from "@/components/FixtureCard";
+import { FixtureCard, NowProvider, type Fixture, type Prediction } from "@/components/FixtureCard";
 import { useMemo, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { getTeamFormBatch, type FormMatch } from "@/lib/team-form.functions";
@@ -159,6 +159,7 @@ function FixturesPage() {
 
   return (
     <main className="max-w-3xl mx-auto px-4 py-4 sm:py-6">
+      <NowProvider>
       <div className="mb-4">
         <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-ink flex items-center gap-2">
           <CalendarDays className="h-6 w-6 text-primary" />
@@ -274,6 +275,7 @@ function FixturesPage() {
           </div>
         </DialogContent>
       </Dialog>
+      </NowProvider>
     </main>
   );
 }
