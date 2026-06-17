@@ -358,7 +358,7 @@ export function FixtureCard({
             disabled={!canSeeOthers}
             className="w-full flex items-center justify-between px-3 py-2 text-xs font-semibold text-muted-foreground hover:text-ink disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            <span>{canSeeOthers ? "See the predictions" : "Lock in your predictions and see others'"}</span>
+            <span>{canSeeOthers ? "See the predictions" : "Lock in your predictions and see the others"}</span>
             <ChevronDown className={"h-4 w-4 transition-transform " + (open ? "rotate-180" : "")} />
           </CollapsibleTrigger>
           <CollapsibleContent className="px-3 pb-3">
