@@ -316,9 +316,16 @@ export function FixtureCard({
                   <span className="text-xs text-muted-foreground">Enter your prediction</span>
                 )}
                 {!userLocked && (
-                  <Button size="sm" onClick={submit} disabled={busy} className="font-bold h-8">
-                    {prediction ? "Update" : "Submit"}
-                  </Button>
+                  <div className="flex items-center gap-2">
+                    {isSaved && (
+                      <span className="inline-flex items-center gap-0.5 text-xs text-emerald-600 font-semibold">
+                        <Check className="h-3 w-3" /> Saved
+                      </span>
+                    )}
+                    <Button size="sm" onClick={submit} disabled={busy} className="font-bold h-8">
+                      {prediction ? "Update" : "Submit"}
+                    </Button>
+                  </div>
                 )}
               </>
             ) : (
