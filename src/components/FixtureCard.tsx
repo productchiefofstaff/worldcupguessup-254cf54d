@@ -299,7 +299,7 @@ export function FixtureCard({
             {!locked ? (
               <>
                 {prediction ? (
-                  <label className={"inline-flex items-center gap-1.5 text-xs font-semibold " + (userLocked ? "text-ink" : "text-muted-foreground")}>
+                  <label className={"inline-flex items-center gap-1.5 text-xs font-semibold " + (userLocked ? "text-muted-foreground" : "text-muted-foreground")}>
                     <Lock className="h-3 w-3" />
                     <span>{userLocked ? "Locked" : "Lock"}</span>
                     <Switch
