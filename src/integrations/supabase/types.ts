@@ -99,6 +99,7 @@ export type Database = {
           fixture_id: string
           home_score: number
           id: string
+          locked_at: string | null
           updated_at: string
           user_id: string
         }
@@ -108,6 +109,7 @@ export type Database = {
           fixture_id: string
           home_score: number
           id?: string
+          locked_at?: string | null
           updated_at?: string
           user_id: string
         }
@@ -117,6 +119,7 @@ export type Database = {
           fixture_id?: string
           home_score?: number
           id?: string
+          locked_at?: string | null
           updated_at?: string
           user_id?: string
         }

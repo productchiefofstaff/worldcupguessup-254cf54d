@@ -90,7 +90,7 @@ function FixturesPage() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("predictions")
-        .select("id, fixture_id, home_score, away_score")
+        .select("id, fixture_id, home_score, away_score, locked_at")
         .eq("user_id", user!.id);
       if (error) throw error;
       return data as Prediction[];
