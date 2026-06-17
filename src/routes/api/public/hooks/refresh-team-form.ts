@@ -34,12 +34,32 @@ export const Route = createFileRoute("/api/public/hooks/refresh-team-form")({
         }
         const fixtureRows = (completedFixtures ?? []) as CompletedFixtureForForm[];
 
+        const { data: cachedRows, error: cacheError } = await supabase
+          .from("team_form_cache")
+          .select("team_name, matches");
+
+        if (cacheError) {
+          return Response.json(
+            { success: false, error: cacheError.message },
+            { status: 500 },
+          );
+        }
+
+        const cachedByTeam = new Map(
+          ((cachedRows ?? []) as Array<{ team_name: string; matches: unknown }>).map((row) => [
+            row.team_name,
+            Array.isArray(row.matches) ? row.matches : [],
+          ]),
+        );
+
         for (const [teamName, espn] of Object.entries(ESPN_TEAMS)) {
           try {
-            const markdown = await scrapeEspnResults(espn.id, espn.slug);
-            const scrapedMatches = parseEspnResultsMarkdown(markdown, espn.id);
+            const cachedMatches = cachedByTeam.get(teamName);
+            const scrapedMatches = cachedMatches
+              ? cachedMatches
+              : parseEspnResultsMarkdown(await scrapeEspnResults(espn.id, espn.slug), espn.id);
             const matches = mergeTeamFormMatches(
-              scrapedMatches,
+              scrapedMatches as ReturnType<typeof parseEspnResultsMarkdown>,
               buildFixtureFormMatches(fixtureRows, teamName),
             );
             await supabase.from("team_form_cache").upsert({
