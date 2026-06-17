@@ -81,6 +81,10 @@ function parseEspnDate(dayLabel: string, year: number): string {
 }
 
 export async function scrapeEspnResults(teamId: number, slug: string): Promise<string> {
+  // Use Firecrawl with the HTML format (not markdown). Markdown conversion
+  // silently dropped the most recent month's results table for some pages
+  // (e.g. Cape Verde's June 2026 vs Spain), and ESPN's AWS WAF blocks direct
+  // worker fetches — so we ask Firecrawl for the rendered HTML and parse it.
   const apiKey = process.env.FIRECRAWL_API_KEY;
   if (!apiKey) throw new Error("FIRECRAWL_API_KEY missing");
   const url = `https://www.espn.com/soccer/team/results/_/id/${teamId}/${slug}`;
@@ -90,14 +94,110 @@ export async function scrapeEspnResults(teamId: number, slug: string): Promise<s
       Authorization: `Bearer ${apiKey}`,
       "Content-Type": "application/json",
     },
-    body: JSON.stringify({ url, formats: ["markdown"], onlyMainContent: true }),
+    body: JSON.stringify({
+      url,
+      formats: ["html"],
+      onlyMainContent: false,
+      waitFor: 4000,
+      maxAge: 0,
+    }),
   });
   if (!res.ok) throw new Error(`firecrawl ${res.status}`);
-  const json = (await res.json()) as { data?: { markdown?: string } };
-  return json.data?.markdown ?? "";
+  const json = (await res.json()) as { data?: { html?: string } };
+  return json.data?.html ?? "";
 }
 
 export function parseEspnResultsMarkdown(
+  html: string,
+  teamId: number,
+): FormMatch[] {
+  // Now parses raw ESPN HTML (kept the name for back-compat with callers).
+  const idMarker = `/id/${teamId}/`;
+  const out: FormMatch[] = [];
+
+  // Locate each month's results table by its "Table__Title" header.
+  const titleRe = /Table__Title[^>]*>([^<]+)</g;
+  const titles: { title: string; idx: number }[] = [];
+  let tm: RegExpExecArray | null;
+  while ((tm = titleRe.exec(html)) !== null) {
+    titles.push({ title: tm[1].trim(), idx: tm.index });
+  }
+  titles.push({ title: "", idx: html.length });
+
+  const monthYearRe = /^(\w{3,9}),\s*(\d{4})$/;
+  const rowRe = /<tr\b[^>]*>([\s\S]*?)<\/tr>/g;
+  const dayRe = />(\w{3}),\s*(\w{3})\s*(\d+)</;
+  const teamLinkRe =
+    /href="[^"]*\/soccer\/team\/_\/id\/(\d+)\/[^"]+"[^>]*>([^<]+)</g;
+  const scoreRe = />(\d+)\s*-\s*(\d+)</;
+  const compRe = /<span>([^<]+)<\/span>\s*<\/td>\s*<\/tr>/;
+
+  for (let i = 0; i < titles.length - 1; i++) {
+    const my = monthYearRe.exec(titles[i].title);
+    if (!my) continue;
+    const month = MONTHS[my[1].slice(0, 3)] ?? 0;
+    const year = parseInt(my[2], 10);
+    const section = html.slice(titles[i].idx, titles[i + 1].idx);
+
+    rowRe.lastIndex = 0;
+    let r: RegExpExecArray | null;
+    while ((r = rowRe.exec(section)) !== null) {
+      const tr = r[1];
+      if (!/>FT</.test(tr)) continue;
+
+      const d = dayRe.exec(tr);
+      if (!d) continue;
+      const day = parseInt(d[3], 10);
+
+      teamLinkRe.lastIndex = 0;
+      const links: { id: string; name: string }[] = [];
+      let lm: RegExpExecArray | null;
+      while ((lm = teamLinkRe.exec(tr)) !== null) {
+        const name = lm[2].trim();
+        if (!name) continue;
+        if (!links.find((x) => x.id === lm![1])) {
+          links.push({ id: lm[1], name });
+        }
+      }
+      if (links.length < 2) continue;
+      const [home, away] = links;
+
+      const s = scoreRe.exec(tr);
+      if (!s) continue;
+      const sh = parseInt(s[1], 10);
+      const sa = parseInt(s[2], 10);
+
+      const teamIdStr = String(teamId);
+      const isHome = home.id === teamIdStr;
+      const isAway = away.id === teamIdStr;
+      if (!isHome && !isAway) continue;
+
+      const scoreFor = isHome ? sh : sa;
+      const scoreAgainst = isHome ? sa : sh;
+      const opponent = isHome ? away.name : home.name;
+      const compM = compRe.exec(tr);
+      const competition = compM ? compM[1].trim() : "";
+
+      out.push({
+        date: new Date(Date.UTC(year, month, day)).toISOString(),
+        competition,
+        opponent,
+        homeAway: isHome ? "H" : "A",
+        scoreFor,
+        scoreAgainst,
+        result:
+          scoreFor > scoreAgainst ? "W" : scoreFor < scoreAgainst ? "L" : "D",
+      });
+    }
+  }
+
+  return out
+    .sort((x, y) => new Date(y.date).getTime() - new Date(x.date).getTime())
+    .slice(0, 5);
+}
+
+// Legacy (unused) — kept as a no-op stub so external imports don't break.
+function _legacyParseEspnResultsMarkdown(
   markdown: string,
   teamId: number,
 ): FormMatch[] {
