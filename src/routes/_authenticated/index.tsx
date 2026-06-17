@@ -3,6 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { db as supabase } from "@/lib/db";
 import { useAuth } from "@/hooks/use-auth";
 import { FixtureCard, type Fixture, type Prediction } from "@/components/FixtureCard";
+import type { FormMatch } from "@/lib/team-form.functions";
 import { useMemo, useState } from "react";
 import {
   Dialog,
@@ -70,6 +71,7 @@ function FixturesPage() {
 
   const fixturesQ = useQuery({
     queryKey: ["fixtures"],
+    staleTime: 5 * 60 * 1000,
     queryFn: async () => {
       const { data, error } = await supabase
         .from("fixtures")
@@ -84,6 +86,7 @@ function FixturesPage() {
   const predsQ = useQuery({
     queryKey: ["predictions", user?.id],
     enabled: !!user,
+    staleTime: 5 * 60 * 1000,
     queryFn: async () => {
       const { data, error } = await supabase
         .from("predictions")
@@ -91,6 +94,22 @@ function FixturesPage() {
         .eq("user_id", user!.id);
       if (error) throw error;
       return data as Prediction[];
+    },
+  });
+
+  const formQ = useQuery({
+    queryKey: ["team-form-all"],
+    staleTime: 60 * 60 * 1000,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("team_form_cache")
+        .select("team_name, matches");
+      if (error) throw error;
+      const map = new Map<string, FormMatch[]>();
+      ((data ?? []) as Array<{ team_name: string; matches: FormMatch[] }>).forEach((r) =>
+        map.set(r.team_name, r.matches ?? []),
+      );
+      return map;
     },
   });
 
@@ -181,6 +200,8 @@ function FixturesPage() {
                   fixture={f}
                   prediction={predByFixture.get(f.id) ?? null}
                   userId={user.id}
+                  homeForm={formQ.data?.get(f.team_home) ?? []}
+                  awayForm={formQ.data?.get(f.team_away) ?? []}
                 />
               ))}
             </div>
