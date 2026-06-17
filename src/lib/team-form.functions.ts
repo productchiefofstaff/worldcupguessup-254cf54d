@@ -157,11 +157,30 @@ export function mergeTeamFormMatches(
   // App fixture results are the source of truth for World Cup matches; ESPN is
   // still useful for older friendlies/qualifiers but sometimes lags per-team.
   fixtureMatches.forEach(add);
-  scrapedMatches.forEach(add);
+  // Drop any scraped 2026 World Cup matches — fixtureMatches already covers
+  // those authoritatively, and ESPN opponent-name/date variations
+  // (e.g. "United States" vs "USA", timezone-shifted dates) can slip past the
+  // dedupe key and produce duplicate rows in the recent-form badges.
+  scrapedMatches
+    .filter((m) => !isWorldCup2026Match(m))
+    .forEach(add);
 
   return merged
     .sort((x, y) => new Date(y.date).getTime() - new Date(x.date).getTime())
     .slice(0, 5);
+}
+
+function isWorldCup2026Match(match: FormMatch): boolean {
+  const comp = match.competition.toLowerCase();
+  const isWcComp =
+    comp.includes("fifa world cup") &&
+    !comp.includes("qualif"); // keep qualifiers, drop the tournament itself
+  if (!isWcComp) return false;
+  // Tournament window guard so future cycles aren't accidentally filtered.
+  const t = new Date(match.date).getTime();
+  const start = Date.UTC(2026, 5, 1); // Jun 1 2026
+  const end = Date.UTC(2026, 6, 31); // Jul 31 2026
+  return t >= start && t <= end;
 }
 
 function parseEspnDate(dayLabel: string, year: number): string {
