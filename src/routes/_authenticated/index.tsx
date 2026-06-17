@@ -62,6 +62,7 @@ function FixturesPage() {
   const { user } = useAuth();
   const [tab, setTab] = useState<(typeof TABS)[number]>("Upcoming");
   const [whatsNewOpen, setWhatsNewOpen] = useState(!hasDismissedWhatsNew());
+  const [rulesOpen, setRulesOpen] = useState(false);
 
   const dismissWhatsNew = () => {
     markWhatsNewDismissed();
@@ -148,12 +149,22 @@ function FixturesPage() {
 
   return (
     <main className="max-w-3xl mx-auto px-4 py-4 sm:py-6">
-      <div className="mb-4">
-        <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-ink flex items-center gap-2">
-          <CalendarDays className="h-6 w-6 text-primary" />
-          Fixtures
-        </h1>
-        <p className="text-xs text-muted-foreground mt-1">Enter your predictions below</p>
+      <div className="mb-4 flex items-start justify-between gap-3">
+        <div>
+          <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-ink flex items-center gap-2">
+            <CalendarDays className="h-6 w-6 text-primary" />
+            Fixtures
+          </h1>
+          <p className="text-xs text-muted-foreground mt-1">Enter your predictions below</p>
+        </div>
+        <button
+          type="button"
+          onClick={() => setRulesOpen(true)}
+          className="inline-flex items-center justify-center rounded-full hover:bg-muted p-1.5 transition-colors shrink-0 mt-0.5"
+          aria-label="Game rules"
+        >
+          <Info className="h-4 w-4 text-muted-foreground" />
+        </button>
       </div>
 
       <Tabs value={tab} onValueChange={(v) => setTab(v as (typeof TABS)[number])}>
@@ -214,6 +225,29 @@ function FixturesPage() {
           <div className="flex justify-end mt-2">
             <button
               onClick={dismissWhatsNew}
+              className="text-xs font-semibold px-4 py-2 rounded-md bg-primary text-primary-foreground hover:bg-primary/90 transition-colors"
+            >
+              Got it
+            </button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={rulesOpen} onOpenChange={setRulesOpen}>
+        <DialogContent className="sm:max-w-sm bg-white/70 backdrop-blur-xl border-white/40 shadow-2xl">
+          <DialogHeader>
+            <DialogTitle className="text-ink">Game Rules</DialogTitle>
+            <DialogDescription className="text-ink/80 pt-2 space-y-2">
+              <span className="block">
+                <span className="font-bold text-success">40 pts</span> exact score ·{" "}
+                <span className="font-bold text-warning">10 pts</span> correct result · predictions lock at kickoff
+              </span>
+              <span className="block">Knockout scores are based on the 90-minute result (extra time and penalties do not count).</span>
+            </DialogDescription>
+          </DialogHeader>
+          <div className="flex justify-end mt-2">
+            <button
+              onClick={() => setRulesOpen(false)}
               className="text-xs font-semibold px-4 py-2 rounded-md bg-primary text-primary-foreground hover:bg-primary/90 transition-colors"
             >
               Got it
