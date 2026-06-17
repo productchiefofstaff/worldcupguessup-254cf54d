@@ -2,8 +2,11 @@ import { createFileRoute } from "@tanstack/react-router";
 import { createClient } from "@supabase/supabase-js";
 import {
   ESPN_TEAMS,
+  buildFixtureFormMatches,
+  mergeTeamFormMatches,
   scrapeEspnResults,
   parseEspnResultsMarkdown,
+  type CompletedFixtureForForm,
 } from "@/lib/team-form.functions";
 
 export const Route = createFileRoute("/api/public/hooks/refresh-team-form")({
@@ -17,11 +20,28 @@ export const Route = createFileRoute("/api/public/hooks/refresh-team-form")({
         );
 
         const results: { team: string; ok: boolean; error?: string }[] = [];
+        const { data: completedFixtures, error: fixturesError } = await supabase
+          .from("fixtures")
+          .select("team_home, team_away, kickoff_at, home_score, away_score")
+          .not("home_score", "is", null)
+          .not("away_score", "is", null);
+
+        if (fixturesError) {
+          return Response.json(
+            { success: false, error: fixturesError.message },
+            { status: 500 },
+          );
+        }
+        const fixtureRows = (completedFixtures ?? []) as CompletedFixtureForForm[];
 
         for (const [teamName, espn] of Object.entries(ESPN_TEAMS)) {
           try {
             const markdown = await scrapeEspnResults(espn.id, espn.slug);
-            const matches = parseEspnResultsMarkdown(markdown, espn.id);
+            const scrapedMatches = parseEspnResultsMarkdown(markdown, espn.id);
+            const matches = mergeTeamFormMatches(
+              scrapedMatches,
+              buildFixtureFormMatches(fixtureRows, teamName),
+            );
             await supabase.from("team_form_cache").upsert({
               team_name: teamName,
               external_team_id: espn.id,
