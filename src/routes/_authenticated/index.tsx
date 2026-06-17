@@ -221,9 +221,9 @@ function FixturesPage() {
               What's new?
             </DialogTitle>
             <DialogDescription className="text-ink/80 pt-2 space-y-2">
-              <p>We've added form to each of the fixture cards.</p>
-              <p>You can click on any of the win, draw or loss icons to see more details too!</p>
-              <p>Happy predicting 🔮</p>
+              <span className="block">We've added form to each of the fixture cards.</span>
+              <span className="block">You can click on any of the win, draw or loss icons to see more details too!</span>
+              <span className="block">Happy predicting 🔮</span>
             </DialogDescription>
           </DialogHeader>
           <div className="flex justify-end mt-2">
