@@ -16,7 +16,7 @@ import { Collapsible, CollapsibleTrigger, CollapsibleContent } from "@/component
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Lightbulb, CalendarDays, ChevronDown, Info } from "lucide-react";
 
-const WHATS_NEW_KEY = "wcg-whats-new-dismissed-v2-lock";
+const WHATS_NEW_KEY = "wcg-whats-new-dismissed-v3";
 
 function hasDismissedWhatsNew() {
   try {
