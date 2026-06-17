@@ -9,7 +9,7 @@ import {
 } from "@/lib/admin-fixtures.functions";
 import { db as supabase } from "@/lib/db";
 import { useAuth } from "@/hooks/use-auth";
-import { Flag } from "@/components/Flag";
+import { flagFor } from "@/lib/flags";
 import { Shield, Download, Pencil, Trash2 } from "lucide-react";
 import { useState } from "react";
 
@@ -441,9 +441,9 @@ function AdminPage() {
                   <td className="px-3 py-2">
                     {f ? (
                       <span className="flex items-center gap-1">
-                        <Flag team={f.team_home} size={20} />
+                        <span>{flagFor(f.team_home)}</span>
                         <span className="text-muted-foreground">v</span>
-                        <Flag team={f.team_away} size={20} />
+                        <span>{flagFor(f.team_away)}</span>
                       </span>
                     ) : (
                       "—"
@@ -686,11 +686,11 @@ function AdminPage() {
                   <tr key={f.id} className="border-t border-border">
                     <td className="px-3 py-2">
                       <span className="flex items-center gap-1">
-                        <Flag team={f.team_home} size={20} />
+                        <span>{flagFor(f.team_home)}</span>
                         <span>{f.team_home}</span>
                         <span className="text-muted-foreground">v</span>
                         <span>{f.team_away}</span>
-                        <Flag team={f.team_away} size={20} />
+                        <span>{flagFor(f.team_away)}</span>
                       </span>
                     </td>
                     <td className="px-3 py-2 text-right text-[11px] text-muted-foreground whitespace-nowrap">
@@ -834,9 +834,9 @@ function AdminPage() {
                     <td className="px-3 py-2">
                       {f ? (
                         <span className="flex items-center gap-1">
-                          <Flag team={f.team_home} size={20} />
+                          <span>{flagFor(f.team_home)}</span>
                           <span className="text-muted-foreground">v</span>
-                          <Flag team={f.team_away} size={20} />
+                          <span>{flagFor(f.team_away)}</span>
                         </span>
                       ) : (
                         "—"

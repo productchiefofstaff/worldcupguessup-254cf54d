@@ -71,18 +71,6 @@ function lookupIso(team: string): string | undefined {
   return code || undefined;
 }
 
-export function isoFor(team: string): string | undefined {
-  return lookupIso(team);
-}
-
-// flagcdn.com supports GB subdivisions via the gb-eng / gb-sct / gb-wls slugs.
-export function flagImageUrl(team: string, height: 20 | 40 | 60 | 80 = 40): string | undefined {
-  const code = lookupIso(team);
-  if (!code) return undefined;
-  const slug = code.toLowerCase();
-  return `https://flagcdn.com/h${height}/${slug}.png`;
-}
-
 const SUBDIVISION_FLAG: Record<string, string> = {
   // Tag sequence flags for England/Scotland/Wales
   "GB-ENG": "\u{1F3F4}\u{E0067}\u{E0062}\u{E0065}\u{E006E}\u{E0067}\u{E007F}",

@@ -2,7 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { db as supabase } from "@/lib/db";
 import { useAuth } from "@/hooks/use-auth";
-import { Flag } from "@/components/Flag";
+import { flagFor } from "@/lib/flags";
 import { ClipboardList } from "lucide-react";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { useState } from "react";
@@ -194,9 +194,9 @@ function PredictionsTable({
           >
             <div className="min-w-0">
               <div className="flex items-center gap-1.5 text-sm font-bold text-ink truncate">
-                <Flag team={f.team_home} className="text-base" size={20} />
+                <span>{flagFor(f.team_home)}</span>
                 <span className="text-muted-foreground font-normal">v</span>
-                <Flag team={f.team_away} className="text-base" size={20} />
+                <span>{flagFor(f.team_away)}</span>
               </div>
               <div className="text-[10px] text-muted-foreground mt-0.5">
                 {formatDate(f.kickoff_at)} · {formatTime(f.kickoff_at)} · {f.stage}
