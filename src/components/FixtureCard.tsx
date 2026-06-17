@@ -306,6 +306,7 @@ export function FixtureCard({
                       checked={userLocked}
                       disabled={userLocked || busy}
                       onCheckedChange={(v) => { if (v) lockIn(); }}
+                      className={userLocked ? "data-[state=checked]:bg-muted-foreground" : ""}
                       aria-label="Lock prediction"
                     />
                   </label>
