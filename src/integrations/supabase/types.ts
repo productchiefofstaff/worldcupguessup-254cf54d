@@ -138,7 +138,6 @@ export type Database = {
           last_visit_at: string | null
           show_on_leaderboard: boolean
           updated_at: string
-          visit_count: number
         }
         Insert: {
           created_at?: string
@@ -147,7 +146,6 @@ export type Database = {
           last_visit_at?: string | null
           show_on_leaderboard?: boolean
           updated_at?: string
-          visit_count?: number
         }
         Update: {
           created_at?: string
@@ -156,7 +154,6 @@ export type Database = {
           last_visit_at?: string | null
           show_on_leaderboard?: boolean
           updated_at?: string
-          visit_count?: number
         }
         Relationships: []
       }

@@ -39,7 +39,7 @@ type Fixture = {
   home_score: number | null;
   away_score: number | null;
 };
-type Profile = { id: string; display_name: string; created_at?: string; show_on_leaderboard?: boolean; last_visit_at?: string | null; visit_count?: number | null };
+type Profile = { id: string; display_name: string; created_at?: string; show_on_leaderboard?: boolean; last_visit_at?: string | null };
 
 function AdminPage() {
   const { user, ready } = useAuth();
@@ -155,7 +155,7 @@ function AdminPage() {
     queryFn: async () => {
       const { data } = await supabase
         .from("profiles")
-        .select("id, display_name, created_at, show_on_leaderboard, last_visit_at, visit_count")
+        .select("id, display_name, created_at, show_on_leaderboard, last_visit_at")
         .order("created_at", { ascending: false });
       return (data ?? []) as Profile[];
     },
@@ -557,7 +557,6 @@ function AdminPage() {
                 <th className="text-left px-3 py-2">Display name</th>
                 <th className="text-center px-3 py-2">Leaderboard</th>
                 <th className="text-right px-3 py-2 whitespace-nowrap">Last visit</th>
-                <th className="text-right px-3 py-2 whitespace-nowrap">Visits</th>
                 <th className="text-right px-3 py-2 whitespace-nowrap">Signed up</th>
                 <th className="text-right px-3 py-2">Delete</th>
               </tr>
@@ -607,9 +606,6 @@ function AdminPage() {
                       : "—"}
                   </td>
                   <td className="px-3 py-2 text-right text-[11px] text-muted-foreground whitespace-nowrap">
-                    {p.visit_count ?? 0}
-                  </td>
-                  <td className="px-3 py-2 text-right text-[11px] text-muted-foreground whitespace-nowrap">
                     {p.created_at
                       ? new Date(p.created_at).toLocaleString(undefined, {
                           day: "numeric",
@@ -646,7 +642,7 @@ function AdminPage() {
               ))}
               {!usersQ.isLoading && (usersQ.data ?? []).length === 0 && (
                 <tr>
-                  <td colSpan={6} className="p-6 text-center text-sm text-muted-foreground">
+                  <td colSpan={5} className="p-6 text-center text-sm text-muted-foreground">
                     No users yet.
                   </td>
                 </tr>
