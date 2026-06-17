@@ -18,7 +18,6 @@ import { Route as AuthenticatedLeaderboardRouteImport } from './routes/_authenti
 import { Route as AuthenticatedAdminRouteImport } from './routes/_authenticated/admin'
 import { Route as ApiPublicSyncResultsRouteImport } from './routes/api/public/sync-results'
 import { Route as ApiPublicHooksRefreshTeamFormRouteImport } from './routes/api/public/hooks/refresh-team-form'
-import { Route as ApiPublicHooksDebugTeamFormRouteImport } from './routes/api/public/hooks/debug-team-form'
 
 const ResetPasswordRoute = ResetPasswordRouteImport.update({
   id: '/reset-password',
@@ -67,12 +66,6 @@ const ApiPublicHooksRefreshTeamFormRoute =
     path: '/api/public/hooks/refresh-team-form',
     getParentRoute: () => rootRouteImport,
   } as any)
-const ApiPublicHooksDebugTeamFormRoute =
-  ApiPublicHooksDebugTeamFormRouteImport.update({
-    id: '/api/public/hooks/debug-team-form',
-    path: '/api/public/hooks/debug-team-form',
-    getParentRoute: () => rootRouteImport,
-  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof AuthenticatedIndexRoute
@@ -82,7 +75,6 @@ export interface FileRoutesByFullPath {
   '/leaderboard': typeof AuthenticatedLeaderboardRoute
   '/my-predictions': typeof AuthenticatedMyPredictionsRoute
   '/api/public/sync-results': typeof ApiPublicSyncResultsRoute
-  '/api/public/hooks/debug-team-form': typeof ApiPublicHooksDebugTeamFormRoute
   '/api/public/hooks/refresh-team-form': typeof ApiPublicHooksRefreshTeamFormRoute
 }
 export interface FileRoutesByTo {
@@ -93,7 +85,6 @@ export interface FileRoutesByTo {
   '/my-predictions': typeof AuthenticatedMyPredictionsRoute
   '/': typeof AuthenticatedIndexRoute
   '/api/public/sync-results': typeof ApiPublicSyncResultsRoute
-  '/api/public/hooks/debug-team-form': typeof ApiPublicHooksDebugTeamFormRoute
   '/api/public/hooks/refresh-team-form': typeof ApiPublicHooksRefreshTeamFormRoute
 }
 export interface FileRoutesById {
@@ -106,7 +97,6 @@ export interface FileRoutesById {
   '/_authenticated/my-predictions': typeof AuthenticatedMyPredictionsRoute
   '/_authenticated/': typeof AuthenticatedIndexRoute
   '/api/public/sync-results': typeof ApiPublicSyncResultsRoute
-  '/api/public/hooks/debug-team-form': typeof ApiPublicHooksDebugTeamFormRoute
   '/api/public/hooks/refresh-team-form': typeof ApiPublicHooksRefreshTeamFormRoute
 }
 export interface FileRouteTypes {
@@ -119,7 +109,6 @@ export interface FileRouteTypes {
     | '/leaderboard'
     | '/my-predictions'
     | '/api/public/sync-results'
-    | '/api/public/hooks/debug-team-form'
     | '/api/public/hooks/refresh-team-form'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -130,7 +119,6 @@ export interface FileRouteTypes {
     | '/my-predictions'
     | '/'
     | '/api/public/sync-results'
-    | '/api/public/hooks/debug-team-form'
     | '/api/public/hooks/refresh-team-form'
   id:
     | '__root__'
@@ -142,7 +130,6 @@ export interface FileRouteTypes {
     | '/_authenticated/my-predictions'
     | '/_authenticated/'
     | '/api/public/sync-results'
-    | '/api/public/hooks/debug-team-form'
     | '/api/public/hooks/refresh-team-form'
   fileRoutesById: FileRoutesById
 }
@@ -151,7 +138,6 @@ export interface RootRouteChildren {
   AuthRoute: typeof AuthRoute
   ResetPasswordRoute: typeof ResetPasswordRoute
   ApiPublicSyncResultsRoute: typeof ApiPublicSyncResultsRoute
-  ApiPublicHooksDebugTeamFormRoute: typeof ApiPublicHooksDebugTeamFormRoute
   ApiPublicHooksRefreshTeamFormRoute: typeof ApiPublicHooksRefreshTeamFormRoute
 }
 
@@ -220,13 +206,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicHooksRefreshTeamFormRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/api/public/hooks/debug-team-form': {
-      id: '/api/public/hooks/debug-team-form'
-      path: '/api/public/hooks/debug-team-form'
-      fullPath: '/api/public/hooks/debug-team-form'
-      preLoaderRoute: typeof ApiPublicHooksDebugTeamFormRouteImport
-      parentRoute: typeof rootRouteImport
-    }
   }
 }
 
@@ -252,7 +231,6 @@ const rootRouteChildren: RootRouteChildren = {
   AuthRoute: AuthRoute,
   ResetPasswordRoute: ResetPasswordRoute,
   ApiPublicSyncResultsRoute: ApiPublicSyncResultsRoute,
-  ApiPublicHooksDebugTeamFormRoute: ApiPublicHooksDebugTeamFormRoute,
   ApiPublicHooksRefreshTeamFormRoute: ApiPublicHooksRefreshTeamFormRoute,
 }
 export const routeTree = rootRouteImport
