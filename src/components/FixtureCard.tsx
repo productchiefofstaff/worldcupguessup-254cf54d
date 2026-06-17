@@ -317,14 +317,15 @@ export function FixtureCard({
                 )}
                 {!userLocked && (
                   <div className="flex items-center gap-2">
-                    {isSaved && (
+                    {isSaved ? (
                       <span className="inline-flex items-center gap-0.5 text-xs text-emerald-600 font-semibold">
                         <Check className="h-3 w-3" /> Saved
                       </span>
+                    ) : (
+                      <Button size="sm" onClick={submit} disabled={busy} className="font-bold h-8">
+                        {prediction ? "Update" : "Submit"}
+                      </Button>
                     )}
-                    <Button size="sm" onClick={submit} disabled={busy} className="font-bold h-8">
-                      {prediction ? "Update" : "Submit"}
-                    </Button>
                   </div>
                 )}
               </>
