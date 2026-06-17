@@ -331,9 +331,16 @@ export function FixtureCard({
             ) : (
               <>
                 {!hasResult && (
-                  <span className="inline-flex items-center gap-1 text-xs text-muted-foreground">
-                    <Lock className="h-3 w-3" /> Locked
-                  </span>
+                  <label className="inline-flex items-center gap-1.5 text-xs font-semibold text-muted-foreground">
+                    <Lock className="h-3 w-3" />
+                    <span>{userLocked ? "Locked" : "Lock"}</span>
+                    <Switch
+                      checked={userLocked}
+                      disabled={true}
+                      className={userLocked ? "data-[state=checked]:bg-muted data-[state=checked]:border-muted" : ""}
+                      aria-label="Lock prediction"
+                    />
+                  </label>
                 )}
                 {hasResult ? (
                   <span className="text-xs font-semibold inline-flex items-center gap-2">
