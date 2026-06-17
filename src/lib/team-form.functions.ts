@@ -369,7 +369,16 @@ export const getTeamForm = createServerFn({ method: "POST" })
 
     try {
       const markdown = await scrapeEspnResults(espn.id, espn.slug);
-      const matches = parseEspnResultsMarkdown(markdown, espn.id);
+      const scrapedMatches = parseEspnResultsMarkdown(markdown, espn.id);
+      const { data: completedFixtures } = await admin
+        .from("fixtures")
+        .select("team_home, team_away, kickoff_at, home_score, away_score")
+        .not("home_score", "is", null)
+        .not("away_score", "is", null);
+      const matches = mergeTeamFormMatches(
+        scrapedMatches,
+        buildFixtureFormMatches((completedFixtures ?? []) as CompletedFixtureForForm[], teamName),
+      );
       await admin.from("team_form_cache").upsert({
         team_name: teamName,
         external_team_id: espn.id,
