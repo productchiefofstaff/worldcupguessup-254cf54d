@@ -2,12 +2,16 @@ import { Link, useNavigate, useRouterState } from "@tanstack/react-router";
 import { useAuth } from "@/hooks/use-auth";
 import { useQuery } from "@tanstack/react-query";
 import { db } from "@/lib/db";
+import { useEffect, useState } from "react";
 import { LogOut, CalendarDays, Trophy, ClipboardList, Shield } from "lucide-react";
 
 export function SiteHeader() {
+  const [mounted, setMounted] = useState(false);
   const { user, profile, signOut } = useAuth();
   const navigate = useNavigate();
   const pathname = useRouterState({ select: (s) => s.location.pathname });
+  useEffect(() => setMounted(true), []);
+  if (!mounted) return null;
   if (pathname.startsWith("/auth")) return null;
   const label = profile?.display_name ?? user?.email ?? "";
   const roleQ = useQuery({
