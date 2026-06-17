@@ -398,7 +398,7 @@ export function FixtureCard({
                         key={row.userId}
                         className={"flex items-center justify-between py-1.5 px-2 -mx-2 text-sm rounded-sm " + bg}
                       >
-                        <span className="truncate text-ink">{row.name}{row.userId === userId ? " (you)" : ""}</span>
+                        <span className="truncate text-ink inline-flex items-center gap-1">{row.name}{row.userId === userId ? " (you)" : ""}{!locked && row.locked ? <Lock className="h-3 w-3 text-muted-foreground" /> : null}</span>
                         <span className="flex items-center gap-2 shrink-0">
                           <span className="font-bold tabular-nums">{row.home}-{row.away}</span>
                           {rowPts !== null && (
