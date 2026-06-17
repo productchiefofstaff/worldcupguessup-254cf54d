@@ -299,7 +299,19 @@ export function FixtureCard({
           <div className="mt-3 flex items-center justify-between gap-2 min-h-[2rem]">
             {!locked ? (
               <>
-                {!prediction && (
+                {prediction ? (
+                  <label className={"inline-flex items-center gap-1.5 text-xs font-semibold " + (userLocked ? "text-muted-foreground" : "text-muted-foreground")}>
+                    <Lock className="h-3 w-3" />
+                    <span>{userLocked ? "Locked" : "Lock"}</span>
+                    <Switch
+                      checked={userLocked}
+                      disabled={userLocked || busy}
+                      onCheckedChange={(v) => { if (v) lockIn(); }}
+                      className={userLocked ? "data-[state=checked]:bg-muted data-[state=checked]:border-muted" : ""}
+                      aria-label="Lock prediction"
+                    />
+                  </label>
+                ) : (
                   <span className="text-xs text-muted-foreground">Enter your prediction</span>
                 )}
                 {!userLocked && (
@@ -344,32 +356,13 @@ export function FixtureCard({
         )}
 
         <Collapsible open={open} onOpenChange={setOpen} className="mt-2 border-t border-border -mx-3 -mb-3">
-          <div className="flex items-center justify-between px-3 py-2">
-            <CollapsibleTrigger
-              disabled={!canSeeOthers}
-              className="flex-1 flex items-center gap-2 text-xs font-semibold text-muted-foreground hover:text-ink disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              <ChevronDown className={"h-4 w-4 transition-transform " + (open ? "rotate-180" : "")} />
-              <span>{canSeeOthers ? "See the predictions" : "Lock in your predictions and see the others"}</span>
-            </CollapsibleTrigger>
-
-            {!locked && prediction && (
-              <span
-                className="ml-2 inline-flex items-center gap-1.5 text-xs font-semibold text-muted-foreground"
-                onClick={(e) => e.stopPropagation()}
-              >
-                <Lock className="h-3 w-3" />
-                <span>Lock</span>
-                <Switch
-                  checked={userLocked}
-                  disabled={userLocked || busy}
-                  onCheckedChange={(v) => { if (v) lockIn(); }}
-                  className={userLocked ? "data-[state=checked]:bg-muted data-[state=checked]:border-muted" : ""}
-                  aria-label="Lock prediction"
-                />
-              </span>
-            )}
-          </div>
+          <CollapsibleTrigger
+            disabled={!canSeeOthers}
+            className="w-full flex items-center justify-between px-3 py-2 text-xs font-semibold text-muted-foreground hover:text-ink disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            <span>{canSeeOthers ? "See the predictions" : "Lock in your predictions and see the others"}</span>
+            <ChevronDown className={"h-4 w-4 transition-transform " + (open ? "rotate-180" : "")} />
+          </CollapsibleTrigger>
           <CollapsibleContent className="px-3 pb-3">
             {allPredsQ.isLoading && <p className="text-xs text-muted-foreground">Loading…</p>}
             {allPredsQ.error && <p className="text-xs text-destructive">Failed to load predictions.</p>}
