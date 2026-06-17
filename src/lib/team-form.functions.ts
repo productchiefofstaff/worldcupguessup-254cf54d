@@ -94,7 +94,13 @@ export async function scrapeEspnResults(teamId: number, slug: string): Promise<s
       Authorization: `Bearer ${apiKey}`,
       "Content-Type": "application/json",
     },
-    body: JSON.stringify({ url, formats: ["html"], onlyMainContent: false }),
+    body: JSON.stringify({
+      url,
+      formats: ["html"],
+      onlyMainContent: false,
+      waitFor: 4000,
+      maxAge: 0,
+    }),
   });
   if (!res.ok) throw new Error(`firecrawl ${res.status}`);
   const json = (await res.json()) as { data?: { html?: string } };
