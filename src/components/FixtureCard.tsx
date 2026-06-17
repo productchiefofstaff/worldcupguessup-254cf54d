@@ -138,19 +138,19 @@ export function FixtureCard({
   const pts = prediction ? pointsFor(prediction, fixture) : null;
   const showStatusRow = !locked || !hasResult || Boolean(prediction);
 
-  type PredRow = { name: string; home: number; away: number; userId: string };
+  type PredRow = { name: string; home: number; away: number; userId: string; locked: boolean };
   const allPredsQ = useQuery<PredRow[]>({
     queryKey: ["fixture-predictions", fixture.id],
     enabled: open && canSeeOthers,
     queryFn: async () => {
       const { data: preds, error } = await supabase
         .from("predictions")
-        .select("user_id, home_score, away_score")
+        .select("user_id, home_score, away_score, locked_at")
         .eq("fixture_id", fixture.id);
       if (error) throw error;
-      const predRows = (preds ?? []) as Array<{ user_id: string; home_score: number; away_score: number }>;
+      const predRows = (preds ?? []) as Array<{ user_id: string; home_score: number; away_score: number; locked_at: string | null }>;
       const ids = Array.from(new Set(predRows.map((p) => p.user_id)));
-      if (ids.length === 0) return [] as Array<{ name: string; home: number; away: number; userId: string }>;
+      if (ids.length === 0) return [] as Array<{ name: string; home: number; away: number; userId: string; locked: boolean }>;
       const { data: profiles, error: pErr } = await supabase
         .from("profiles")
         .select("id, display_name")
@@ -165,6 +165,7 @@ export function FixtureCard({
           name: nameById.get(p.user_id) ?? "Player",
           home: p.home_score,
           away: p.away_score,
+          locked: !!p.locked_at,
         }))
         .sort((a, b) => a.name.localeCompare(b.name));
     },
