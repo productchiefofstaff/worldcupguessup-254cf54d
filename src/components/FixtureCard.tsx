@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { db as supabase } from "@/lib/db";
 import { Button } from "@/components/ui/button";
-import { Lock, ChevronDown, Radio } from "lucide-react";
+import { Lock, ChevronDown, Radio, Check } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
 import { toast } from "sonner";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
