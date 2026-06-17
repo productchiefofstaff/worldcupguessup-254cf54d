@@ -5,7 +5,7 @@ import { Lock, Check, ChevronDown, Radio } from "lucide-react";
 import { toast } from "sonner";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
-import { flagFor } from "@/lib/flags";
+import { Flag } from "@/components/Flag";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import type { FormMatch } from "@/lib/team-form.functions";
 
@@ -69,9 +69,7 @@ function FormBadge({ match }: { match: FormMatch }) {
       <PopoverContent className="w-56 p-3 text-xs" align="center">
         <div className="font-semibold text-ink mb-1 inline-flex items-center gap-1">
           <span>vs {match.opponent}</span>
-          {flagFor(match.opponent) && (
-            <span className="text-base leading-none" aria-hidden>{flagFor(match.opponent)}</span>
-          )}
+          <Flag team={match.opponent} className="text-base" size={20} />
         </div>
         <div className="text-base font-extrabold tabular-nums mb-1">
           {match.scoreFor}-{match.scoreAgainst}
@@ -213,7 +211,7 @@ export function FixtureCard({
         <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-2 flex-1">
           <div className="flex items-center justify-end gap-1.5 font-bold text-ink truncate text-sm sm:text-base">
             <span className="truncate">{fixture.team_home}</span>
-            <span className="text-lg leading-none shrink-0" aria-hidden>{flagFor(fixture.team_home)}</span>
+            <Flag team={fixture.team_home} className="text-lg shrink-0" size={20} />
           </div>
           <div className="flex items-center gap-1">
             <input
@@ -265,7 +263,7 @@ export function FixtureCard({
             />
           </div>
           <div className="flex items-center justify-start gap-1.5 font-bold text-ink truncate text-sm sm:text-base">
-            <span className="text-lg leading-none shrink-0" aria-hidden>{flagFor(fixture.team_away)}</span>
+            <Flag team={fixture.team_away} className="text-lg shrink-0" size={20} />
             <span className="truncate">{fixture.team_away}</span>
           </div>
         </div>
