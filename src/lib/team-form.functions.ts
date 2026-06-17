@@ -81,19 +81,24 @@ function parseEspnDate(dayLabel: string, year: number): string {
 }
 
 export async function scrapeEspnResults(teamId: number, slug: string): Promise<string> {
-  // Direct HTML fetch. Firecrawl's markdown conversion silently dropped the
-  // most recent month's results table for some team pages (e.g. Cape Verde),
-  // so we parse ESPN's HTML directly — more reliable and avoids the dependency.
+  // Use Firecrawl with the HTML format (not markdown). Markdown conversion
+  // silently dropped the most recent month's results table for some pages
+  // (e.g. Cape Verde's June 2026 vs Spain), and ESPN's AWS WAF blocks direct
+  // worker fetches — so we ask Firecrawl for the rendered HTML and parse it.
+  const apiKey = process.env.FIRECRAWL_API_KEY;
+  if (!apiKey) throw new Error("FIRECRAWL_API_KEY missing");
   const url = `https://www.espn.com/soccer/team/results/_/id/${teamId}/${slug}`;
-  const res = await fetch(url, {
+  const res = await fetch("https://api.firecrawl.dev/v2/scrape", {
+    method: "POST",
     headers: {
-      "User-Agent":
-        "Mozilla/5.0 (compatible; WorldCupGuessUp/1.0; +https://worldcupguessup.lovable.app)",
-      Accept: "text/html",
+      Authorization: `Bearer ${apiKey}`,
+      "Content-Type": "application/json",
     },
+    body: JSON.stringify({ url, formats: ["html"], onlyMainContent: false }),
   });
-  if (!res.ok) throw new Error(`espn ${res.status}`);
-  return await res.text();
+  if (!res.ok) throw new Error(`firecrawl ${res.status}`);
+  const json = (await res.json()) as { data?: { html?: string } };
+  return json.data?.html ?? "";
 }
 
 export function parseEspnResultsMarkdown(
