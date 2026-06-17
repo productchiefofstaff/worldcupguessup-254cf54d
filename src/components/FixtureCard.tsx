@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { db as supabase } from "@/lib/db";
 import { Button } from "@/components/ui/button";
-import { Lock, ChevronDown, Radio } from "lucide-react";
+import { Lock, ChevronDown, Radio, Check } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
 import { toast } from "sonner";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
@@ -137,6 +137,7 @@ export function FixtureCard({
   const canSeeOthers = locked || userLocked;
   const pts = prediction ? pointsFor(prediction, fixture) : null;
   const showStatusRow = !locked || !hasResult || Boolean(prediction);
+  const isSaved = Boolean(prediction) && home === String(prediction!.home_score) && away === String(prediction!.away_score);
 
   type PredRow = { name: string; home: number; away: number; userId: string; locked: boolean };
   const allPredsQ = useQuery<PredRow[]>({
@@ -315,9 +316,16 @@ export function FixtureCard({
                   <span className="text-xs text-muted-foreground">Enter your prediction</span>
                 )}
                 {!userLocked && (
-                  <Button size="sm" onClick={submit} disabled={busy} className="font-bold h-8">
-                    {prediction ? "Update" : "Submit"}
-                  </Button>
+                  <div className="flex items-center gap-2">
+                    {isSaved && (
+                      <span className="inline-flex items-center gap-0.5 text-xs text-emerald-600 font-semibold">
+                        <Check className="h-3 w-3" /> Saved
+                      </span>
+                    )}
+                    <Button size="sm" onClick={submit} disabled={busy} className="font-bold h-8">
+                      {prediction ? "Update" : "Submit"}
+                    </Button>
+                  </div>
                 )}
               </>
             ) : (
