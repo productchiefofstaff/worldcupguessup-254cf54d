@@ -1,0 +1,1 @@
+ALTER TABLE public.profiles ADD COLUMN visit_count integer NOT NULL DEFAULT 0;
