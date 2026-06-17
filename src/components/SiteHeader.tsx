@@ -11,8 +11,6 @@ export function SiteHeader() {
   const navigate = useNavigate();
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   useEffect(() => setMounted(true), []);
-  if (!mounted) return null;
-  if (pathname.startsWith("/auth")) return null;
   const label = profile?.display_name ?? user?.email ?? "";
   const roleQ = useQuery({
     queryKey: ["my-role", user?.id],
@@ -27,6 +25,7 @@ export function SiteHeader() {
     await signOut();
     navigate({ to: "/auth" });
   }
+  if (!mounted || pathname.startsWith("/auth")) return null;
   return (
     <header className="sticky top-0 z-40 text-primary-foreground border-b border-white/5">
       <div className="bg-ink text-primary-foreground">
