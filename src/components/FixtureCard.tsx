@@ -137,6 +137,7 @@ export function FixtureCard({
   const canSeeOthers = locked || userLocked;
   const pts = prediction ? pointsFor(prediction, fixture) : null;
   const showStatusRow = !locked || !hasResult || Boolean(prediction);
+  const isSaved = Boolean(prediction) && home === String(prediction!.home_score) && away === String(prediction!.away_score);
 
   type PredRow = { name: string; home: number; away: number; userId: string; locked: boolean };
   const allPredsQ = useQuery<PredRow[]>({
