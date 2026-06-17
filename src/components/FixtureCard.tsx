@@ -221,17 +221,7 @@ export function FixtureCard({
           {fixture.group_name ? "Group stage" : fixture.stage}
         </span>
         <span className="font-semibold">Match {fixture.match_number}/104</span>
-        <div className="flex items-center gap-1.5">
-          <span>{kickoffLabel(fixture.kickoff_at)}</span>
-          <button
-            type="button"
-            onClick={() => setRulesOpen(true)}
-            className="inline-flex items-center justify-center rounded-full hover:bg-muted p-0.5 transition-colors"
-            aria-label="Game rules"
-          >
-            <Info className="h-3 w-3" />
-          </button>
-        </div>
+        <span>{kickoffLabel(fixture.kickoff_at)}</span>
       </div>
       {(() => {
         const hm = homeForm;
@@ -445,28 +435,6 @@ export function FixtureCard({
             )}
           </CollapsibleContent>
         </Collapsible>
-        <Dialog open={rulesOpen} onOpenChange={setRulesOpen}>
-          <DialogContent className="sm:max-w-sm bg-white/70 backdrop-blur-xl border-white/40 shadow-2xl">
-            <DialogHeader>
-              <DialogTitle className="text-ink">Game Rules</DialogTitle>
-              <DialogDescription className="text-ink/80 pt-2 space-y-2">
-                <span className="block">
-                  <span className="font-bold text-success">40 pts</span> exact score ·{" "}
-                  <span className="font-bold text-warning">10 pts</span> correct result · predictions lock at kickoff
-                </span>
-                <span className="block">Knockout scores are based on the 90-minute result (extra time and penalties do not count).</span>
-              </DialogDescription>
-            </DialogHeader>
-            <div className="flex justify-end mt-2">
-              <button
-                onClick={() => setRulesOpen(false)}
-                className="text-xs font-semibold px-4 py-2 rounded-md bg-primary text-primary-foreground hover:bg-primary/90 transition-colors"
-              >
-                Got it
-              </button>
-            </div>
-          </DialogContent>
-        </Dialog>
       </div>
     </div>
   );
