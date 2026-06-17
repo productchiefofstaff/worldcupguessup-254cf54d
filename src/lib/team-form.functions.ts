@@ -71,6 +71,99 @@ const MONTHS: Record<string, number> = {
   Jul: 6, Aug: 7, Sep: 8, Oct: 9, Nov: 10, Dec: 11,
 };
 
+export type CompletedFixtureForForm = {
+  team_home: string;
+  team_away: string;
+  kickoff_at: string;
+  home_score: number | null;
+  away_score: number | null;
+};
+
+const TEAM_NAME_ALIASES: Record<string, string> = {
+  bosniaherzegovina: "bosniaandherzegovina",
+  bosniaherz: "bosniaandherzegovina",
+  congodr: "drcongo",
+  curacao: "curacao",
+  coteivoire: "ivorycoast",
+  czechrepublic: "czechia",
+  holland: "netherlands",
+  korea: "southkorea",
+  republicofkorea: "southkorea",
+  saudi: "saudiarabia",
+  turkey: "turkiye",
+  turkiye: "turkiye",
+  unitedstates: "usa",
+  usmnt: "usa",
+};
+
+function normalizeTeamName(name: string): string {
+  const key = name
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .replace(/&/g, "and")
+    .replace(/[^a-z0-9]/g, "");
+  return TEAM_NAME_ALIASES[key] ?? key;
+}
+
+function utcDay(iso: string): string {
+  return new Date(iso).toISOString().slice(0, 10);
+}
+
+function resultFor(scoreFor: number, scoreAgainst: number): "W" | "D" | "L" {
+  return scoreFor > scoreAgainst ? "W" : scoreFor < scoreAgainst ? "L" : "D";
+}
+
+export function buildFixtureFormMatches(
+  fixtures: CompletedFixtureForForm[],
+  teamName: string,
+): FormMatch[] {
+  const teamKey = normalizeTeamName(teamName);
+  return fixtures
+    .flatMap((fixture) => {
+      if (fixture.home_score === null || fixture.away_score === null) return [];
+      const isHome = normalizeTeamName(fixture.team_home) === teamKey;
+      const isAway = normalizeTeamName(fixture.team_away) === teamKey;
+      if (!isHome && !isAway) return [];
+
+      const scoreFor = isHome ? fixture.home_score : fixture.away_score;
+      const scoreAgainst = isHome ? fixture.away_score : fixture.home_score;
+      return [{
+        date: fixture.kickoff_at,
+        competition: "FIFA World Cup",
+        opponent: isHome ? fixture.team_away : fixture.team_home,
+        homeAway: isHome ? "H" as const : "A" as const,
+        scoreFor,
+        scoreAgainst,
+        result: resultFor(scoreFor, scoreAgainst),
+      }];
+    })
+    .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+}
+
+export function mergeTeamFormMatches(
+  scrapedMatches: FormMatch[],
+  fixtureMatches: FormMatch[],
+): FormMatch[] {
+  const merged: FormMatch[] = [];
+  const seen = new Set<string>();
+  const add = (match: FormMatch) => {
+    const key = `${utcDay(match.date)}:${normalizeTeamName(match.opponent)}`;
+    if (seen.has(key)) return;
+    seen.add(key);
+    merged.push(match);
+  };
+
+  // App fixture results are the source of truth for World Cup matches; ESPN is
+  // still useful for older friendlies/qualifiers but sometimes lags per-team.
+  fixtureMatches.forEach(add);
+  scrapedMatches.forEach(add);
+
+  return merged
+    .sort((x, y) => new Date(y.date).getTime() - new Date(x.date).getTime())
+    .slice(0, 5);
+}
+
 function parseEspnDate(dayLabel: string, year: number): string {
   // dayLabel = "Tue, Jun 9"
   const m = /^\w{3},\s*(\w{3})\s*(\d+)$/.exec(dayLabel.trim());
