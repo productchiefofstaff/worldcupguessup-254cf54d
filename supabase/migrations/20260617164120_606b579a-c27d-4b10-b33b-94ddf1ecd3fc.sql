@@ -1,0 +1,1 @@
+ALTER TABLE public.profiles ALTER COLUMN show_on_leaderboard SET DEFAULT false;
