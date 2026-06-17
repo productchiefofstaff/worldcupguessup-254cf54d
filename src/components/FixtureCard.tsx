@@ -116,7 +116,6 @@ export function FixtureCard({
   const [away, setAway] = useState<string>(prediction ? String(prediction.away_score) : "");
   const [busy, setBusy] = useState(false);
   const [open, setOpen] = useState(false);
-  const [rulesOpen, setRulesOpen] = useState(false);
 
   useEffect(() => {
     if (prediction) {
