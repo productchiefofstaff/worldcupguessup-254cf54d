@@ -1,7 +1,8 @@
 import { useEffect, useState } from "react";
 import { db as supabase } from "@/lib/db";
 import { Button } from "@/components/ui/button";
-import { Lock, Check, ChevronDown, Radio } from "lucide-react";
+import { Lock, ChevronDown, Radio } from "lucide-react";
+import { Switch } from "@/components/ui/switch";
 import { toast } from "sonner";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
@@ -26,6 +27,7 @@ export type Prediction = {
   fixture_id: string;
   home_score: number;
   away_score: number;
+  locked_at?: string | null;
 };
 
 function pointsFor(p: Prediction, f: Fixture): number | null {
@@ -130,13 +132,16 @@ export function FixtureCard({
 
   const locked = new Date(fixture.kickoff_at).getTime() <= now;
   const hasResult = fixture.home_score !== null && fixture.away_score !== null;
+  const userLocked = Boolean(prediction?.locked_at);
+  const editable = !locked && !userLocked;
+  const canSeeOthers = locked || userLocked;
   const pts = prediction ? pointsFor(prediction, fixture) : null;
   const showStatusRow = !locked || !hasResult || Boolean(prediction);
 
   type PredRow = { name: string; home: number; away: number; userId: string };
   const allPredsQ = useQuery<PredRow[]>({
     queryKey: ["fixture-predictions", fixture.id],
-    enabled: open && locked,
+    enabled: open && canSeeOthers,
     queryFn: async () => {
       const { data: preds, error } = await supabase
         .from("predictions")
@@ -188,6 +193,25 @@ export function FixtureCard({
     queryClient.invalidateQueries({ queryKey: ["predictions", userId] });
   }
 
+  async function lockIn() {
+    if (!prediction) {
+      toast.error("Submit a prediction first");
+      return;
+    }
+    setBusy(true);
+    const { error } = await supabase
+      .from("predictions")
+      .update({ locked_at: new Date().toISOString() })
+      .eq("id", prediction.id);
+    setBusy(false);
+    if (error) {
+      toast.error(error.message);
+      return;
+    }
+    toast.success("Prediction locked");
+    queryClient.invalidateQueries({ queryKey: ["predictions", userId] });
+  }
+
   return (
     <div className="bg-card border border-border rounded-md overflow-hidden flex flex-col h-full">
       <div className="flex items-center justify-between px-3 py-1.5 bg-surface text-xs text-muted-foreground border-b border-border">
@@ -224,12 +248,12 @@ export function FixtureCard({
               value={
                 hasResult
                   ? (fixture.home_score as number)
-                  : locked
+                  : !editable
                     ? (prediction ? prediction.home_score : "—")
                     : home
               }
               onChange={(e) => setHome(e.target.value)}
-              disabled={locked}
+              disabled={!editable}
               placeholder="-"
               className={
                 "w-10 h-10 text-center font-extrabold text-lg border rounded-sm leading-10 focus:outline-none focus:ring-2 focus:ring-ring disabled:opacity-100 " +
@@ -248,12 +272,12 @@ export function FixtureCard({
               value={
                 hasResult
                   ? (fixture.away_score as number)
-                  : locked
+                  : !editable
                     ? (prediction ? prediction.away_score : "—")
                     : away
               }
               onChange={(e) => setAway(e.target.value)}
-              disabled={locked}
+              disabled={!editable}
               placeholder="-"
               className={
                 "w-10 h-10 text-center font-extrabold text-lg border rounded-sm leading-10 focus:outline-none focus:ring-2 focus:ring-ring disabled:opacity-100 " +
@@ -274,18 +298,25 @@ export function FixtureCard({
           <div className="mt-3 flex items-center justify-between gap-2 min-h-[2rem]">
             {!locked ? (
               <>
-                <span className="text-xs text-muted-foreground">
-                  {prediction ? (
-                    <span className="inline-flex items-center gap-1 text-success">
-                      <Check className="h-3 w-3" /> Saved – update before kickoff
-                    </span>
-                  ) : (
-                    "Enter your prediction"
-                  )}
-                </span>
-                <Button size="sm" onClick={submit} disabled={busy} className="font-bold h-8">
-                  {prediction ? "Update" : "Submit"}
-                </Button>
+                {prediction ? (
+                  <label className={"inline-flex items-center gap-1.5 text-xs font-semibold " + (userLocked ? "text-ink" : "text-muted-foreground")}>
+                    <Lock className="h-3 w-3" />
+                    <span>{userLocked ? "Locked" : "Lock"}</span>
+                    <Switch
+                      checked={userLocked}
+                      disabled={userLocked || busy}
+                      onCheckedChange={(v) => { if (v) lockIn(); }}
+                      aria-label="Lock prediction"
+                    />
+                  </label>
+                ) : (
+                  <span className="text-xs text-muted-foreground">Enter your prediction</span>
+                )}
+                {!userLocked && (
+                  <Button size="sm" onClick={submit} disabled={busy} className="font-bold h-8">
+                    {prediction ? "Update" : "Submit"}
+                  </Button>
+                )}
               </>
             ) : (
               <>
@@ -324,10 +355,10 @@ export function FixtureCard({
 
         <Collapsible open={open} onOpenChange={setOpen} className="mt-2 border-t border-border -mx-3 -mb-3">
           <CollapsibleTrigger
-            disabled={!locked}
+            disabled={!canSeeOthers}
             className="w-full flex items-center justify-between px-3 py-2 text-xs font-semibold text-muted-foreground hover:text-ink disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            <span>{locked ? "See the predictions" : "Predictions visible after kickoff"}</span>
+            <span>{canSeeOthers ? "See the predictions" : "Lock in your predictions and see others'"}</span>
             <ChevronDown className={"h-4 w-4 transition-transform " + (open ? "rotate-180" : "")} />
           </CollapsibleTrigger>
           <CollapsibleContent className="px-3 pb-3">
