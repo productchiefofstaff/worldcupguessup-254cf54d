@@ -226,10 +226,10 @@ function StatBox({
 }) {
   return (
     <div className="text-center">
-      <div className={"text-sm font-bold tabular-nums " + (valueClass ?? "text-zinc-200")}>
+      <div className={"text-sm font-bold tabular-nums " + (valueClass ?? "text-foreground")}>
         {value}
       </div>
-      <div className="text-[9px] text-zinc-500 uppercase font-semibold tracking-wide mt-0.5 leading-tight">
+      <div className="text-[9px] text-muted-foreground uppercase font-semibold tracking-wide mt-0.5 leading-tight">
         {label}
       </div>
     </div>
