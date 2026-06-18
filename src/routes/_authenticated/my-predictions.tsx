@@ -62,7 +62,7 @@ function MyPredictionsPage() {
   const { user } = useAuth();
 
   const fixturesQ = useQuery({
-    queryKey: ["fixtures"],
+    queryKey: ["fixtures", "prediction-summary"],
     queryFn: async () => {
       const { data, error } = await supabase
         .from("fixtures")
