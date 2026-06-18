@@ -18,6 +18,8 @@ export type Database = {
         Row: {
           away_score: number | null
           group_name: string | null
+          highlights_checked_at: string | null
+          highlights_url: string | null
           home_score: number | null
           id: string
           kickoff_at: string
@@ -29,6 +31,8 @@ export type Database = {
         Insert: {
           away_score?: number | null
           group_name?: string | null
+          highlights_checked_at?: string | null
+          highlights_url?: string | null
           home_score?: number | null
           id?: string
           kickoff_at: string
@@ -40,6 +44,8 @@ export type Database = {
         Update: {
           away_score?: number | null
           group_name?: string | null
+          highlights_checked_at?: string | null
+          highlights_url?: string | null
           home_score?: number | null
           id?: string
           kickoff_at?: string
