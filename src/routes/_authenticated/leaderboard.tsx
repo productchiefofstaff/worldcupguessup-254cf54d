@@ -3,7 +3,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { db as supabase } from "@/lib/db";
 import { useAuth } from "@/hooks/use-auth";
-import { Trophy, Crown } from "lucide-react";
+import { Trophy, Crown, ChevronDown } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/leaderboard")({
   head: () => ({
