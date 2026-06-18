@@ -13,6 +13,7 @@ import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
 import { SiteHeader } from "@/components/SiteHeader";
 import { Toaster } from "@/components/ui/sonner";
+import ogImageAsset from "@/assets/og-image.jpg.asset.json";
 
 function NotFoundComponent() {
   return (
