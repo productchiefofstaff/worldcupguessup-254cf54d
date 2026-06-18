@@ -168,7 +168,7 @@ function LeaderboardCard({
   isMe: boolean;
   initial: string;
 }) {
-  const [open, setOpen] = React.useState(false);
+  const [open, setOpen] = React.useState(rank === 1);
 
   return (
     <div className="relative group">
@@ -203,25 +203,30 @@ function LeaderboardCard({
                 </h2>
               </div>
             </div>
-            <div className="text-right shrink-0 flex flex-col items-end">
+            <div className="text-right shrink-0">
               <div
-                className="text-3xl text-primary leading-none tabular-nums"
+                className={
+                  "leading-none tabular-nums " +
+                  (rank === 1 ? "text-4xl" : "text-3xl")
+                }
                 style={BEBAS}
               >
                 {row.points}
               </div>
-              <button
-                onClick={() => setOpen((v) => !v)}
-                className="mt-0.5 flex items-center gap-0.5 text-[9px] font-bold text-muted-foreground uppercase hover:text-foreground transition-colors"
-                aria-label={open ? "Hide stats" : "Show stats"}
-              >
-                Stats
-                <ChevronDown
-                  className={
-                    "h-3 w-3 transition-transform " + (open ? "rotate-180" : "")
-                  }
-                />
-              </button>
+              {rank !== 1 && (
+                <button
+                  onClick={() => setOpen((v) => !v)}
+                  className="mt-0.5 flex items-center gap-0.5 text-[9px] font-bold text-muted-foreground uppercase hover:text-foreground transition-colors"
+                  aria-label={open ? "Hide stats" : "Show stats"}
+                >
+                  Stats
+                  <ChevronDown
+                    className={
+                      "h-3 w-3 transition-transform " + (open ? "rotate-180" : "")
+                    }
+                  />
+                </button>
+              )}
             </div>
           </div>
 
