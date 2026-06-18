@@ -1,4 +1,4 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { db as supabase } from "@/lib/db";
 import { useAuth } from "@/hooks/use-auth";
@@ -40,6 +40,9 @@ export const Route = createFileRoute("/_authenticated/")({
       { name: "description", content: "Predict the score of every 2026 World Cup match. 40 points for the exact score, 10 for the result." },
     ],
   }),
+  validateSearch: (search: Record<string, unknown>) => ({
+    tab: search.tab === "Completed" ? ("Completed" as const) : ("Upcoming" as const),
+  }),
   component: FixturesPage,
 });
 
@@ -60,7 +63,10 @@ const TABS = ["Upcoming", "Completed"] as const;
 
 function FixturesPage() {
   const { user } = useAuth();
-  const [tab, setTab] = useState<(typeof TABS)[number]>("Upcoming");
+  const { tab } = Route.useSearch();
+  const navigate = useNavigate();
+  const setTab = (next: (typeof TABS)[number]) =>
+    navigate({ to: "/", search: { tab: next }, replace: true });
   const [whatsNewOpen, setWhatsNewOpen] = useState(!hasDismissedWhatsNew());
   const [rulesOpen, setRulesOpen] = useState(false);
 
