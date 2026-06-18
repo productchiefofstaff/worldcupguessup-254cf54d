@@ -335,11 +335,11 @@ export function FixtureCard({
                 {!hasResult && (
                   <label className="inline-flex items-center gap-1.5 text-xs font-semibold text-muted-foreground">
                     <Lock className="h-3 w-3" />
-                    <span>{userLocked ? "Locked" : "Lock"}</span>
+                    <span>Locked</span>
                     <Switch
-                      checked={userLocked}
+                      checked={true}
                       disabled={true}
-                      className={userLocked ? "data-[state=checked]:bg-muted data-[state=checked]:border-muted" : ""}
+                      className="data-[state=checked]:bg-muted data-[state=checked]:border-muted"
                       aria-label="Lock prediction"
                     />
                   </label>
