@@ -192,6 +192,7 @@ function LeaderboardCard({
               >
                 <span
                   className={"text-lg leading-none " + accent.text}
+                  style={BEBAS}
                 >
                   {rankDisplay}
                 </span>
