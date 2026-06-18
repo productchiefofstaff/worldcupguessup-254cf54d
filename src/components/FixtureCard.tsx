@@ -20,6 +20,7 @@ export type Fixture = {
   kickoff_at: string;
   home_score: number | null;
   away_score: number | null;
+  highlights_url?: string | null;
 };
 
 export type Prediction = {
