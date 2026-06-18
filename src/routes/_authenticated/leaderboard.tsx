@@ -98,7 +98,7 @@ function LeaderboardPage() {
       </div>
 
         {data && data.length > 0 && (
-          <div className="flex justify-end -mt-2 -mb-2">
+          <div className="flex justify-start -mt-2 -mb-2">
             <div className="inline-flex items-center gap-1.5 rounded-full bg-warning/10 border border-warning/30 px-2.5 py-1">
               <Crown className="h-3.5 w-3.5 text-warning shrink-0" />
               <span className="text-[11px] font-bold text-foreground">1st place wins £80</span>
