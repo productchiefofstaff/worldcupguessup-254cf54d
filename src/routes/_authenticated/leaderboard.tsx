@@ -238,7 +238,6 @@ function LeaderboardCard({
               <StatBox
                 value={`${accuracy}%`}
                 label="Total Accuracy"
-                valueClass={accent.text}
               />
             </div>
           )}
