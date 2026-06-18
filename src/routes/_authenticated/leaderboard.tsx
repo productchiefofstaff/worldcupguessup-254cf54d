@@ -56,6 +56,7 @@ function LeaderboardPage() {
       if (error) throw error;
       return data as Row[];
     },
+    staleTime: 30_000,
     refetchInterval: 30_000,
   });
 
