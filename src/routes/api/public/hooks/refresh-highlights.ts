@@ -17,53 +17,66 @@ function extractYouTubeId(url: string): string | null {
   return m ? m[1] : null;
 }
 
-async function firecrawlSearch(query: string): Promise<Array<{ url: string; title?: string }>> {
-  const apiKey = process.env.FIRECRAWL_API_KEY;
-  if (!apiKey) throw new Error("FIRECRAWL_API_KEY not configured");
-  const res = await fetch("https://api.firecrawl.dev/v2/search", {
-    method: "POST",
-    headers: {
-      Authorization: `Bearer ${apiKey}`,
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({ query, limit: 10 }),
-  });
-  if (!res.ok) {
-    throw new Error(`Firecrawl search failed [${res.status}]: ${await res.text()}`);
-  }
-  const body = (await res.json()) as { data?: { web?: Array<{ url: string; title?: string }> } | Array<{ url: string; title?: string }> };
-  const data = body.data;
-  if (Array.isArray(data)) return data;
-  return data?.web ?? [];
+// Variants for tricky team names so title matching works regardless of how
+// ITV writes them (e.g. "Türkiye" vs "Turkey", "USA" vs "United States").
+const TEAM_ALIASES: Record<string, string[]> = {
+  "USA": ["usa", "united states", "u.s."],
+  "South Korea": ["south korea", "korea republic", "republic of korea"],
+  "North Korea": ["north korea", "korea dpr", "dpr korea"],
+  "Turkiye": ["turkiye", "türkiye", "turkey"],
+  "Ivory Coast": ["ivory coast", "côte d'ivoire", "cote d'ivoire"],
+  "Curacao": ["curacao", "curaçao"],
+  "DR Congo": ["dr congo", "democratic republic of congo", "congo dr"],
+  "Cape Verde": ["cape verde", "cabo verde"],
+};
+
+function aliasesFor(team: string): string[] {
+  return (TEAM_ALIASES[team] ?? [team.toLowerCase()]).map((s) => s.toLowerCase());
 }
 
-async function findHighlightsUrl(fixture: FixtureRow): Promise<string | null> {
-  const { team_home, team_away } = fixture;
-  // Try ITV Sport channel first, then broaden.
-  const queries = [
-    `site:youtube.com/@itvsport "${team_home}" "${team_away}" highlights`,
-    `site:youtube.com "${team_home}" v "${team_away}" highlights World Cup`,
-    `site:youtube.com "${team_home}" "${team_away}" highlights`,
-  ];
-  for (const q of queries) {
-    try {
-      const results = await firecrawlSearch(q);
-      for (const r of results) {
-        const id = extractYouTubeId(r.url);
-        if (!id) continue;
-        const title = (r.title ?? "").toLowerCase();
-        const home = team_home.toLowerCase();
-        const away = team_away.toLowerCase();
-        // Require both team names in the title to avoid mismatched videos.
-        if (title.includes(home) && title.includes(away)) {
-          return `https://www.youtube.com/embed/${id}`;
-        }
-      }
-    } catch (err) {
-      console.error("highlights search error", q, err);
-    }
+function titleMatchesFixture(title: string, home: string, away: string): boolean {
+  const t = title.toLowerCase();
+  if (!t.includes("highlight")) return false;
+  const homeHit = aliasesFor(home).some((a) => t.includes(a));
+  const awayHit = aliasesFor(away).some((a) => t.includes(a));
+  return homeHit && awayHit;
+}
+
+type ItvVideo = { id: string; title: string };
+
+async function fetchItvSportVideos(): Promise<ItvVideo[]> {
+  // Fetch the raw HTML of the ITV Sport channel "videos" tab. YouTube embeds
+  // the initial video list in ytInitialData inside a <script>; we extract
+  // video IDs and their titles via regex (no JS execution needed).
+  const res = await fetch("https://www.youtube.com/@itvsport/videos", {
+    headers: {
+      "User-Agent":
+        "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0 Safari/537.36",
+      "Accept-Language": "en-GB,en;q=0.9",
+    },
+  });
+  if (!res.ok) {
+    throw new Error(`YouTube channel fetch failed [${res.status}]`);
   }
-  return null;
+  const html = await res.text();
+
+  // Match: "videoId":"XXXXXXXXXXX", ... "title":{"runs":[{"text":"..."}]}
+  // or "title":{"simpleText":"..."}
+  const videos: ItvVideo[] = [];
+  const seen = new Set<string>();
+  const re =
+    /"videoId":"([A-Za-z0-9_-]{11})"[^}]{0,400}?"title":\{(?:"runs":\[\{"text":"([^"]+)"|"simpleText":"([^"]+)")/g;
+  let m: RegExpExecArray | null;
+  while ((m = re.exec(html)) !== null) {
+    const id = m[1];
+    if (seen.has(id)) continue;
+    seen.add(id);
+    const title = (m[2] ?? m[3] ?? "")
+      .replace(/\\u0026/g, "&")
+      .replace(/\\"/g, '"');
+    if (title) videos.push({ id, title });
+  }
+  return videos;
 }
 
 export const Route = createFileRoute("/api/public/hooks/refresh-highlights")({
