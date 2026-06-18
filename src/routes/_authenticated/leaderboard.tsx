@@ -98,11 +98,11 @@ function LeaderboardPage() {
       </div>
 
         {data && data.length > 0 && (
-          <div className="rounded-lg bg-warning/10 border border-warning/30 p-3 flex items-center gap-3">
-            <Crown className="h-5 w-5 text-warning shrink-0" />
-            <span className="text-sm font-bold text-foreground">
-              1st place wins £{20 * data.length}
-            </span>
+          <div className="flex justify-end -mt-2 -mb-2">
+            <div className="inline-flex items-center gap-1.5 rounded-full bg-warning/10 border border-warning/30 px-2.5 py-1">
+              <Crown className="h-3.5 w-3.5 text-warning shrink-0" />
+              <span className="text-[11px] font-bold text-foreground">1st place wins £80</span>
+            </div>
           </div>
         )}
 
@@ -157,16 +157,11 @@ function LeaderboardPage() {
                           <h2 className="text-lg font-bold text-ink leading-tight">
                             {row.name}
                           </h2>
-                          {isMe && (
-                            <span className="inline-block mt-0.5 text-[9px] uppercase tracking-wider bg-primary text-primary-foreground px-1 py-0 rounded-sm font-black">
-                              You
-                            </span>
-                          )}
                         </div>
                       </div>
                       <div className="text-right shrink-0">
                         <div
-                          className="text-3xl text-ink leading-none tabular-nums"
+                          className="text-3xl text-primary leading-none tabular-nums"
                           style={BEBAS}
                         >
                           {row.points}
