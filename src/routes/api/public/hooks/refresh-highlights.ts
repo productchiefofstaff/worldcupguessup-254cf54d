@@ -8,15 +8,6 @@ type FixtureRow = {
   kickoff_at: string;
 };
 
-function extractYouTubeId(url: string): string | null {
-  const m =
-    url.match(/youtube\.com\/watch\?[^\s]*v=([A-Za-z0-9_-]{11})/) ||
-    url.match(/youtu\.be\/([A-Za-z0-9_-]{11})/) ||
-    url.match(/youtube\.com\/embed\/([A-Za-z0-9_-]{11})/) ||
-    url.match(/youtube\.com\/shorts\/([A-Za-z0-9_-]{11})/);
-  return m ? m[1] : null;
-}
-
 // Variants for tricky team names so title matching works regardless of how
 // ITV writes them (e.g. "Türkiye" vs "Turkey", "USA" vs "United States").
 const TEAM_ALIASES: Record<string, string[]> = {
