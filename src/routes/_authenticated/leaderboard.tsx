@@ -110,7 +110,7 @@ function LeaderboardPage() {
         {isLoading && <p className="text-sm text-muted-foreground">Loading…</p>}
         {error && <p className="text-sm text-destructive">Failed to load leaderboard.</p>}
 
-        <div className="space-y-4">
+        <div className="space-y-2">
           {ranked.map((row) => {
             const isMe = user?.id === row.user_id;
             const rank = row.rank;
