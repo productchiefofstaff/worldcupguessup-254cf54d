@@ -34,10 +34,10 @@ function ordinal(n: number) {
 }
 
 function rankAccent(rank: number) {
-  if (rank === 1) return { border: "border-yellow-500", text: "text-yellow-500", ring: "border-yellow-500/40", glow: true };
-  if (rank === 2) return { border: "border-zinc-300", text: "text-zinc-300", ring: "border-zinc-300/40", glow: false };
-  if (rank === 3) return { border: "border-amber-700", text: "text-amber-600", ring: "border-amber-700/40", glow: false };
-  return { border: "border-zinc-700", text: "text-zinc-400", ring: "border-zinc-700", glow: false };
+  if (rank === 1) return { border: "border-warning", text: "text-warning", ring: "border-warning/40", glow: true };
+  if (rank === 2) return { border: "border-muted-foreground/30", text: "text-muted-foreground", ring: "border-muted-foreground/30", glow: false };
+  if (rank === 3) return { border: "border-muted-foreground/30", text: "text-muted-foreground", ring: "border-muted-foreground/30", glow: false };
+  return { border: "border-border", text: "text-muted-foreground", ring: "border-border", glow: false };
 }
 
 function LeaderboardPage() {
@@ -87,28 +87,28 @@ function LeaderboardPage() {
   }, [data]);
 
   return (
-    <main className="min-h-screen bg-zinc-950">
+    <main className="min-h-screen bg-surface">
       <div className="max-w-xl mx-auto px-4 py-6 space-y-6">
-        <div className="flex justify-between items-end border-b border-zinc-800 pb-2">
-          <h1 className="text-3xl text-white tracking-wider italic" style={BEBAS}>
+        <div className="flex justify-between items-end border-b border-border pb-2">
+          <h1 className="text-3xl text-ink tracking-wider italic" style={BEBAS}>
             LEADERBOARD
           </h1>
-          <span className="text-[10px] text-zinc-500 font-bold uppercase tracking-widest pb-1">
+          <span className="text-[10px] text-muted-foreground font-bold uppercase tracking-widest pb-1">
             World Cup 2026
           </span>
         </div>
 
         {data && data.length > 0 && (
-          <div className="rounded-lg bg-yellow-500/10 border border-yellow-500/30 p-3 flex items-center gap-3">
-            <Crown className="h-5 w-5 text-yellow-500 shrink-0" />
-            <span className="text-sm font-bold text-white">
+          <div className="rounded-lg bg-warning/10 border border-warning/30 p-3 flex items-center gap-3">
+            <Crown className="h-5 w-5 text-warning shrink-0" />
+            <span className="text-sm font-bold text-foreground">
               1st place wins £{20 * data.length}
             </span>
           </div>
         )}
 
-        {isLoading && <p className="text-sm text-zinc-500">Loading…</p>}
-        {error && <p className="text-sm text-red-400">Failed to load leaderboard.</p>}
+        {isLoading && <p className="text-sm text-muted-foreground">Loading…</p>}
+        {error && <p className="text-sm text-destructive">Failed to load leaderboard.</p>}
 
         <div className="space-y-4">
           {ranked.map((row) => {
@@ -129,11 +129,11 @@ function LeaderboardPage() {
             return (
               <div key={row.user_id} className="relative group">
                 {accent.glow && (
-                  <div className="absolute -inset-0.5 bg-gradient-to-r from-yellow-500 to-amber-600 rounded-xl blur opacity-20 pointer-events-none" />
+                  <div className="absolute -inset-0.5 bg-gradient-to-r from-warning to-warning/60 rounded-xl blur opacity-20 pointer-events-none" />
                 )}
                 <div
                   className={
-                    "relative bg-zinc-900 border-l-4 rounded-r-xl overflow-hidden " +
+                    "relative bg-card border border-border border-l-4 rounded-r-xl overflow-hidden " +
                     accent.border
                   }
                 >
@@ -142,7 +142,7 @@ function LeaderboardPage() {
                       <div className="flex items-center gap-3 min-w-0">
                         <div
                           className={
-                            "w-14 h-14 bg-zinc-800 rounded-full border-2 flex flex-col items-center justify-center shrink-0 " +
+                            "w-14 h-14 bg-muted rounded-full border-2 flex flex-col items-center justify-center shrink-0 " +
                             accent.ring
                           }
                         >
@@ -153,17 +153,17 @@ function LeaderboardPage() {
                             {ord}
                           </span>
                           {row.tied && (
-                            <span className="text-[8px] font-bold uppercase tracking-wider text-zinc-500 leading-none mt-0.5">
+                            <span className="text-[8px] font-bold uppercase tracking-wider text-muted-foreground leading-none mt-0.5">
                               tied
                             </span>
                           )}
                         </div>
                         <div className="min-w-0">
-                          <h2 className="text-2xl font-bold text-white leading-tight truncate">
+                          <h2 className="text-2xl font-bold text-ink leading-tight truncate">
                             {row.name}
                           </h2>
                           {isMe && (
-                            <span className="inline-block mt-1 text-[10px] uppercase tracking-wider bg-white text-zinc-900 px-1.5 py-0.5 rounded-sm font-black">
+                            <span className="inline-block mt-1 text-[10px] uppercase tracking-wider bg-primary text-primary-foreground px-1.5 py-0.5 rounded-sm font-black">
                               You
                             </span>
                           )}
@@ -171,18 +171,18 @@ function LeaderboardPage() {
                       </div>
                       <div className="text-right shrink-0">
                         <div
-                          className="text-4xl text-white leading-none tabular-nums"
+                          className="text-4xl text-ink leading-none tabular-nums"
                           style={BEBAS}
                         >
                           {row.points}
                         </div>
-                        <div className="text-[10px] font-bold text-zinc-500 uppercase mt-1">
+                        <div className="text-[10px] font-bold text-muted-foreground uppercase mt-1">
                           Points
                         </div>
                       </div>
                     </div>
 
-                    <div className="mt-4 grid grid-cols-4 gap-2 border-t border-zinc-800/60 pt-3">
+                    <div className="mt-4 grid grid-cols-4 gap-2 border-t border-border/60 pt-3">
                       <StatBox value={row.settled_predictions} label="Matches Predicted" />
                       <StatBox value={row.correct_scores} label="Correct Scores" />
                       <StatBox value={row.correct_results} label="Correct Results" />
@@ -194,7 +194,7 @@ function LeaderboardPage() {
                     </div>
                   </div>
                   <span
-                    className="absolute top-0 right-0 text-7xl text-white/[0.03] select-none pointer-events-none -mr-2 -mt-4 leading-none"
+                    className="absolute top-0 right-0 text-7xl text-foreground/[0.03] select-none pointer-events-none -mr-2 -mt-4 leading-none"
                     style={BEBAS}
                   >
                     {rank}
@@ -206,7 +206,7 @@ function LeaderboardPage() {
         </div>
 
         {!isLoading && (data?.length ?? 0) === 0 && (
-          <div className="p-6 text-center text-sm text-zinc-500 bg-zinc-900 rounded-xl border border-zinc-800">
+          <div className="p-6 text-center text-sm text-muted-foreground bg-card rounded-xl border border-border">
             No players yet — be the first to predict!
           </div>
         )}
@@ -226,10 +226,10 @@ function StatBox({
 }) {
   return (
     <div className="text-center">
-      <div className={"text-sm font-bold tabular-nums " + (valueClass ?? "text-zinc-200")}>
+      <div className={"text-sm font-bold tabular-nums " + (valueClass ?? "text-foreground")}>
         {value}
       </div>
-      <div className="text-[9px] text-zinc-500 uppercase font-semibold tracking-wide mt-0.5 leading-tight">
+      <div className="text-[9px] text-muted-foreground uppercase font-semibold tracking-wide mt-0.5 leading-tight">
         {label}
       </div>
     </div>
