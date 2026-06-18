@@ -27,9 +27,10 @@ export const ScenePrize: React.FC = () => {
   const amountS = spring({
     frame: frame - 22,
     fps,
-    config: { damping: 12, stiffness: 140 },
+    config: { damping: 200 },
+    durationInFrames: 28,
   });
-  const amount = Math.round(interpolate(amountS, [0, 1], [0, 80]));
+  const amount = Math.min(80, Math.round(interpolate(amountS, [0, 1], [0, 80])));
 
   const burstS = spring({
     frame: frame - 18,
