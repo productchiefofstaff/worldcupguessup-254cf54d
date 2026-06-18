@@ -218,6 +218,7 @@ function FixturesPage() {
               What's new?
             </DialogTitle>
             <DialogDescription className="text-ink/80 pt-2 space-y-2">
+              <span className="block">See the highlights from all the games in the completed tab.</span>
               <span className="block">You can now lock in your predictions ahead of kickoff to see what everyone else has predicted earlier.</span>
               <span className="block">Just toggle the lock switch on a fixture once you're happy with your score — once locked, it can't be changed.</span>
               <span className="block">Happy predicting 🔮</span>
