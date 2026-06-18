@@ -110,7 +110,7 @@ function LeaderboardPage() {
         {isLoading && <p className="text-sm text-muted-foreground">Loading…</p>}
         {error && <p className="text-sm text-destructive">Failed to load leaderboard.</p>}
 
-        <div className="space-y-4">
+        <div className="space-y-2">
           {ranked.map((row) => {
             const isMe = user?.id === row.user_id;
             const rank = row.rank;
@@ -125,6 +125,7 @@ function LeaderboardPage() {
                 : 0;
             const initial = (row.name || "?").trim().charAt(0).toUpperCase();
             const ord = ordinal(rank);
+            const rankDisplay = row.tied ? `=${ord}` : ord;
 
             return (
               <div key={row.user_id} className="relative group">
@@ -137,33 +138,28 @@ function LeaderboardPage() {
                     accent.border
                   }
                 >
-                  <div className="p-4">
-                    <div className="flex justify-between items-start gap-3">
-                      <div className="flex items-center gap-3 min-w-0">
+                  <div className="p-2.5">
+                    <div className="flex justify-between items-center gap-3">
+                      <div className="flex items-center gap-2.5 min-w-0">
                         <div
                           className={
-                            "w-14 h-14 bg-muted rounded-full border-2 flex flex-col items-center justify-center shrink-0 " +
+                            "w-11 h-11 bg-muted rounded-full border-2 flex items-center justify-center shrink-0 " +
                             accent.ring
                           }
                         >
                           <span
-                            className={"text-xl leading-none " + accent.text}
+                            className={"text-lg leading-none " + accent.text}
                             style={BEBAS}
                           >
-                            {ord}
+                            {rankDisplay}
                           </span>
-                          {row.tied && (
-                            <span className="text-[8px] font-bold uppercase tracking-wider text-muted-foreground leading-none mt-0.5">
-                              tied
-                            </span>
-                          )}
                         </div>
                         <div className="min-w-0">
-                          <h2 className="text-2xl font-bold text-ink leading-tight truncate">
+                          <h2 className="text-lg font-bold text-ink leading-tight">
                             {row.name}
                           </h2>
                           {isMe && (
-                            <span className="inline-block mt-1 text-[10px] uppercase tracking-wider bg-primary text-primary-foreground px-1.5 py-0.5 rounded-sm font-black">
+                            <span className="inline-block mt-0.5 text-[9px] uppercase tracking-wider bg-primary text-primary-foreground px-1 py-0 rounded-sm font-black">
                               You
                             </span>
                           )}
@@ -171,18 +167,18 @@ function LeaderboardPage() {
                       </div>
                       <div className="text-right shrink-0">
                         <div
-                          className="text-4xl text-ink leading-none tabular-nums"
+                          className="text-3xl text-ink leading-none tabular-nums"
                           style={BEBAS}
                         >
                           {row.points}
                         </div>
-                        <div className="text-[10px] font-bold text-muted-foreground uppercase mt-1">
+                        <div className="text-[9px] font-bold text-muted-foreground uppercase mt-0.5">
                           Points
                         </div>
                       </div>
                     </div>
 
-                    <div className="mt-4 grid grid-cols-4 gap-2 border-t border-border/60 pt-3">
+                    <div className="mt-2 grid grid-cols-4 gap-1 border-t border-border/60 pt-2">
                       <StatBox value={row.settled_predictions} label="Matches Predicted" />
                       <StatBox value={row.correct_scores} label="Correct Scores" />
                       <StatBox value={row.correct_results} label="Correct Results" />
@@ -194,7 +190,7 @@ function LeaderboardPage() {
                     </div>
                   </div>
                   <span
-                    className="absolute top-0 right-0 text-7xl text-foreground/[0.03] select-none pointer-events-none -mr-2 -mt-4 leading-none"
+                    className="absolute top-0 right-0 text-5xl text-foreground/[0.03] select-none pointer-events-none -mr-2 -mt-2 leading-none"
                     style={BEBAS}
                   >
                     {rank}
