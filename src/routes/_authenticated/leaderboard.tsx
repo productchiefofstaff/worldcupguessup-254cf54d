@@ -87,8 +87,8 @@ function LeaderboardPage() {
   }, [data]);
 
   return (
-    <main className="min-h-screen bg-surface">
-      <div className="max-w-xl mx-auto px-4 py-6 space-y-6">
+    <main className="min-h-screen bg-surface py-4 sm:py-6">
+      <div className="max-w-xl mx-auto px-4">
       <div className="mb-4">
         <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-ink flex items-center gap-2">
           <Trophy className="h-6 w-6 text-primary" />
@@ -98,7 +98,7 @@ function LeaderboardPage() {
       </div>
 
         {data && data.length > 0 && (
-          <div className="flex justify-start -mt-2 -mb-2">
+          <div className="flex justify-start -mt-2 mb-4">
             <div className="inline-flex items-center gap-1.5 rounded-full bg-warning/10 border border-warning/30 px-2.5 py-1">
               <Crown className="h-3.5 w-3.5 text-warning shrink-0" />
               <span className="text-[11px] font-bold text-foreground">1st place wins £80</span>
@@ -106,8 +106,8 @@ function LeaderboardPage() {
           </div>
         )}
 
-        {isLoading && <p className="text-sm text-muted-foreground">Loading…</p>}
-        {error && <p className="text-sm text-destructive">Failed to load leaderboard.</p>}
+        {isLoading && <p className="text-sm text-muted-foreground mb-4">Loading…</p>}
+        {error && <p className="text-sm text-destructive mb-4">Failed to load leaderboard.</p>}
 
         <div className="space-y-2">
           {ranked.map((row) => {
