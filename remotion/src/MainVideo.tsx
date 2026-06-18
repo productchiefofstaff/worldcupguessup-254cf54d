@@ -24,7 +24,7 @@ export const MainVideo: React.FC = () => {
   return (
     <AbsoluteFill style={{ backgroundColor: "#0A0E27" }}>
       <TransitionSeries>
-        <TransitionSeries.Sequence durationInFrames={75}>
+        <TransitionSeries.Sequence durationInFrames={60}>
           <SceneHook />
         </TransitionSeries.Sequence>
         <TransitionSeries.Transition
