@@ -42,126 +42,53 @@ function titleMatchesFixture(title: string, home: string, away: string): boolean
 type ItvVideo = { id: string; title: string };
 
 const ITV_SPORT_CHANNEL_ID = "UCBzDz6beXDfMtfxQdEutD_w";
-const INNERTUBE_CTX = {
-  client: {
-    clientName: "WEB",
-    clientVersion: "2.20240801.00.00",
-    hl: "en-GB",
-    gl: "GB",
-  },
+// Uploads playlist for a channel is the channel ID with "UC" → "UU".
+const ITV_UPLOADS_PLAYLIST = "UU" + ITV_SPORT_CHANNEL_ID.slice(2);
+
+type PlaylistItemsResponse = {
+  nextPageToken?: string;
+  items?: Array<{
+    snippet?: {
+      title?: string;
+      resourceId?: { videoId?: string };
+    };
+  }>;
 };
 
-function collectLockups(node: unknown, out: Array<Record<string, unknown>>): void {
-  if (Array.isArray(node)) {
-    for (const v of node) collectLockups(v, out);
-  } else if (node && typeof node === "object") {
-    const obj = node as Record<string, unknown>;
-    if (obj.lockupViewModel && typeof obj.lockupViewModel === "object") {
-      out.push(obj.lockupViewModel as Record<string, unknown>);
-    }
-    for (const v of Object.values(obj)) collectLockups(v, out);
-  }
-}
+async function fetchItvSportVideos(maxPages = 20): Promise<ItvVideo[]> {
+  const apiKey = process.env.YOUTUBE_API_KEY;
+  if (!apiKey) throw new Error("YOUTUBE_API_KEY is not configured");
 
-function findContinuationToken(node: unknown): string | null {
-  if (Array.isArray(node)) {
-    for (const v of node) {
-      const r = findContinuationToken(v);
-      if (r) return r;
-    }
-  } else if (node && typeof node === "object") {
-    const obj = node as Record<string, unknown>;
-    const cmd = obj.continuationCommand as { token?: string } | undefined;
-    if (cmd && typeof cmd.token === "string") return cmd.token;
-    for (const v of Object.values(obj)) {
-      const r = findContinuationToken(v);
-      if (r) return r;
-    }
-  }
-  return null;
-}
-
-async function innertubeBrowse(body: Record<string, unknown>): Promise<unknown> {
-  const res = await fetch("https://www.youtube.com/youtubei/v1/browse?prettyPrint=false", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      "User-Agent":
-        "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0 Safari/537.36",
-      "Accept-Language": "en-GB,en;q=0.9",
-    },
-    body: JSON.stringify(body),
-  });
-  if (!res.ok) throw new Error(`InnerTube browse failed [${res.status}]`);
-  return res.json();
-}
-
-async function fetchItvSportVideos(maxPages = 15): Promise<ItvVideo[]> {
   const videos: ItvVideo[] = [];
   const seen = new Set<string>();
+  let pageToken: string | undefined;
+  let page = 0;
 
-  const push = (id?: string, title?: string) => {
-    if (!id || !title || seen.has(id)) return;
-    seen.add(id);
-    videos.push({ id, title });
-  };
+  while (page < maxPages) {
+    const url = new URL("https://www.googleapis.com/youtube/v3/playlistItems");
+    url.searchParams.set("part", "snippet");
+    url.searchParams.set("maxResults", "50");
+    url.searchParams.set("playlistId", ITV_UPLOADS_PLAYLIST);
+    url.searchParams.set("key", apiKey);
+    if (pageToken) url.searchParams.set("pageToken", pageToken);
 
-  // 1. RSS feed — most reliable (no consent wall, no client headers needed).
-  //    Gives the latest ~15 videos including the official HIGHLIGHTS uploads.
-  try {
-    const rss = await fetch(
-      `https://www.youtube.com/feeds/videos.xml?channel_id=${ITV_SPORT_CHANNEL_ID}`,
-    );
-    if (rss.ok) {
-      const xml = await rss.text();
-      const re =
-        /<yt:videoId>([A-Za-z0-9_-]{11})<\/yt:videoId>[\s\S]*?<title>([^<]+)<\/title>/g;
-      let m: RegExpExecArray | null;
-      while ((m = re.exec(xml)) !== null) {
-        const title = m[2]
-          .replace(/&amp;/g, "&")
-          .replace(/&quot;/g, '"')
-          .replace(/&#39;/g, "'")
-          .replace(/&lt;/g, "<")
-          .replace(/&gt;/g, ">");
-        push(m[1], title);
+    const res = await fetch(url.toString());
+    if (!res.ok) {
+      const text = await res.text();
+      throw new Error(`YouTube API failed [${res.status}]: ${text.slice(0, 200)}`);
+    }
+    const data = (await res.json()) as PlaylistItemsResponse;
+    for (const it of data.items ?? []) {
+      const id = it.snippet?.resourceId?.videoId;
+      const title = it.snippet?.title;
+      if (id && title && !seen.has(id)) {
+        seen.add(id);
+        videos.push({ id, title });
       }
     }
-  } catch (err) {
-    console.error("rss fetch failed", err);
-  }
-
-  // 2. InnerTube paginated browse — full historical library.
-  try {
-    let data: unknown = await innertubeBrowse({
-      context: INNERTUBE_CTX,
-      browseId: ITV_SPORT_CHANNEL_ID,
-      params: "EgZ2aWRlb3PyBgQKAjoA",
-    });
-    const items: Array<Record<string, unknown>> = [];
-    collectLockups(data, items);
-    let token = findContinuationToken(data);
-    let page = 1;
-    while (token && page < maxPages) {
-      try {
-        data = await innertubeBrowse({ context: INNERTUBE_CTX, continuation: token });
-      } catch {
-        break;
-      }
-      collectLockups(data, items);
-      token = findContinuationToken(data);
-      page += 1;
-    }
-    for (const it of items) {
-      const id = it.contentId as string | undefined;
-      const md = (it.metadata as Record<string, unknown> | undefined)?.lockupMetadataViewModel as
-        | Record<string, unknown>
-        | undefined;
-      const title = (md?.title as { content?: string } | undefined)?.content;
-      push(id, title);
-    }
-  } catch (err) {
-    console.error("innertube fetch failed", err);
+    if (!data.nextPageToken) break;
+    pageToken = data.nextPageToken;
+    page += 1;
   }
 
   return videos;
