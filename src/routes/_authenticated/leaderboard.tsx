@@ -89,14 +89,13 @@ function LeaderboardPage() {
   return (
     <main className="min-h-screen bg-surface">
       <div className="max-w-xl mx-auto px-4 py-6 space-y-6">
-        <div className="flex justify-between items-end border-b border-border pb-2">
-          <h1 className="text-3xl text-ink tracking-wider italic" style={BEBAS}>
-            LEADERBOARD
-          </h1>
-          <span className="text-[10px] text-muted-foreground font-bold uppercase tracking-widest pb-1">
-            World Cup 2026
-          </span>
-        </div>
+      <div className="mb-4">
+        <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-ink flex items-center gap-2">
+          <Trophy className="h-6 w-6 text-primary" />
+          Leaderboard
+        </h1>
+        <p className="text-xs text-muted-foreground mt-1">Updated automatically as results come in</p>
+      </div>
 
         {data && data.length > 0 && (
           <div className="rounded-lg bg-warning/10 border border-warning/30 p-3 flex items-center gap-3">
