@@ -15,7 +15,7 @@ import {
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Lightbulb, CalendarDays, Info } from "lucide-react";
 
-const WHATS_NEW_KEY = "wcg-whats-new-dismissed-v2-lock";
+const WHATS_NEW_KEY = "wcg-whats-new-dismissed-v3-highlights";
 
 function hasDismissedWhatsNew() {
   try {
