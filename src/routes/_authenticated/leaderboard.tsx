@@ -161,7 +161,7 @@ function LeaderboardPage() {
                       </div>
                       <div className="text-right shrink-0">
                         <div
-                          className="text-3xl text-ink leading-none tabular-nums"
+                          className="text-3xl text-primary leading-none tabular-nums"
                           style={BEBAS}
                         >
                           {row.points}
