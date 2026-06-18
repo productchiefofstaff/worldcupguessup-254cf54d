@@ -97,40 +97,73 @@ async function innertubeBrowse(body: Record<string, unknown>): Promise<unknown> 
 }
 
 async function fetchItvSportVideos(maxPages = 15): Promise<ItvVideo[]> {
-  let data: unknown = await innertubeBrowse({
-    context: INNERTUBE_CTX,
-    browseId: ITV_SPORT_CHANNEL_ID,
-    params: "EgZ2aWRlb3PyBgQKAjoA", // "Videos" tab
-  });
-
-  const items: Array<Record<string, unknown>> = [];
-  collectLockups(data, items);
-  let token = findContinuationToken(data);
-  let page = 1;
-
-  while (token && page < maxPages) {
-    try {
-      data = await innertubeBrowse({ context: INNERTUBE_CTX, continuation: token });
-    } catch {
-      break;
-    }
-    collectLockups(data, items);
-    token = findContinuationToken(data);
-    page += 1;
-  }
-
   const videos: ItvVideo[] = [];
   const seen = new Set<string>();
-  for (const it of items) {
-    const id = it.contentId as string | undefined;
-    const md = (it.metadata as Record<string, unknown> | undefined)?.lockupMetadataViewModel as
-      | Record<string, unknown>
-      | undefined;
-    const title = (md?.title as { content?: string } | undefined)?.content;
-    if (!id || !title || seen.has(id)) continue;
+
+  const push = (id?: string, title?: string) => {
+    if (!id || !title || seen.has(id)) return;
     seen.add(id);
     videos.push({ id, title });
+  };
+
+  // 1. RSS feed — most reliable (no consent wall, no client headers needed).
+  //    Gives the latest ~15 videos including the official HIGHLIGHTS uploads.
+  try {
+    const rss = await fetch(
+      `https://www.youtube.com/feeds/videos.xml?channel_id=${ITV_SPORT_CHANNEL_ID}`,
+    );
+    if (rss.ok) {
+      const xml = await rss.text();
+      const re =
+        /<yt:videoId>([A-Za-z0-9_-]{11})<\/yt:videoId>[\s\S]*?<title>([^<]+)<\/title>/g;
+      let m: RegExpExecArray | null;
+      while ((m = re.exec(xml)) !== null) {
+        const title = m[2]
+          .replace(/&amp;/g, "&")
+          .replace(/&quot;/g, '"')
+          .replace(/&#39;/g, "'")
+          .replace(/&lt;/g, "<")
+          .replace(/&gt;/g, ">");
+        push(m[1], title);
+      }
+    }
+  } catch (err) {
+    console.error("rss fetch failed", err);
   }
+
+  // 2. InnerTube paginated browse — full historical library.
+  try {
+    let data: unknown = await innertubeBrowse({
+      context: INNERTUBE_CTX,
+      browseId: ITV_SPORT_CHANNEL_ID,
+      params: "EgZ2aWRlb3PyBgQKAjoA",
+    });
+    const items: Array<Record<string, unknown>> = [];
+    collectLockups(data, items);
+    let token = findContinuationToken(data);
+    let page = 1;
+    while (token && page < maxPages) {
+      try {
+        data = await innertubeBrowse({ context: INNERTUBE_CTX, continuation: token });
+      } catch {
+        break;
+      }
+      collectLockups(data, items);
+      token = findContinuationToken(data);
+      page += 1;
+    }
+    for (const it of items) {
+      const id = it.contentId as string | undefined;
+      const md = (it.metadata as Record<string, unknown> | undefined)?.lockupMetadataViewModel as
+        | Record<string, unknown>
+        | undefined;
+      const title = (md?.title as { content?: string } | undefined)?.content;
+      push(id, title);
+    }
+  } catch (err) {
+    console.error("innertube fetch failed", err);
+  }
+
   return videos;
 }
 
