@@ -89,33 +89,34 @@ export const Route = createFileRoute("/api/public/hooks/refresh-highlights")({
           { auth: { persistSession: false, autoRefreshToken: false } },
         );
 
-        // Completed fixtures with no highlights yet, or last checked >24h ago,
-        // and at least 2h past kickoff (gives the broadcaster time to upload).
+        // Completed fixtures past full-time (2h after kickoff).
         const twoHoursAgo = new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString();
-        const oneDayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
-
         const { data: fixtures, error } = await supabase
           .from("fixtures")
-          .select("id, team_home, team_away, kickoff_at, highlights_url, highlights_checked_at")
+          .select("id, team_home, team_away, kickoff_at, highlights_url")
           .not("home_score", "is", null)
           .not("away_score", "is", null)
-          .lt("kickoff_at", twoHoursAgo)
-          .or(`highlights_url.is.null,highlights_checked_at.lt.${oneDayAgo}`)
-          .limit(20);
+          .lt("kickoff_at", twoHoursAgo);
 
         if (error) {
           return Response.json({ success: false, error: error.message }, { status: 500 });
         }
 
         const rows = (fixtures ?? []) as Array<FixtureRow & { highlights_url: string | null }>;
-        const results: Array<{ id: string; found: boolean }> = [];
+
+        let videos: ItvVideo[];
+        try {
+          videos = await fetchItvSportVideos();
+        } catch (err) {
+          const msg = err instanceof Error ? err.message : String(err);
+          return Response.json({ success: false, error: msg }, { status: 502 });
+        }
+
+        const results: Array<{ id: string; team_home: string; team_away: string; found: boolean; title?: string }> = [];
 
         for (const fx of rows) {
-          if (fx.highlights_url) {
-            results.push({ id: fx.id, found: true });
-            continue;
-          }
-          const url = await findHighlightsUrl(fx);
+          const match = videos.find((v) => titleMatchesFixture(v.title, fx.team_home, fx.team_away));
+          const url = match ? `https://www.youtube.com/embed/${match.id}` : null;
           await supabase
             .from("fixtures")
             .update({
@@ -123,14 +124,16 @@ export const Route = createFileRoute("/api/public/hooks/refresh-highlights")({
               highlights_checked_at: new Date().toISOString(),
             })
             .eq("id", fx.id);
-          results.push({ id: fx.id, found: !!url });
+          results.push({ id: fx.id, team_home: fx.team_home, team_away: fx.team_away, found: !!match, title: match?.title });
         }
 
         const found = results.filter((r) => r.found).length;
         return Response.json({
           success: true,
+          channel_videos: videos.length,
           scanned: results.length,
           found,
+          missing: results.filter((r) => !r.found).map((r) => `${r.team_home} v ${r.team_away}`),
         });
       },
     },
