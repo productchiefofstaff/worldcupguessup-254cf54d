@@ -13,10 +13,9 @@ import {
   DialogDescription,
 } from "@/components/ui/dialog";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Lightbulb, CalendarDays, Info, X, Play } from "lucide-react";
+import { Lightbulb, CalendarDays, Info } from "lucide-react";
 
 const WHATS_NEW_KEY = "wcg-whats-new-dismissed-v2-lock";
-const HIGHLIGHTS_BANNER_KEY = "wcg-highlights-banner-dismissed-v1";
 
 function hasDismissedWhatsNew() {
   try {
@@ -29,22 +28,6 @@ function hasDismissedWhatsNew() {
 function markWhatsNewDismissed() {
   try {
     localStorage.setItem(WHATS_NEW_KEY, "1");
-  } catch {
-    // ignore
-  }
-}
-
-function hasDismissedHighlightsBanner() {
-  try {
-    return localStorage.getItem(HIGHLIGHTS_BANNER_KEY) === "1";
-  } catch {
-    return false;
-  }
-}
-
-function markHighlightsBannerDismissed() {
-  try {
-    localStorage.setItem(HIGHLIGHTS_BANNER_KEY, "1");
   } catch {
     // ignore
   }
@@ -79,17 +62,11 @@ function FixturesPage() {
   const { user } = useAuth();
   const [tab, setTab] = useState<(typeof TABS)[number]>("Upcoming");
   const [whatsNewOpen, setWhatsNewOpen] = useState(!hasDismissedWhatsNew());
-  const [highlightsBannerOpen, setHighlightsBannerOpen] = useState(!hasDismissedHighlightsBanner());
   const [rulesOpen, setRulesOpen] = useState(false);
 
   const dismissWhatsNew = () => {
     markWhatsNewDismissed();
     setWhatsNewOpen(false);
-  };
-
-  const dismissHighlightsBanner = () => {
-    markHighlightsBannerDismissed();
-    setHighlightsBannerOpen(false);
   };
 
   const fixturesQ = useQuery({
@@ -200,23 +177,6 @@ function FixturesPage() {
           ))}
         </TabsList>
       </Tabs>
-
-      {highlightsBannerOpen && (
-        <div className="mb-4 flex items-center gap-3 rounded-lg border border-primary/20 bg-primary/5 px-3 py-2.5">
-          <Play className="h-4 w-4 shrink-0 text-primary" />
-          <p className="text-sm text-ink flex-1">
-            See the highlights from all the games in the completed tab.
-          </p>
-          <button
-            type="button"
-            onClick={dismissHighlightsBanner}
-            className="shrink-0 rounded-full p-1 text-muted-foreground hover:bg-muted hover:text-ink transition-colors"
-            aria-label="Dismiss highlights banner"
-          >
-            <X className="h-4 w-4" />
-          </button>
-        </div>
-      )}
 
       {(fixturesQ.isLoading || (!!user && predsQ.isLoading)) && (
         <p className="text-sm text-muted-foreground">Loading fixtures…</p>
