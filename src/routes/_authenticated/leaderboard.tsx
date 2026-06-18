@@ -206,7 +206,7 @@ function LeaderboardCard({
             <div className="text-right shrink-0">
               <div
                 className={
-                  "leading-none tabular-nums " +
+                  "text-primary leading-none tabular-nums " +
                   (rank === 1 ? "text-4xl" : "text-3xl")
                 }
                 style={BEBAS}
