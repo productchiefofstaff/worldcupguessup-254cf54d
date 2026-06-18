@@ -74,7 +74,7 @@ function MyPredictionsPage() {
   });
 
   const leaderboardQ = useQuery({
-    queryKey: ["leaderboard"],
+    queryKey: ["leaderboard", "summary"],
     queryFn: async () => {
       const { data, error } = await supabase
         .from("leaderboard")
