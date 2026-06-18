@@ -85,7 +85,10 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { property: "og:title", content: "World Cup 2026 Predictor" },
       { property: "og:description", content: "Pick scores for every 2026 World Cup match and climb the leaderboard." },
       { property: "og:type", content: "website" },
-      { name: "twitter:card", content: "summary" },
+      { property: "og:image", content: ogImageAsset.url },
+      { property: "og:url", content: "https://worldcupguessup.lovable.app" },
+      { name: "twitter:card", content: "summary_large_image" },
+      { name: "twitter:image", content: ogImageAsset.url },
       { name: "twitter:site", content: "@Lovable" },
     ],
     links: [
