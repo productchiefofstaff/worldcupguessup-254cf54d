@@ -13,6 +13,7 @@ type FixtureRow = {
 const TEAM_ALIASES: Record<string, string[]> = {
   "USA": ["usa", "united states", "u.s."],
   "South Korea": ["south korea", "korea republic", "republic of korea"],
+  "Czechia": ["czechia", "czech republic"],
   "North Korea": ["north korea", "korea dpr", "dpr korea"],
   "Turkiye": ["turkiye", "türkiye", "turkey"],
   "Ivory Coast": ["ivory coast", "côte d'ivoire", "cote d'ivoire"],

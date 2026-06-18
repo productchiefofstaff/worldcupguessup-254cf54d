@@ -372,6 +372,23 @@ export function FixtureCard({
           </div>
         )}
 
+        {hasResult && fixture.highlights_url && (
+          <div className="mt-3">
+            <div className="text-xs font-semibold text-muted-foreground mb-1.5">Highlights</div>
+            <div className="relative w-full overflow-hidden rounded-sm bg-black" style={{ paddingTop: "56.25%" }}>
+              <iframe
+                src={fixture.highlights_url}
+                title={`${fixture.team_home} v ${fixture.team_away} highlights`}
+                loading="lazy"
+                allow="accelerometer; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                allowFullScreen
+                referrerPolicy="strict-origin-when-cross-origin"
+                className="absolute inset-0 w-full h-full border-0"
+              />
+            </div>
+          </div>
+        )}
+
         <Collapsible open={open} onOpenChange={setOpen} className="mt-2 border-t border-border -mx-3 -mb-3">
           <CollapsibleTrigger
             disabled={!canSeeOthers}
@@ -436,25 +453,6 @@ export function FixtureCard({
             )}
           </CollapsibleContent>
         </Collapsible>
-
-        {hasResult && fixture.highlights_url && (
-          <div className="border-t border-border -mx-3 -mb-3">
-            <div className="px-3 pt-2 pb-3">
-              <div className="text-xs font-semibold text-muted-foreground mb-1.5">Highlights</div>
-              <div className="relative w-full overflow-hidden rounded-sm bg-black" style={{ paddingTop: "56.25%" }}>
-                <iframe
-                  src={fixture.highlights_url}
-                  title={`${fixture.team_home} v ${fixture.team_away} highlights`}
-                  loading="lazy"
-                  allow="accelerometer; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                  allowFullScreen
-                  referrerPolicy="strict-origin-when-cross-origin"
-                  className="absolute inset-0 w-full h-full border-0"
-                />
-              </div>
-            </div>
-          </div>
-        )}
       </div>
     </div>
   );
