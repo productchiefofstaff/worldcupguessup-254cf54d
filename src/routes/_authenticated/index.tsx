@@ -13,9 +13,10 @@ import {
   DialogDescription,
 } from "@/components/ui/dialog";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Lightbulb, CalendarDays, Info } from "lucide-react";
+import { Lightbulb, CalendarDays, Info, X, Play } from "lucide-react";
 
-const WHATS_NEW_KEY = "wcg-whats-new-dismissed-v3-highlights";
+const WHATS_NEW_KEY = "wcg-whats-new-dismissed-v2-lock";
+const HIGHLIGHTS_BANNER_KEY = "wcg-highlights-banner-dismissed-v1";
 
 function hasDismissedWhatsNew() {
   try {
@@ -28,6 +29,22 @@ function hasDismissedWhatsNew() {
 function markWhatsNewDismissed() {
   try {
     localStorage.setItem(WHATS_NEW_KEY, "1");
+  } catch {
+    // ignore
+  }
+}
+
+function hasDismissedHighlightsBanner() {
+  try {
+    return localStorage.getItem(HIGHLIGHTS_BANNER_KEY) === "1";
+  } catch {
+    return false;
+  }
+}
+
+function markHighlightsBannerDismissed() {
+  try {
+    localStorage.setItem(HIGHLIGHTS_BANNER_KEY, "1");
   } catch {
     // ignore
   }
@@ -62,11 +79,17 @@ function FixturesPage() {
   const { user } = useAuth();
   const [tab, setTab] = useState<(typeof TABS)[number]>("Upcoming");
   const [whatsNewOpen, setWhatsNewOpen] = useState(!hasDismissedWhatsNew());
+  const [highlightsBannerOpen, setHighlightsBannerOpen] = useState(!hasDismissedHighlightsBanner());
   const [rulesOpen, setRulesOpen] = useState(false);
 
   const dismissWhatsNew = () => {
     markWhatsNewDismissed();
     setWhatsNewOpen(false);
+  };
+
+  const dismissHighlightsBanner = () => {
+    markHighlightsBannerDismissed();
+    setHighlightsBannerOpen(false);
   };
 
   const fixturesQ = useQuery({
@@ -218,7 +241,6 @@ function FixturesPage() {
               What's new?
             </DialogTitle>
             <DialogDescription className="text-ink/80 pt-2 space-y-2">
-              <span className="block">See the highlights from all the games in the completed tab.</span>
               <span className="block">You can now lock in your predictions ahead of kickoff to see what everyone else has predicted earlier.</span>
               <span className="block">Just toggle the lock switch on a fixture once you're happy with your score — once locked, it can't be changed.</span>
               <span className="block">Happy predicting 🔮</span>
