@@ -66,7 +66,7 @@ function FixturesPage() {
   const { tab } = Route.useSearch();
   const navigate = useNavigate();
   const setTab = (next: (typeof TABS)[number]) =>
-    navigate({ search: { tab: next }, replace: true });
+    navigate({ to: "/", search: { tab: next }, replace: true });
   const [whatsNewOpen, setWhatsNewOpen] = useState(!hasDismissedWhatsNew());
   const [rulesOpen, setRulesOpen] = useState(false);
 
