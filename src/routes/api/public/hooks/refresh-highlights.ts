@@ -27,7 +27,13 @@ function aliasesFor(team: string): string[] {
 
 function titleMatchesFixture(title: string, home: string, away: string): boolean {
   const t = title.toLowerCase();
+  // ITV titles real match highlights as "HIGHLIGHTS - X v Y | ..."
+  // We require the word "highlights" AND exclude retro/qualifier uploads so
+  // we don't grab a reaction video or a 1979 retro match by accident.
   if (!t.includes("highlight")) return false;
+  if (t.includes("retro")) return false;
+  if (t.includes("qualifier")) return false;
+  if (t.includes("2022") || t.includes("2018") || t.includes("2014")) return false;
   const homeHit = aliasesFor(home).some((a) => t.includes(a));
   const awayHit = aliasesFor(away).some((a) => t.includes(a));
   return homeHit && awayHit;
