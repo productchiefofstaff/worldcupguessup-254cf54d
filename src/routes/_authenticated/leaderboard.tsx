@@ -34,10 +34,10 @@ function ordinal(n: number) {
 }
 
 function rankAccent(rank: number) {
-  if (rank === 1) return { border: "border-yellow-500", text: "text-yellow-500", ring: "border-yellow-500/40", glow: true };
-  if (rank === 2) return { border: "border-zinc-300", text: "text-zinc-300", ring: "border-zinc-300/40", glow: false };
-  if (rank === 3) return { border: "border-amber-700", text: "text-amber-600", ring: "border-amber-700/40", glow: false };
-  return { border: "border-zinc-700", text: "text-zinc-400", ring: "border-zinc-700", glow: false };
+  if (rank === 1) return { border: "border-warning", text: "text-warning", ring: "border-warning/40", glow: true };
+  if (rank === 2) return { border: "border-muted-foreground/30", text: "text-muted-foreground", ring: "border-muted-foreground/30", glow: false };
+  if (rank === 3) return { border: "border-muted-foreground/30", text: "text-muted-foreground", ring: "border-muted-foreground/30", glow: false };
+  return { border: "border-border", text: "text-muted-foreground", ring: "border-border", glow: false };
 }
 
 function LeaderboardPage() {
