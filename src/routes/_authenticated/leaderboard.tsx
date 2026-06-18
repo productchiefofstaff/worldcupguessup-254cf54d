@@ -127,70 +127,16 @@ function LeaderboardPage() {
             const rankDisplay = row.tied ? `=${ord}` : ord;
 
             return (
-              <div key={row.user_id} className="relative group">
-                {accent.glow && (
-                  <div className="absolute -inset-0.5 bg-gradient-to-r from-warning to-warning/60 rounded-xl blur opacity-20 pointer-events-none" />
-                )}
-                <div
-                  className={
-                    "relative bg-card border border-border border-l-4 rounded-r-xl overflow-hidden " +
-                    accent.border
-                  }
-                >
-                  <div className="p-2.5">
-                    <div className="flex justify-between items-center gap-3">
-                      <div className="flex items-center gap-2.5 min-w-0">
-                        <div
-                          className={
-                            "w-11 h-11 bg-muted rounded-full border-2 flex items-center justify-center shrink-0 " +
-                            accent.ring
-                          }
-                        >
-                          <span
-                            className={"text-lg leading-none " + accent.text}
-                            style={BEBAS}
-                          >
-                            {rankDisplay}
-                          </span>
-                        </div>
-                        <div className="min-w-0">
-                          <h2 className="text-lg font-bold text-ink leading-tight">
-                            {row.name}
-                          </h2>
-                        </div>
-                      </div>
-                      <div className="text-right shrink-0">
-                        <div
-                          className="text-3xl text-primary leading-none tabular-nums"
-                          style={BEBAS}
-                        >
-                          {row.points}
-                        </div>
-                        <div className="text-[9px] font-bold text-muted-foreground uppercase mt-0.5">
-                          Points
-                        </div>
-                      </div>
-                    </div>
-
-                    <div className="mt-2 grid grid-cols-4 gap-1 border-t border-border/60 pt-2">
-                      <StatBox value={row.settled_predictions} label="Matches Predicted" />
-                      <StatBox value={row.correct_scores} label="Correct Scores" />
-                      <StatBox value={row.correct_results} label="Correct Results" />
-                      <StatBox
-                        value={`${accuracy}%`}
-                        label="Total Accuracy"
-                        valueClass={accent.text}
-                      />
-                    </div>
-                  </div>
-                  <span
-                    className="absolute top-0 right-0 text-5xl text-foreground/[0.03] select-none pointer-events-none -mr-2 -mt-2 leading-none"
-                    style={BEBAS}
-                  >
-                    {rank}
-                  </span>
-                </div>
-              </div>
+              <LeaderboardCard
+                key={row.user_id}
+                row={row}
+                rank={rank}
+                rankDisplay={rankDisplay}
+                accent={accent}
+                accuracy={accuracy}
+                isMe={isMe}
+                initial={initial}
+              />
             );
           })}
         </div>
