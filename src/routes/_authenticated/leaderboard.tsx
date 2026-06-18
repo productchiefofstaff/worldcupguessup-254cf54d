@@ -157,11 +157,6 @@ function LeaderboardPage() {
                           <h2 className="text-lg font-bold text-ink leading-tight">
                             {row.name}
                           </h2>
-                          {isMe && (
-                            <span className="inline-block mt-0.5 text-[9px] uppercase tracking-wider bg-primary text-primary-foreground px-1 py-0 rounded-sm font-black">
-                              You
-                            </span>
-                          )}
                         </div>
                       </div>
                       <div className="text-right shrink-0">
