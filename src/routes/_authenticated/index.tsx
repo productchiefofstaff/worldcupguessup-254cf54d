@@ -230,6 +230,7 @@ function FixturesPage() {
                   fixture={f}
                   prediction={predByFixture.get(f.id) ?? null}
                   userId={user.id}
+                  avatarUrl={user.user_metadata?.avatar_url ?? user.user_metadata?.picture ?? null}
                   homeForm={formQ.data?.get(f.team_home) ?? []}
                   awayForm={formQ.data?.get(f.team_away) ?? []}
                 />
