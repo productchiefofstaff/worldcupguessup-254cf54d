@@ -175,6 +175,7 @@ function FixturesPage() {
         id: k,
         top: shortWeekday(arr[0].kickoff_at),
         bottom: dayNumber(arr[0].kickoff_at),
+        today: k === dayKey(new Date().toISOString()),
       })),
     [grouped],
   );
@@ -192,6 +193,12 @@ function FixturesPage() {
   const activeDay = selectedDay && dayItems.some((d) => d.id === selectedDay)
     ? selectedDay
     : defaultDayId;
+
+  const todayId = useMemo(() => {
+    const k = dayKey(new Date().toISOString());
+    return dayItems.some((d) => d.id === k) ? k : null;
+  }, [dayItems]);
+  const showTodayJump = !!todayId && activeDay !== todayId;
 
   const visibleGroups = useMemo(
     () => (activeDay ? grouped.filter(([k]) => k === activeDay) : []),
@@ -222,13 +229,25 @@ function FixturesPage() {
       </div>
 
       {dayItems.length > 0 && (
-        <div className="mb-4">
-          <PillNav
-            items={dayItems}
-            value={activeDay ?? ""}
-            onChange={setSelectedDay}
-            ariaLabel="Filter fixtures by day"
-          />
+        <div className="mb-4 flex items-center gap-2">
+          <div className="flex-1 min-w-0">
+            <PillNav
+              items={dayItems}
+              value={activeDay ?? ""}
+              onChange={setSelectedDay}
+              ariaLabel="Filter fixtures by day"
+            />
+          </div>
+          {showTodayJump && (
+            <button
+              type="button"
+              onClick={() => setSelectedDay(todayId)}
+              className="shrink-0 inline-flex items-center gap-1 text-[11px] font-bold uppercase tracking-wider text-primary border border-primary/40 bg-primary/10 hover:bg-primary/20 rounded-full px-2.5 py-1.5 transition-colors mb-2"
+              aria-label="Jump to today"
+            >
+              Today
+            </button>
+          )}
         </div>
       )}
 
