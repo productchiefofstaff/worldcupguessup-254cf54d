@@ -12,7 +12,6 @@ import {
   DialogTitle,
   DialogDescription,
 } from "@/components/ui/dialog";
-import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Lightbulb, CalendarDays, Info } from "lucide-react";
 import { PillNav, type PillNavItem } from "@/components/PillNav";
 
@@ -65,30 +64,8 @@ function dayNumber(iso: string) {
   return String(new Date(iso).getDate());
 }
 
-const TABS = ["Upcoming", "Completed"] as const;
-const FIXTURES_TAB_KEY = "wcg-fixtures-tab";
-
-function loadTab(): (typeof TABS)[number] {
-  try {
-    const v = localStorage.getItem(FIXTURES_TAB_KEY);
-    return v === "Completed" ? "Completed" : "Upcoming";
-  } catch {
-    return "Upcoming";
-  }
-}
-
 function FixturesPage() {
   const { user } = useAuth();
-  const [tab, setTabState] = useState<(typeof TABS)[number]>(loadTab);
-  const setTab = (next: (typeof TABS)[number]) => {
-    setTabState(next);
-    setSelectedDay(null);
-    try {
-      localStorage.setItem(FIXTURES_TAB_KEY, next);
-    } catch {
-      // ignore
-    }
-  };
   const [selectedDay, setSelectedDay] = useState<string | null>(null);
   const [whatsNewOpen, setWhatsNewOpen] = useState(!hasDismissedWhatsNew());
   const [rulesOpen, setRulesOpen] = useState(false);
@@ -163,31 +140,16 @@ function FixturesPage() {
     return map;
   }, [predsQ.data]);
 
-  const filtered = useMemo(() => {
-    const all = fixturesQ.data ?? [];
-    return all.filter((f) => {
-      const hasResult = f.home_score !== null;
-      if (tab === "Upcoming") return !hasResult;
-      if (tab === "Completed") return hasResult;
-      return true;
-    });
-  }, [fixturesQ.data, tab]);
-
   const grouped = useMemo(() => {
     const map = new Map<string, Fixture[]>();
-    filtered.forEach((f) => {
+    (fixturesQ.data ?? []).forEach((f) => {
       const k = dayKey(f.kickoff_at);
       const arr = map.get(k) ?? [];
       arr.push(f);
       map.set(k, arr);
     });
-    const entries = Array.from(map.entries());
-    if (tab === "Completed") {
-      entries.forEach(([, arr]) => arr.reverse());
-      entries.reverse();
-    }
-    return entries;
-  }, [filtered, tab]);
+    return Array.from(map.entries());
+  }, [fixturesQ.data]);
 
   const dayItems: PillNavItem[] = useMemo(
     () =>
@@ -237,16 +199,6 @@ function FixturesPage() {
           <span>Rules</span>
         </button>
       </div>
-
-      <Tabs value={tab} onValueChange={(v) => setTab(v as (typeof TABS)[number])}>
-        <TabsList className="w-full justify-start overflow-x-auto flex-nowrap mb-4">
-          {TABS.map((s) => (
-            <TabsTrigger key={s} value={s} className="flex-1">
-              {s}
-            </TabsTrigger>
-          ))}
-        </TabsList>
-      </Tabs>
 
       {dayItems.length > 0 && (
         <div className="mb-4">
