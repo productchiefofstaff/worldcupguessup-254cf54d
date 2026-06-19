@@ -388,7 +388,8 @@ export function FixtureCard({
                   </span>
                 ) : (
                   <span className="inline-flex items-center gap-1 text-xs text-destructive font-semibold">
-                    <Radio className="h-3 w-3" /> Live
+                    <Radio className="h-3 w-3" />
+                    <span>Live{liveLabel ? ` · ${liveLabel}` : ""}</span>
                   </span>
                 )}
               </>
