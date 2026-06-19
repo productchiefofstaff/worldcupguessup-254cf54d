@@ -385,12 +385,12 @@ export function FixtureCard({
                     />
                   </label>
                 )}
-                {!hasResult && isLive && avatarUrl && (
-                  <img
-                    src={avatarUrl}
-                    alt="Your avatar"
-                    className="h-6 w-6 rounded-full object-cover border border-border"
-                  />
+                {!hasResult && isLive && prediction && (
+                  <span className="text-xs font-semibold inline-flex items-center gap-2">
+                    <span className="text-muted-foreground">
+                      Your pick <span className="text-ink font-extrabold">{prediction.home_score}-{prediction.away_score}</span>
+                    </span>
+                  </span>
                 )}
                 {hasResult ? (
                   <span className="text-xs font-semibold inline-flex items-center gap-2">
