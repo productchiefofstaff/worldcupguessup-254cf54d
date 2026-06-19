@@ -127,12 +127,14 @@ export function FixtureCard({
   userId,
   homeForm,
   awayForm,
+  avatarUrl,
 }: {
   fixture: Fixture;
   prediction: Prediction | null;
   userId: string;
   homeForm: FormMatch[];
   awayForm: FormMatch[];
+  avatarUrl?: string | null;
 }) {
   const queryClient = useQueryClient();
   const [home, setHome] = useState<string>(prediction ? String(prediction.home_score) : "");
@@ -297,11 +299,9 @@ export function FixtureCard({
               placeholder="-"
               className={
                 "w-10 h-10 text-center font-extrabold text-lg border rounded-sm leading-10 focus:outline-none focus:ring-2 focus:ring-ring disabled:opacity-100 " +
-                (hasResult
+                (hasResult || isLive
                   ? "bg-ink text-background border-ink"
-                  : isLive
-                    ? "bg-destructive/10 text-destructive border-destructive disabled:bg-destructive/10 disabled:text-destructive"
-                    : "bg-background border-input disabled:bg-muted disabled:text-ink")
+                  : "bg-background border-input disabled:bg-muted disabled:text-ink")
               }
               aria-label={`${fixture.team_home} predicted score`}
             />
@@ -325,11 +325,9 @@ export function FixtureCard({
               placeholder="-"
               className={
                 "w-10 h-10 text-center font-extrabold text-lg border rounded-sm leading-10 focus:outline-none focus:ring-2 focus:ring-ring disabled:opacity-100 " +
-                (hasResult
+                (hasResult || isLive
                   ? "bg-ink text-background border-ink"
-                  : isLive
-                    ? "bg-destructive/10 text-destructive border-destructive disabled:bg-destructive/10 disabled:text-destructive"
-                    : "bg-background border-input disabled:bg-muted disabled:text-ink")
+                  : "bg-background border-input disabled:bg-muted disabled:text-ink")
               }
               aria-label={`${fixture.team_away} predicted score`}
             />
