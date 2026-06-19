@@ -99,6 +99,21 @@ function FixturesPage() {
       if (error) throw error;
       return data as Fixture[];
     },
+    // Tick more often while any match is live so live scores update on screen
+    // without forcing a manual refresh. The query stays idle otherwise.
+    refetchInterval: (q) => {
+      const data = q.state.data as Fixture[] | undefined;
+      if (!data) return false;
+      const now = Date.now();
+      const anyLive = data.some((f) => {
+        const ko = new Date(f.kickoff_at).getTime();
+        const mins = (now - ko) / 60000;
+        const hasResult = f.home_score !== null && f.away_score !== null;
+        return !hasResult && mins >= 0 && mins <= 150;
+      });
+      return anyLive ? 30_000 : false;
+    },
+    refetchIntervalInBackground: false,
   });
 
   const predsQ = useQuery({
