@@ -140,6 +140,13 @@ function FixturesPage() {
     return map;
   }, [predsQ.data]);
 
+  const isLive = (f: Fixture) => {
+    const ko = new Date(f.kickoff_at).getTime();
+    const mins = (Date.now() - ko) / 60000;
+    const hasResult = f.home_score !== null && f.away_score !== null;
+    return !hasResult && mins >= 0 && mins <= 150;
+  };
+
   const grouped = useMemo(() => {
     const map = new Map<string, Fixture[]>();
     (fixturesQ.data ?? []).forEach((f) => {
@@ -148,7 +155,17 @@ function FixturesPage() {
       arr.push(f);
       map.set(k, arr);
     });
+    // Sort live games to the top within each day.
+    for (const [, arr] of map) {
+      arr.sort((a, b) => {
+        const la = isLive(a) ? 0 : 1;
+        const lb = isLive(b) ? 0 : 1;
+        if (la !== lb) return la - lb;
+        return new Date(a.kickoff_at).getTime() - new Date(b.kickoff_at).getTime();
+      });
+    }
     return Array.from(map.entries());
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [fixturesQ.data]);
 
   const dayItems: PillNavItem[] = useMemo(
@@ -161,12 +178,15 @@ function FixturesPage() {
     [grouped],
   );
 
-  // Default selected day: today if present, otherwise the first available day.
+  // Default selected day: day of any live game, otherwise today, otherwise the first available day.
   const defaultDayId = useMemo(() => {
-    if (dayItems.length === 0) return null;
+    if (grouped.length === 0) return null;
+    const liveDay = grouped.find(([, arr]) => arr.some(isLive))?.[0];
+    if (liveDay) return liveDay;
     const todayKey = dayKey(new Date().toISOString());
-    return dayItems.find((d) => d.id === todayKey)?.id ?? dayItems[0].id;
-  }, [dayItems]);
+    return grouped.find(([k]) => k === todayKey)?.[0] ?? grouped[0][0];
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [grouped]);
 
   const activeDay = selectedDay && dayItems.some((d) => d.id === selectedDay)
     ? selectedDay
@@ -220,9 +240,6 @@ function FixturesPage() {
       <div className="space-y-6">
         {visibleGroups.map(([k, fixtures]) => (
           <section key={k}>
-            <h2 className="text-xs uppercase tracking-wider font-bold text-muted-foreground mb-2">
-              {formatDay(fixtures[0].kickoff_at)}
-            </h2>
             <div className="space-y-2">
               {fixtures.map((f) => (
                 <FixtureCard
