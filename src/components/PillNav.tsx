@@ -53,16 +53,22 @@ export function PillNav({
                 : "bg-card border-border text-ink hover:bg-muted",
             )}
           >
-            <span
-              className={cn(
-                "text-[10px] font-bold uppercase tracking-wider",
-                active ? "text-primary-foreground/80" : "text-muted-foreground",
-              )}
-            >
-              {it.top}
-            </span>
-            {it.bottom && (
-              <span className="text-base font-bold leading-tight">{it.bottom}</span>
+            {it.bottom ? (
+              <>
+                <span
+                  className={cn(
+                    "text-[10px] font-bold uppercase tracking-wider",
+                    active ? "text-primary-foreground/80" : "text-muted-foreground",
+                  )}
+                >
+                  {it.top}
+                </span>
+                <span className="text-base font-bold leading-tight">{it.bottom}</span>
+              </>
+            ) : (
+              <span className="text-sm font-bold leading-tight whitespace-nowrap">
+                {it.top}
+              </span>
             )}
             {it.dot && (
               <span
