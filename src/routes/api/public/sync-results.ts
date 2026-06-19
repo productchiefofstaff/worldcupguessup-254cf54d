@@ -189,7 +189,7 @@ export const Route = createFileRoute("/api/public/sync-results")({
         );
         const { data: fixtures, error: fxErr } = await supabaseAdmin
           .from("fixtures")
-          .select("id, match_number, stage, team_home, team_away, kickoff_at, home_score, away_score");
+          .select("id, match_number, stage, team_home, team_away, kickoff_at, home_score, away_score, live_home_score, live_away_score, live_status_label");
         if (fxErr || !fixtures) {
           return Response.json(
             { error: "db_read_failed", detail: fxErr?.message },
