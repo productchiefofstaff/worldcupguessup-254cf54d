@@ -63,7 +63,8 @@ function displayLiveLabel(label: string | null, updatedAt: string | null | undef
 
   const base = Number(match[1]);
   const extra = match[2] ? Number(match[2]) : 0;
-  const elapsed = Math.max(0, Math.floor((now - updated) / 60000));
+  // Compensate for upstream feed delay (~45s) so the clock reads closer to real time
+  const elapsed = Math.max(0, Math.floor((now - updated + 45_000) / 60000));
   const total = Math.min(base + extra + elapsed, 130);
 
   if (match[2]) return `${base}'+${Math.max(0, total - base)}'`;
