@@ -21,6 +21,9 @@ export type Fixture = {
   home_score: number | null;
   away_score: number | null;
   highlights_url?: string | null;
+  live_home_score?: number | null;
+  live_away_score?: number | null;
+  live_status_label?: string | null;
 };
 
 export type Prediction = {
