@@ -4,8 +4,8 @@ import { db as supabase } from "@/lib/db";
 import { useAuth } from "@/hooks/use-auth";
 import { flagFor } from "@/lib/flags";
 import { ClipboardList } from "lucide-react";
-import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { useState } from "react";
+import { PillNav, type PillNavItem } from "@/components/PillNav";
 
 export const Route = createFileRoute("/_authenticated/my-predictions")({
   head: () => ({
@@ -144,25 +144,27 @@ function MyPredictionsPage() {
         <p className="text-sm text-destructive">Failed to load predictions.</p>
       )}
 
-      <Tabs value={activeTab} onValueChange={setActiveTab}>
-        <TabsList className="w-full justify-start overflow-x-auto flex-nowrap">
-          <TabsTrigger value="you" className="flex-1">You</TabsTrigger>
-          {others.map((p) => (
-            <TabsTrigger key={p.user_id} value={p.user_id} className="flex-1">
-              {p.name}
-            </TabsTrigger>
-          ))}
-        </TabsList>
+      <div className="mb-4">
+        <PillNav
+          items={[
+            { id: "you", top: "You" } as PillNavItem,
+            ...others.map((p) => ({ id: p.user_id, top: p.name }) as PillNavItem),
+          ]}
+          value={activeTab}
+          onChange={setActiveTab}
+          ariaLabel="Select player"
+        />
+      </div>
 
-        <TabsContent value="you">
-          <PredictionsTable rows={sortRows(rowsFor(user.id))} isOther={false} loading={allPredsQ.isLoading} />
-        </TabsContent>
-        {others.map((p) => (
-          <TabsContent key={p.user_id} value={p.user_id}>
-            <PredictionsTable rows={sortRows(rowsFor(p.user_id))} isOther={true} loading={allPredsQ.isLoading} />
-          </TabsContent>
-        ))}
-      </Tabs>
+      {activeTab === "you" ? (
+        <PredictionsTable rows={sortRows(rowsFor(user.id))} isOther={false} loading={allPredsQ.isLoading} />
+      ) : (
+        <PredictionsTable
+          rows={sortRows(rowsFor(activeTab))}
+          isOther={true}
+          loading={allPredsQ.isLoading}
+        />
+      )}
     </main>
   );
 }
