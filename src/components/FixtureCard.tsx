@@ -225,7 +225,14 @@ export function FixtureCard({
   }
 
   return (
-    <div className="bg-card border border-border rounded-md overflow-hidden flex flex-col h-full">
+    <div
+      className={
+        "bg-card rounded-md overflow-hidden flex flex-col h-full " +
+        (isLive
+          ? "border-2 border-destructive"
+          : "border border-border")
+      }
+    >
       <div className="flex items-center justify-between px-3 py-1.5 bg-surface text-xs text-muted-foreground border-b border-border">
         <span className="font-semibold">
           {fixture.group_name ? "Group stage" : fixture.stage}
