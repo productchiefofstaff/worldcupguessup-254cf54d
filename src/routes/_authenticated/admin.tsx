@@ -208,7 +208,12 @@ function AdminPage() {
       f: fixtureMap.get(r.fixture_id),
       name: profileMap.get(r.user_id)?.display_name ?? r.user_id.slice(0, 8),
     }))
-    .sort((a, b) => new Date(b.r.updated_at).getTime() - new Date(a.r.updated_at).getTime());
+    .sort((a, b) => {
+      const ak = a.f ? new Date(a.f.kickoff_at).getTime() : 0;
+      const bk = b.f ? new Date(b.f.kickoff_at).getTime() : 0;
+      if (bk !== ak) return bk - ak;
+      return a.name.localeCompare(b.name);
+    });
 
   const now = Date.now();
   const editableFixtures = (fixturesQ.data ?? [])
