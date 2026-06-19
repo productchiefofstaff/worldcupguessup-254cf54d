@@ -135,8 +135,16 @@ function parseEspnScoreboard(data: EspnScoreboard): SourceMatch[] {
         team_away: away.team?.displayName ?? away.team?.abbreviation ?? null,
         status_label: statusLabel,
         status: completed ? "finished" : statusType?.state === "in" ? "live" : "scheduled",
-        home_score: completed ? Number.parseInt(home.score ?? "", 10) : null,
-        away_score: completed ? Number.parseInt(away.score ?? "", 10) : null,
+        // Parse scores whenever ESPN provides them — both for completed
+        // matches (final score) and in-progress matches (live score).
+        home_score: (() => {
+          const n = Number.parseInt(home.score ?? "", 10);
+          return Number.isInteger(n) ? n : null;
+        })(),
+        away_score: (() => {
+          const n = Number.parseInt(away.score ?? "", 10);
+          return Number.isInteger(n) ? n : null;
+        })(),
         stage: event.season?.type?.name ?? fallbackStage,
       },
     ];
