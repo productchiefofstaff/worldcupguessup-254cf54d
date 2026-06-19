@@ -139,6 +139,15 @@ function FixturesPage() {
     return !hasResult && mins >= 0 && mins <= 150;
   };
 
+  const isUpcoming = (f: Fixture) => {
+    const ko = new Date(f.kickoff_at).getTime();
+    return Date.now() < ko;
+  };
+
+  const isCompleted = (f: Fixture) => {
+    return f.home_score !== null && f.away_score !== null;
+  };
+
   const grouped = useMemo(() => {
     const map = new Map<string, Fixture[]>();
     (fixturesQ.data ?? []).forEach((f) => {
