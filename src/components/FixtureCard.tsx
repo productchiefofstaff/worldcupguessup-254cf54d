@@ -136,6 +136,12 @@ export function FixtureCard({
 
   const locked = new Date(fixture.kickoff_at).getTime() <= now;
   const hasResult = fixture.home_score !== null && fixture.away_score !== null;
+  const isLive =
+    !hasResult &&
+    locked &&
+    (fixture.live_home_score !== null && fixture.live_home_score !== undefined &&
+     fixture.live_away_score !== null && fixture.live_away_score !== undefined);
+  const liveLabel = fixture.live_status_label ?? null;
   const userLocked = Boolean(prediction?.locked_at);
   const editable = !locked && !userLocked;
   const canSeeOthers = locked || userLocked;
