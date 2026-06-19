@@ -1,0 +1,1 @@
+UPDATE public.fixtures SET kickoff_at = '2026-06-21 00:00:00+00' WHERE id = '880909ad-5629-4fa4-b0e2-76b88a58fb99';
