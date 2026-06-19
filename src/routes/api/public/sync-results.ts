@@ -269,6 +269,10 @@ export const Route = createFileRoute("/api/public/sync-results")({
             team_away?: string;
             home_score?: number;
             away_score?: number;
+            live_home_score?: number | null;
+            live_away_score?: number | null;
+            live_status_label?: string | null;
+            live_updated_at?: string | null;
           } = {};
 
           // Fill in knockout teams as they're decided
@@ -317,6 +321,11 @@ export const Route = createFileRoute("/api/public/sync-results")({
           ) {
             patch.home_score = srcHome as number;
             patch.away_score = srcAway as number;
+            // Clear live state once the final score is settled.
+            patch.live_home_score = null;
+            patch.live_away_score = null;
+            patch.live_status_label = null;
+            patch.live_updated_at = null;
           } else if (
             !alreadyHasScore &&
             m.status === "finished" &&
@@ -325,6 +334,23 @@ export const Route = createFileRoute("/api/public/sync-results")({
             console.warn(
               `[sync-results] rejecting 'finished' for match ${fixture.match_number} (${fixture.team_home} v ${fixture.team_away}) — label='${m.status_label ?? ""}', minsSinceKO=${minutesSinceKickoff.toFixed(0)}`,
             );
+          }
+
+          // Track in-progress live scores so the UI can show the current
+          // scoreline and minute without affecting prediction settlement.
+          if (m.status === "live" && !alreadyHasScore) {
+            const liveHome = Number.isInteger(srcHome) ? (srcHome as number) : null;
+            const liveAway = Number.isInteger(srcAway) ? (srcAway as number) : null;
+            if (
+              liveHome !== fixture.live_home_score ||
+              liveAway !== fixture.live_away_score ||
+              (m.status_label ?? null) !== fixture.live_status_label
+            ) {
+              patch.live_home_score = liveHome;
+              patch.live_away_score = liveAway;
+              patch.live_status_label = m.status_label ?? null;
+              patch.live_updated_at = new Date().toISOString();
+            }
           }
 
           if (Object.keys(patch).length === 0) continue;
