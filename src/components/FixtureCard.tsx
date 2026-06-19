@@ -24,6 +24,7 @@ export type Fixture = {
   live_home_score?: number | null;
   live_away_score?: number | null;
   live_status_label?: string | null;
+  live_updated_at?: string | null;
 };
 
 export type Prediction = {
@@ -50,6 +51,24 @@ function kickoffLabel(iso: string) {
 function formatMatchDate(iso: string) {
   const d = new Date(iso);
   return d.toLocaleDateString(undefined, { day: "2-digit", month: "short", year: "numeric" });
+}
+
+function displayLiveLabel(label: string | null, updatedAt: string | null | undefined, now: number) {
+  if (!label) return null;
+  const match = label.trim().match(/^(\d+)'(?:\+(\d+)')?$/);
+  if (!match || !updatedAt) return label;
+
+  const updated = new Date(updatedAt).getTime();
+  if (!Number.isFinite(updated)) return label;
+
+  const base = Number(match[1]);
+  const extra = match[2] ? Number(match[2]) : 0;
+  const elapsed = Math.max(0, Math.floor((now - updated) / 60000));
+  const total = Math.min(base + extra + elapsed, 130);
+
+  if (match[2]) return `${base}'+${Math.max(0, total - base)}'`;
+  if (total > 90) return `90'+${total - 90}'`;
+  return `${total}'`;
 }
 
 function FormBadge({ match }: { match: FormMatch }) {
@@ -141,7 +160,7 @@ export function FixtureCard({
     locked &&
     (fixture.live_home_score !== null && fixture.live_home_score !== undefined &&
      fixture.live_away_score !== null && fixture.live_away_score !== undefined);
-  const liveLabel = fixture.live_status_label ?? null;
+  const liveLabel = displayLiveLabel(fixture.live_status_label ?? null, fixture.live_updated_at, now);
   const userLocked = Boolean(prediction?.locked_at);
   const editable = !locked && !userLocked;
   const canSeeOthers = locked || userLocked;
