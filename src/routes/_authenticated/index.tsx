@@ -266,7 +266,7 @@ function FixturesPage() {
                 )}
                 {upcoming.length > 0 && (
                   <div>
-                    <h2 className="text-xs font-bold uppercase tracking-wider text-primary mb-2">Upcoming</h2>
+                    <h2 className="text-xs font-bold uppercase tracking-wider text-muted-foreground mb-2">Upcoming</h2>
                     <div className="space-y-2">
                       {upcoming.map((f) => (
                         <FixtureCard
