@@ -6,6 +6,7 @@ export type PillNavItem = {
   top: string;
   bottom?: string;
   dot?: boolean;
+  today?: boolean;
 };
 
 export function PillNav({
@@ -50,7 +51,9 @@ export function PillNav({
               "relative flex-none snap-center flex flex-col items-center justify-center min-w-14 px-3 py-2 rounded-2xl border transition-all active:scale-95",
               active
                 ? "bg-primary border-primary text-primary-foreground shadow-md"
-                : "bg-card border-border text-ink hover:bg-muted",
+                : it.today
+                  ? "bg-card border-2 border-primary text-ink ring-4 ring-primary/15 hover:bg-muted"
+                  : "bg-card border-border text-ink hover:bg-muted",
             )}
           >
             {it.bottom ? (
