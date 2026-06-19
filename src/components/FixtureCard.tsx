@@ -373,7 +373,7 @@ export function FixtureCard({
               </>
             ) : (
               <>
-                {!hasResult && (
+                {!hasResult && !isLive && (
                   <label className="inline-flex items-center gap-1.5 text-xs font-semibold text-muted-foreground">
                     <Lock className="h-3 w-3" />
                     <span>Locked</span>
@@ -384,6 +384,13 @@ export function FixtureCard({
                       aria-label="Lock prediction"
                     />
                   </label>
+                )}
+                {!hasResult && isLive && avatarUrl && (
+                  <img
+                    src={avatarUrl}
+                    alt="Your avatar"
+                    className="h-6 w-6 rounded-full object-cover border border-border"
+                  />
                 )}
                 {hasResult ? (
                   <span className="text-xs font-semibold inline-flex items-center gap-2">
