@@ -14,6 +14,7 @@ import {
 } from "@/components/ui/dialog";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Lightbulb, CalendarDays, Info } from "lucide-react";
+import { PillNav, type PillNavItem } from "@/components/PillNav";
 
 const WHATS_NEW_KEY = "wcg-whats-new-dismissed-v2-lock";
 
@@ -56,6 +57,14 @@ function dayKey(iso: string) {
   return `${d.getFullYear()}-${d.getMonth()}-${d.getDate()}`;
 }
 
+function shortWeekday(iso: string) {
+  return new Date(iso).toLocaleDateString(undefined, { weekday: "short" });
+}
+
+function dayNumber(iso: string) {
+  return String(new Date(iso).getDate());
+}
+
 const TABS = ["Upcoming", "Completed"] as const;
 const FIXTURES_TAB_KEY = "wcg-fixtures-tab";
 
@@ -73,12 +82,14 @@ function FixturesPage() {
   const [tab, setTabState] = useState<(typeof TABS)[number]>(loadTab);
   const setTab = (next: (typeof TABS)[number]) => {
     setTabState(next);
+    setSelectedDay(null);
     try {
       localStorage.setItem(FIXTURES_TAB_KEY, next);
     } catch {
       // ignore
     }
   };
+  const [selectedDay, setSelectedDay] = useState<string | null>(null);
   const [whatsNewOpen, setWhatsNewOpen] = useState(!hasDismissedWhatsNew());
   const [rulesOpen, setRulesOpen] = useState(false);
 
@@ -178,6 +189,32 @@ function FixturesPage() {
     return entries;
   }, [filtered, tab]);
 
+  const dayItems: PillNavItem[] = useMemo(
+    () =>
+      grouped.map(([k, arr]) => ({
+        id: k,
+        top: shortWeekday(arr[0].kickoff_at),
+        bottom: dayNumber(arr[0].kickoff_at),
+      })),
+    [grouped],
+  );
+
+  // Default selected day: today if present, otherwise the first available day.
+  const defaultDayId = useMemo(() => {
+    if (dayItems.length === 0) return null;
+    const todayKey = dayKey(new Date().toISOString());
+    return dayItems.find((d) => d.id === todayKey)?.id ?? dayItems[0].id;
+  }, [dayItems]);
+
+  const activeDay = selectedDay && dayItems.some((d) => d.id === selectedDay)
+    ? selectedDay
+    : defaultDayId;
+
+  const visibleGroups = useMemo(
+    () => (activeDay ? grouped.filter(([k]) => k === activeDay) : []),
+    [grouped, activeDay],
+  );
+
   if (!user) return null;
 
   return (
@@ -211,6 +248,17 @@ function FixturesPage() {
         </TabsList>
       </Tabs>
 
+      {dayItems.length > 0 && (
+        <div className="mb-4">
+          <PillNav
+            items={dayItems}
+            value={activeDay ?? ""}
+            onChange={setSelectedDay}
+            ariaLabel="Filter fixtures by day"
+          />
+        </div>
+      )}
+
       {(fixturesQ.isLoading || (!!user && predsQ.isLoading)) && (
         <p className="text-sm text-muted-foreground">Loading fixtures…</p>
       )}
@@ -218,7 +266,7 @@ function FixturesPage() {
 
       {!fixturesQ.isLoading && !predsQ.isLoading && (
       <div className="space-y-6">
-        {grouped.map(([k, fixtures]) => (
+        {visibleGroups.map(([k, fixtures]) => (
           <section key={k}>
             <h2 className="text-xs uppercase tracking-wider font-bold text-muted-foreground mb-2">
               {formatDay(fixtures[0].kickoff_at)}
