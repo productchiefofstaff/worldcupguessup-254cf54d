@@ -139,6 +139,15 @@ function FixturesPage() {
     return !hasResult && mins >= 0 && mins <= 150;
   };
 
+  const isUpcoming = (f: Fixture) => {
+    const ko = new Date(f.kickoff_at).getTime();
+    return Date.now() < ko;
+  };
+
+  const isCompleted = (f: Fixture) => {
+    return f.home_score !== null && f.away_score !== null;
+  };
+
   const grouped = useMemo(() => {
     const map = new Map<string, Fixture[]>();
     (fixturesQ.data ?? []).forEach((f) => {
@@ -229,28 +238,75 @@ function FixturesPage() {
       {fixturesQ.error && <p className="text-sm text-destructive">Failed to load fixtures.</p>}
 
       {!fixturesQ.isLoading && !predsQ.isLoading && (
-      <div className="space-y-6">
-        {visibleGroups.map(([k, fixtures]) => (
-          <section key={k}>
-            <div className="space-y-2">
-              {fixtures.map((f) => (
-                <FixtureCard
-                  key={f.id}
-                  fixture={f}
-                  prediction={predByFixture.get(f.id) ?? null}
-                  userId={user.id}
-                  avatarUrl={user.user_metadata?.avatar_url ?? user.user_metadata?.picture ?? null}
-                  homeForm={formQ.data?.get(f.team_home) ?? []}
-                  awayForm={formQ.data?.get(f.team_away) ?? []}
-                />
-              ))}
-            </div>
-          </section>
-        ))}
-        {!fixturesQ.isLoading && grouped.length === 0 && (
-          <p className="text-sm text-muted-foreground">No fixtures match this filter.</p>
-        )}
-      </div>
+        <div className="space-y-6">
+          {visibleGroups.map(([k, fixtures]) => {
+            const live = fixtures.filter(isLive);
+            const upcoming = fixtures.filter(isUpcoming);
+            const completed = fixtures.filter(isCompleted);
+
+            return (
+              <section key={k} className="space-y-4">
+                {live.length > 0 && (
+                  <div>
+                    <h2 className="text-xs font-bold uppercase tracking-wider text-destructive mb-2">Live</h2>
+                    <div className="space-y-2">
+                      {live.map((f) => (
+                        <FixtureCard
+                          key={f.id}
+                          fixture={f}
+                          prediction={predByFixture.get(f.id) ?? null}
+                          userId={user.id}
+                          avatarUrl={user.user_metadata?.avatar_url ?? user.user_metadata?.picture ?? null}
+                          homeForm={formQ.data?.get(f.team_home) ?? []}
+                          awayForm={formQ.data?.get(f.team_away) ?? []}
+                        />
+                      ))}
+                    </div>
+                  </div>
+                )}
+                {upcoming.length > 0 && (
+                  <div>
+                    <h2 className="text-xs font-bold uppercase tracking-wider text-primary mb-2">Upcoming</h2>
+                    <div className="space-y-2">
+                      {upcoming.map((f) => (
+                        <FixtureCard
+                          key={f.id}
+                          fixture={f}
+                          prediction={predByFixture.get(f.id) ?? null}
+                          userId={user.id}
+                          avatarUrl={user.user_metadata?.avatar_url ?? user.user_metadata?.picture ?? null}
+                          homeForm={formQ.data?.get(f.team_home) ?? []}
+                          awayForm={formQ.data?.get(f.team_away) ?? []}
+                        />
+                      ))}
+                    </div>
+                  </div>
+                )}
+                {completed.length > 0 && (
+                  <div>
+                    <h2 className="text-xs font-bold uppercase tracking-wider text-muted-foreground mb-2">Completed</h2>
+                    <div className="space-y-2">
+                      {completed.map((f) => (
+                        <FixtureCard
+                          key={f.id}
+                          fixture={f}
+                          prediction={predByFixture.get(f.id) ?? null}
+                          userId={user.id}
+                          avatarUrl={user.user_metadata?.avatar_url ?? user.user_metadata?.picture ?? null}
+                          homeForm={formQ.data?.get(f.team_home) ?? []}
+                          awayForm={formQ.data?.get(f.team_away) ?? []}
+                        />
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </section>
+            );
+          })}
+          {!fixturesQ.isLoading && grouped.length === 0 && (
+            <p className="text-sm text-muted-foreground">No fixtures match this filter.</p>
+          )}
+        </div>
       )}
 
       <Dialog open={whatsNewOpen} onOpenChange={(open) => { if (!open) dismissWhatsNew(); }}>
