@@ -43,14 +43,6 @@ export const Route = createFileRoute("/_authenticated/")({
   component: FixturesPage,
 });
 
-function formatDay(iso: string) {
-  return new Date(iso).toLocaleDateString(undefined, {
-    weekday: "long",
-    day: "numeric",
-    month: "long",
-  });
-}
-
 function dayKey(iso: string) {
   const d = new Date(iso);
   return `${d.getFullYear()}-${d.getMonth()}-${d.getDate()}`;
