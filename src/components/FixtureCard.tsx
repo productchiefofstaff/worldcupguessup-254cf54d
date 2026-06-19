@@ -68,6 +68,7 @@ function displayLiveLabel(label: string | null, updatedAt: string | null | undef
   const total = Math.min(base + extra + elapsed, 130);
 
   if (match[2]) return `${base}'+${Math.max(0, total - base)}'`;
+  if (base === 45 && total > 45) return `45'+${total - 45}'`;
   if (total > 90) return `90'+${total - 90}'`;
   return `${total}'`;
 }
