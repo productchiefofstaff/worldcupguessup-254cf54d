@@ -267,7 +267,9 @@ export function FixtureCard({
               value={
                 hasResult
                   ? (fixture.home_score as number)
-                  : !editable
+                  : isLive
+                    ? (fixture.live_home_score as number)
+                    : !editable
                     ? (prediction ? prediction.home_score : "—")
                     : home
               }
@@ -278,7 +280,9 @@ export function FixtureCard({
                 "w-10 h-10 text-center font-extrabold text-lg border rounded-sm leading-10 focus:outline-none focus:ring-2 focus:ring-ring disabled:opacity-100 " +
                 (hasResult
                   ? "bg-ink text-background border-ink"
-                  : "bg-background border-input disabled:bg-muted disabled:text-ink")
+                  : isLive
+                    ? "bg-destructive/10 text-destructive border-destructive disabled:bg-destructive/10 disabled:text-destructive"
+                    : "bg-background border-input disabled:bg-muted disabled:text-ink")
               }
               aria-label={`${fixture.team_home} predicted score`}
             />
@@ -291,7 +295,9 @@ export function FixtureCard({
               value={
                 hasResult
                   ? (fixture.away_score as number)
-                  : !editable
+                  : isLive
+                    ? (fixture.live_away_score as number)
+                    : !editable
                     ? (prediction ? prediction.away_score : "—")
                     : away
               }
@@ -302,7 +308,9 @@ export function FixtureCard({
                 "w-10 h-10 text-center font-extrabold text-lg border rounded-sm leading-10 focus:outline-none focus:ring-2 focus:ring-ring disabled:opacity-100 " +
                 (hasResult
                   ? "bg-ink text-background border-ink"
-                  : "bg-background border-input disabled:bg-muted disabled:text-ink")
+                  : isLive
+                    ? "bg-destructive/10 text-destructive border-destructive disabled:bg-destructive/10 disabled:text-destructive"
+                    : "bg-background border-input disabled:bg-muted disabled:text-ink")
               }
               aria-label={`${fixture.team_away} predicted score`}
             />
