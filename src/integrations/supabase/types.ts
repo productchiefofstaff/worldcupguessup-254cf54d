@@ -23,6 +23,10 @@ export type Database = {
           home_score: number | null
           id: string
           kickoff_at: string
+          live_away_score: number | null
+          live_home_score: number | null
+          live_status_label: string | null
+          live_updated_at: string | null
           match_number: number
           stage: string
           team_away: string
@@ -36,6 +40,10 @@ export type Database = {
           home_score?: number | null
           id?: string
           kickoff_at: string
+          live_away_score?: number | null
+          live_home_score?: number | null
+          live_status_label?: string | null
+          live_updated_at?: string | null
           match_number: number
           stage: string
           team_away: string
@@ -49,6 +57,10 @@ export type Database = {
           home_score?: number | null
           id?: string
           kickoff_at?: string
+          live_away_score?: number | null
+          live_home_score?: number | null
+          live_status_label?: string | null
+          live_updated_at?: string | null
           match_number?: number
           stage?: string
           team_away?: string

@@ -21,6 +21,9 @@ export type Fixture = {
   home_score: number | null;
   away_score: number | null;
   highlights_url?: string | null;
+  live_home_score?: number | null;
+  live_away_score?: number | null;
+  live_status_label?: string | null;
 };
 
 export type Prediction = {
@@ -133,6 +136,12 @@ export function FixtureCard({
 
   const locked = new Date(fixture.kickoff_at).getTime() <= now;
   const hasResult = fixture.home_score !== null && fixture.away_score !== null;
+  const isLive =
+    !hasResult &&
+    locked &&
+    (fixture.live_home_score !== null && fixture.live_home_score !== undefined &&
+     fixture.live_away_score !== null && fixture.live_away_score !== undefined);
+  const liveLabel = fixture.live_status_label ?? null;
   const userLocked = Boolean(prediction?.locked_at);
   const editable = !locked && !userLocked;
   const canSeeOthers = locked || userLocked;
@@ -216,7 +225,14 @@ export function FixtureCard({
   }
 
   return (
-    <div className="bg-card border border-border rounded-md overflow-hidden flex flex-col h-full">
+    <div
+      className={
+        "bg-card rounded-md overflow-hidden flex flex-col h-full " +
+        (isLive
+          ? "border-2 border-destructive"
+          : "border border-border")
+      }
+    >
       <div className="flex items-center justify-between px-3 py-1.5 bg-surface text-xs text-muted-foreground border-b border-border">
         <span className="font-semibold">
           {fixture.group_name ? "Group stage" : fixture.stage}
@@ -251,7 +267,9 @@ export function FixtureCard({
               value={
                 hasResult
                   ? (fixture.home_score as number)
-                  : !editable
+                  : isLive
+                    ? (fixture.live_home_score as number)
+                    : !editable
                     ? (prediction ? prediction.home_score : "—")
                     : home
               }
@@ -262,7 +280,9 @@ export function FixtureCard({
                 "w-10 h-10 text-center font-extrabold text-lg border rounded-sm leading-10 focus:outline-none focus:ring-2 focus:ring-ring disabled:opacity-100 " +
                 (hasResult
                   ? "bg-ink text-background border-ink"
-                  : "bg-background border-input disabled:bg-muted disabled:text-ink")
+                  : isLive
+                    ? "bg-destructive/10 text-destructive border-destructive disabled:bg-destructive/10 disabled:text-destructive"
+                    : "bg-background border-input disabled:bg-muted disabled:text-ink")
               }
               aria-label={`${fixture.team_home} predicted score`}
             />
@@ -275,7 +295,9 @@ export function FixtureCard({
               value={
                 hasResult
                   ? (fixture.away_score as number)
-                  : !editable
+                  : isLive
+                    ? (fixture.live_away_score as number)
+                    : !editable
                     ? (prediction ? prediction.away_score : "—")
                     : away
               }
@@ -286,7 +308,9 @@ export function FixtureCard({
                 "w-10 h-10 text-center font-extrabold text-lg border rounded-sm leading-10 focus:outline-none focus:ring-2 focus:ring-ring disabled:opacity-100 " +
                 (hasResult
                   ? "bg-ink text-background border-ink"
-                  : "bg-background border-input disabled:bg-muted disabled:text-ink")
+                  : isLive
+                    ? "bg-destructive/10 text-destructive border-destructive disabled:bg-destructive/10 disabled:text-destructive"
+                    : "bg-background border-input disabled:bg-muted disabled:text-ink")
               }
               aria-label={`${fixture.team_away} predicted score`}
             />
@@ -364,7 +388,8 @@ export function FixtureCard({
                   </span>
                 ) : (
                   <span className="inline-flex items-center gap-1 text-xs text-destructive font-semibold">
-                    <Radio className="h-3 w-3" /> Live
+                    <Radio className="h-3 w-3" />
+                    <span>Live{liveLabel ? ` · ${liveLabel}` : ""}</span>
                   </span>
                 )}
               </>
