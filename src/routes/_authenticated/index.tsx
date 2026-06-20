@@ -174,7 +174,7 @@ function FixturesPage() {
     () =>
       grouped.map(([k], i) => ({
         id: k,
-        top: "Match",
+        top: "Match day",
         bottom: String(i + 1),
       })),
     [grouped],
