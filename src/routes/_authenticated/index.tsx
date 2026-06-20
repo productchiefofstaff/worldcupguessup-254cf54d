@@ -43,17 +43,18 @@ export const Route = createFileRoute("/_authenticated/")({
   component: FixturesPage,
 });
 
-function dayKey(iso: string) {
-  const d = new Date(iso);
-  return `${d.getFullYear()}-${d.getMonth()}-${d.getDate()}`;
-}
-
-function shortWeekday(iso: string) {
-  return new Date(iso).toLocaleDateString(undefined, { weekday: "short" });
-}
-
-function dayNumber(iso: string) {
-  return String(new Date(iso).getDate());
+// Group fixtures by New York calendar date (handles DST automatically).
+function nyDayKey(iso: string) {
+  const parts = new Intl.DateTimeFormat("en-CA", {
+    timeZone: "America/New_York",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).formatToParts(new Date(iso));
+  const y = parts.find((p) => p.type === "year")?.value;
+  const m = parts.find((p) => p.type === "month")?.value;
+  const d = parts.find((p) => p.type === "day")?.value;
+  return `${y}-${m}-${d}`;
 }
 
 function FixturesPage() {
@@ -151,7 +152,7 @@ function FixturesPage() {
   const grouped = useMemo(() => {
     const map = new Map<string, Fixture[]>();
     (fixturesQ.data ?? []).forEach((f) => {
-      const k = dayKey(f.kickoff_at);
+      const k = nyDayKey(f.kickoff_at);
       const arr = map.get(k) ?? [];
       arr.push(f);
       map.set(k, arr);
@@ -171,10 +172,10 @@ function FixturesPage() {
 
   const dayItems: PillNavItem[] = useMemo(
     () =>
-      grouped.map(([k, arr]) => ({
+      grouped.map(([k], i) => ({
         id: k,
-        top: shortWeekday(arr[0].kickoff_at),
-        bottom: dayNumber(arr[0].kickoff_at),
+        top: "Match",
+        bottom: String(i + 1),
       })),
     [grouped],
   );
@@ -184,7 +185,7 @@ function FixturesPage() {
     if (grouped.length === 0) return null;
     const liveDay = grouped.find(([, arr]) => arr.some(isLive))?.[0];
     if (liveDay) return liveDay;
-    const todayKey = dayKey(new Date().toISOString());
+    const todayKey = nyDayKey(new Date().toISOString());
     return grouped.find(([k]) => k === todayKey)?.[0] ?? grouped[0][0];
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [grouped]);
