@@ -425,17 +425,10 @@ export function FixtureCard({
         {hasResult && fixture.highlights_url && (
           <div className="mt-3">
             <div className="text-xs font-semibold text-muted-foreground mb-1.5">Highlights</div>
-            <div className="relative w-full overflow-hidden rounded-sm bg-black" style={{ paddingTop: "56.25%" }}>
-              <iframe
-                src={fixture.highlights_url}
-                title={`${fixture.team_home} v ${fixture.team_away} highlights`}
-                loading="lazy"
-                allow="accelerometer; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                allowFullScreen
-                referrerPolicy="strict-origin-when-cross-origin"
-                className="absolute inset-0 w-full h-full border-0"
-              />
-            </div>
+            <HighlightsPlayer
+              url={fixture.highlights_url}
+              title={`${fixture.team_home} v ${fixture.team_away} highlights`}
+            />
           </div>
         )}
 
