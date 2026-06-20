@@ -72,6 +72,51 @@ function displayLiveLabel(label: string | null, updatedAt: string | null | undef
   return `${total}'`;
 }
 
+function HighlightsPlayer({ url, title }: { url: string; title: string }) {
+  const [playing, setPlaying] = useState(false);
+  const idMatch = url.match(/\/embed\/([A-Za-z0-9_-]{6,})/);
+  const videoId = idMatch?.[1] ?? null;
+  const thumb = videoId ? `https://i.ytimg.com/vi/${videoId}/hqdefault.jpg` : null;
+  const playerSrc = url + (url.includes("?") ? "&" : "?") + "autoplay=1&playsinline=1&rel=0";
+
+  return (
+    <div className="relative w-full overflow-hidden rounded-sm bg-black" style={{ paddingTop: "56.25%" }}>
+      {playing || !thumb ? (
+        <iframe
+          src={playing ? playerSrc : url}
+          title={title}
+          loading="lazy"
+          allow="autoplay; accelerometer; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+          allowFullScreen
+          referrerPolicy="strict-origin-when-cross-origin"
+          className="absolute inset-0 w-full h-full border-0"
+        />
+      ) : (
+        <button
+          type="button"
+          onClick={() => setPlaying(true)}
+          aria-label={`Play ${title}`}
+          className="absolute inset-0 w-full h-full group"
+        >
+          <img
+            src={thumb}
+            alt=""
+            className="absolute inset-0 w-full h-full object-cover"
+            loading="lazy"
+          />
+          <span className="absolute inset-0 flex items-center justify-center bg-black/20 group-hover:bg-black/30 transition-colors">
+            <span className="flex items-center justify-center w-14 h-14 rounded-full bg-red-600 shadow-lg">
+              <svg viewBox="0 0 24 24" className="w-6 h-6 ml-1 fill-white" aria-hidden="true">
+                <path d="M8 5v14l11-7z" />
+              </svg>
+            </span>
+          </span>
+        </button>
+      )}
+    </div>
+  );
+}
+
 function FormBadge({ match }: { match: FormMatch }) {
   const [open, setOpen] = useState(false);
   const cls =
