@@ -12,8 +12,8 @@ import {
   DialogTitle,
   DialogDescription,
 } from "@/components/ui/dialog";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Lightbulb, CalendarDays, Info } from "lucide-react";
-import { PillNav, type PillNavItem } from "@/components/PillNav";
 
 const WHATS_NEW_KEY = "wcg-whats-new-dismissed-v2-lock";
 
@@ -43,23 +43,42 @@ export const Route = createFileRoute("/_authenticated/")({
   component: FixturesPage,
 });
 
-// Group fixtures by New York calendar date (handles DST automatically).
-function nyDayKey(iso: string) {
-  const parts = new Intl.DateTimeFormat("en-CA", {
-    timeZone: "America/New_York",
-    year: "numeric",
-    month: "2-digit",
-    day: "2-digit",
-  }).formatToParts(new Date(iso));
-  const y = parts.find((p) => p.type === "year")?.value;
-  const m = parts.find((p) => p.type === "month")?.value;
-  const d = parts.find((p) => p.type === "day")?.value;
-  return `${y}-${m}-${d}`;
+function formatDay(iso: string) {
+  return new Date(iso).toLocaleDateString(undefined, {
+    weekday: "long",
+    day: "numeric",
+    month: "long",
+  });
+}
+
+function dayKey(iso: string) {
+  const d = new Date(iso);
+  return `${d.getFullYear()}-${d.getMonth()}-${d.getDate()}`;
+}
+
+const TABS = ["Upcoming", "Completed"] as const;
+const FIXTURES_TAB_KEY = "wcg-fixtures-tab";
+
+function loadTab(): (typeof TABS)[number] {
+  try {
+    const v = localStorage.getItem(FIXTURES_TAB_KEY);
+    return v === "Completed" ? "Completed" : "Upcoming";
+  } catch {
+    return "Upcoming";
+  }
 }
 
 function FixturesPage() {
   const { user } = useAuth();
-  const [selectedDay, setSelectedDay] = useState<string | null>(null);
+  const [tab, setTabState] = useState<(typeof TABS)[number]>(loadTab);
+  const setTab = (next: (typeof TABS)[number]) => {
+    setTabState(next);
+    try {
+      localStorage.setItem(FIXTURES_TAB_KEY, next);
+    } catch {
+      // ignore
+    }
+  };
   const [whatsNewOpen, setWhatsNewOpen] = useState(!hasDismissedWhatsNew());
   const [rulesOpen, setRulesOpen] = useState(false);
 
@@ -133,71 +152,31 @@ function FixturesPage() {
     return map;
   }, [predsQ.data]);
 
-  const isLive = (f: Fixture) => {
-    const ko = new Date(f.kickoff_at).getTime();
-    const mins = (Date.now() - ko) / 60000;
-    const hasResult = f.home_score !== null && f.away_score !== null;
-    return !hasResult && mins >= 0 && mins <= 150;
-  };
-
-  const isUpcoming = (f: Fixture) => {
-    const ko = new Date(f.kickoff_at).getTime();
-    return Date.now() < ko;
-  };
-
-  const isCompleted = (f: Fixture) => {
-    return f.home_score !== null && f.away_score !== null;
-  };
+  const filtered = useMemo(() => {
+    const all = fixturesQ.data ?? [];
+    return all.filter((f) => {
+      const hasResult = f.home_score !== null;
+      if (tab === "Upcoming") return !hasResult;
+      if (tab === "Completed") return hasResult;
+      return true;
+    });
+  }, [fixturesQ.data, tab]);
 
   const grouped = useMemo(() => {
     const map = new Map<string, Fixture[]>();
-    (fixturesQ.data ?? []).forEach((f) => {
-      const k = nyDayKey(f.kickoff_at);
+    filtered.forEach((f) => {
+      const k = dayKey(f.kickoff_at);
       const arr = map.get(k) ?? [];
       arr.push(f);
       map.set(k, arr);
     });
-    // Sort live games to the top within each day.
-    for (const [, arr] of map) {
-      arr.sort((a, b) => {
-        const la = isLive(a) ? 0 : 1;
-        const lb = isLive(b) ? 0 : 1;
-        if (la !== lb) return la - lb;
-        return new Date(a.kickoff_at).getTime() - new Date(b.kickoff_at).getTime();
-      });
+    const entries = Array.from(map.entries());
+    if (tab === "Completed") {
+      entries.forEach(([, arr]) => arr.reverse());
+      entries.reverse();
     }
-    return Array.from(map.entries());
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [fixturesQ.data]);
-
-  const dayItems: PillNavItem[] = useMemo(
-    () =>
-      grouped.map(([k], i) => ({
-        id: k,
-        top: "Match day",
-        bottom: String(i + 1),
-      })),
-    [grouped],
-  );
-
-  // Default selected day: day of any live game, otherwise today, otherwise the first available day.
-  const defaultDayId = useMemo(() => {
-    if (grouped.length === 0) return null;
-    const liveDay = grouped.find(([, arr]) => arr.some(isLive))?.[0];
-    if (liveDay) return liveDay;
-    const todayKey = nyDayKey(new Date().toISOString());
-    return grouped.find(([k]) => k === todayKey)?.[0] ?? grouped[0][0];
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [grouped]);
-
-  const activeDay = selectedDay && dayItems.some((d) => d.id === selectedDay)
-    ? selectedDay
-    : defaultDayId;
-
-  const visibleGroups = useMemo(
-    () => (activeDay ? grouped.filter(([k]) => k === activeDay) : []),
-    [grouped, activeDay],
-  );
+    return entries;
+  }, [filtered, tab]);
 
   if (!user) return null;
 
@@ -222,16 +201,15 @@ function FixturesPage() {
         </button>
       </div>
 
-      {dayItems.length > 0 && (
-        <div className="mb-4">
-          <PillNav
-            items={dayItems}
-            value={activeDay ?? ""}
-            onChange={setSelectedDay}
-            ariaLabel="Filter fixtures by day"
-          />
-        </div>
-      )}
+      <Tabs value={tab} onValueChange={(v) => setTab(v as (typeof TABS)[number])}>
+        <TabsList className="w-full justify-start overflow-x-auto flex-nowrap mb-4">
+          {TABS.map((s) => (
+            <TabsTrigger key={s} value={s} className="flex-1">
+              {s}
+            </TabsTrigger>
+          ))}
+        </TabsList>
+      </Tabs>
 
       {(fixturesQ.isLoading || (!!user && predsQ.isLoading)) && (
         <p className="text-sm text-muted-foreground">Loading fixtures…</p>
@@ -239,75 +217,31 @@ function FixturesPage() {
       {fixturesQ.error && <p className="text-sm text-destructive">Failed to load fixtures.</p>}
 
       {!fixturesQ.isLoading && !predsQ.isLoading && (
-        <div className="space-y-6">
-          {visibleGroups.map(([k, fixtures]) => {
-            const live = fixtures.filter(isLive);
-            const upcoming = fixtures.filter(isUpcoming);
-            const completed = fixtures.filter(isCompleted);
-
-            return (
-              <section key={k} className="space-y-4">
-                {live.length > 0 && (
-                  <div>
-                    <h2 className="text-xs font-bold uppercase tracking-wider text-destructive mb-2">Live</h2>
-                    <div className="space-y-2">
-                      {live.map((f) => (
-                        <FixtureCard
-                          key={f.id}
-                          fixture={f}
-                          prediction={predByFixture.get(f.id) ?? null}
-                          userId={user.id}
-                          avatarUrl={user.user_metadata?.avatar_url ?? user.user_metadata?.picture ?? null}
-                          homeForm={formQ.data?.get(f.team_home) ?? []}
-                          awayForm={formQ.data?.get(f.team_away) ?? []}
-                        />
-                      ))}
-                    </div>
-                  </div>
-                )}
-                {upcoming.length > 0 && (
-                  <div>
-                    <h2 className="text-xs font-bold uppercase tracking-wider text-muted-foreground mb-2">Upcoming</h2>
-                    <div className="space-y-2">
-                      {upcoming.map((f) => (
-                        <FixtureCard
-                          key={f.id}
-                          fixture={f}
-                          prediction={predByFixture.get(f.id) ?? null}
-                          userId={user.id}
-                          avatarUrl={user.user_metadata?.avatar_url ?? user.user_metadata?.picture ?? null}
-                          homeForm={formQ.data?.get(f.team_home) ?? []}
-                          awayForm={formQ.data?.get(f.team_away) ?? []}
-                        />
-                      ))}
-                    </div>
-                  </div>
-                )}
-                {completed.length > 0 && (
-                  <div>
-                    <h2 className="text-xs font-bold uppercase tracking-wider text-muted-foreground mb-2">Completed</h2>
-                    <div className="space-y-2">
-                      {completed.map((f) => (
-                        <FixtureCard
-                          key={f.id}
-                          fixture={f}
-                          prediction={predByFixture.get(f.id) ?? null}
-                          userId={user.id}
-                          avatarUrl={user.user_metadata?.avatar_url ?? user.user_metadata?.picture ?? null}
-                          homeForm={formQ.data?.get(f.team_home) ?? []}
-                          awayForm={formQ.data?.get(f.team_away) ?? []}
-                        />
-                      ))}
-                    </div>
-                  </div>
-                )}
-              </section>
-            );
-          })}
-          {!fixturesQ.isLoading && grouped.length === 0 && (
-            <p className="text-sm text-muted-foreground">No fixtures match this filter.</p>
-          )}
-        </div>
+      <div className="space-y-6">
+        {grouped.map(([k, fixtures]) => (
+          <section key={k}>
+            <h2 className="text-xs uppercase tracking-wider font-bold text-muted-foreground mb-2">
+              {formatDay(fixtures[0].kickoff_at)}
+            </h2>
+            <div className="space-y-2">
+              {fixtures.map((f) => (
+                <FixtureCard
+                  key={f.id}
+                  fixture={f}
+                  prediction={predByFixture.get(f.id) ?? null}
+                  userId={user.id}
+                  avatarUrl={user.user_metadata?.avatar_url ?? user.user_metadata?.picture ?? null}
+                  homeForm={formQ.data?.get(f.team_home) ?? []}
+                  awayForm={formQ.data?.get(f.team_away) ?? []}
+                />
+              ))}
+            </div>
+          </section>
+        ))}
+        {!fixturesQ.isLoading && grouped.length === 0 && (
+          <p className="text-sm text-muted-foreground">No fixtures match this filter.</p>
+        )}
+      </div>
       )}
 
       <Dialog open={whatsNewOpen} onOpenChange={(open) => { if (!open) dismissWhatsNew(); }}>
