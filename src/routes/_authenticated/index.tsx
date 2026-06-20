@@ -152,7 +152,7 @@ function FixturesPage() {
   const grouped = useMemo(() => {
     const map = new Map<string, Fixture[]>();
     (fixturesQ.data ?? []).forEach((f) => {
-      const k = dayKey(f.kickoff_at);
+      const k = nyDayKey(f.kickoff_at);
       const arr = map.get(k) ?? [];
       arr.push(f);
       map.set(k, arr);
