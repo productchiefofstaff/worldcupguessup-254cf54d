@@ -368,7 +368,13 @@ export function FixtureCard({
       return false;
     }
   });
+  const celebratedRef = useRef(false);
   const reveal = () => {
+    if (celebratedRef.current || revealed) {
+      setRevealed(true);
+      return;
+    }
+    celebratedRef.current = true;
     setRevealed(true);
     try {
       localStorage.setItem(revealKey, "1");
