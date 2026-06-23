@@ -122,12 +122,16 @@ function SpoilerSticker({ onReveal, label = "Swipe to reveal score" }: { onRevea
   const wrapRef = useRef<HTMLDivElement>(null);
   const startX = useRef<number | null>(null);
   const [offset, setOffset] = useState(0);
-  const [width, setWidth] = useState(0);
+  const [size, setSize] = useState({ w: 0, h: 0 });
   const [dragging, setDragging] = useState(false);
 
   useEffect(() => {
     if (!wrapRef.current) return;
-    const measure = () => setWidth(wrapRef.current?.offsetWidth ?? 0);
+    const measure = () => {
+      const el = wrapRef.current;
+      if (!el) return;
+      setSize({ w: el.offsetWidth, h: el.offsetHeight });
+    };
     measure();
     const ro = new ResizeObserver(measure);
     ro.observe(wrapRef.current);
@@ -140,21 +144,82 @@ function SpoilerSticker({ onReveal, label = "Swipe to reveal score" }: { onRevea
     (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId);
   };
   const handleMove = (e: React.PointerEvent) => {
-    if (startX.current === null || width === 0) return;
+    if (startX.current === null || size.w === 0) return;
     const dx = startX.current - e.clientX;
-    setOffset(Math.max(0, Math.min(width, dx)));
+    setOffset(Math.max(0, Math.min(size.w, dx)));
   };
   const handleUp = () => {
     if (startX.current === null) return;
     startX.current = null;
     setDragging(false);
-    if (offset > width * 0.45) {
-      setOffset(width);
+    if (offset > size.w * 0.45) {
+      setOffset(size.w);
       onReveal();
     } else {
       setOffset(0);
     }
   };
+
+  const { w, h } = size;
+  const p = w ? offset / w : 0;
+  const L2 = w * w + h * h || 1;
+  const pTopOnly = h * h / L2;
+  const pBottomOnly = w * w / L2;
+  const safeW = Math.max(w, 1);
+  const safeH = Math.max(h, 1);
+  const xt = w - (L2 / safeW) * p;
+  const yr = (L2 * p) / safeH;
+  const yl = (L2 * p - w * w) / safeH;
+  const xb = (L2 * (1 - p)) / safeW;
+
+  let visiblePts: Array<[number, number]>;
+  let creaseStart: [number, number];
+  let creaseEnd: [number, number];
+  if (p <= 0.001) {
+    visiblePts = [[0, 0], [w, 0], [w, h], [0, h]];
+    creaseStart = [w, 0];
+    creaseEnd = [w, 0];
+  } else if (p < pTopOnly) {
+    visiblePts = [[0, 0], [xt, 0], [w, yr], [w, h], [0, h]];
+    creaseStart = [xt, 0];
+    creaseEnd = [w, yr];
+  } else if (p <= pBottomOnly) {
+    visiblePts = [[0, 0], [xt, 0], [xb, h], [0, h]];
+    creaseStart = [xt, 0];
+    creaseEnd = [xb, h];
+  } else if (p < 0.999) {
+    visiblePts = [[0, yl], [xb, h], [0, h]];
+    creaseStart = [0, yl];
+    creaseEnd = [xb, h];
+  } else {
+    visiblePts = [];
+    creaseStart = [0, h];
+    creaseEnd = [0, h];
+  }
+
+  const fmtPts = (pts: Array<[number, number]>) =>
+    pts.map(([x, y]) => `${x.toFixed(2)}px ${y.toFixed(2)}px`).join(", ");
+  const visibleClip = visiblePts.length
+    ? `polygon(${fmtPts(visiblePts)})`
+    : "polygon(0 0, 0 0, 0 0)";
+
+  // Folded-underside flap drawn on the peeled (top-right) side of the crease
+  const FLAP = 16;
+  const cdx = creaseEnd[0] - creaseStart[0];
+  const cdy = creaseEnd[1] - creaseStart[1];
+  const cLen = Math.hypot(cdx, cdy) || 1;
+  // Perpendicular into top-right peeled side: (cdy, -cdx) / cLen
+  const nx = cdy / cLen;
+  const ny = -cdx / cLen;
+  const flapPts: Array<[number, number]> = [
+    creaseStart,
+    creaseEnd,
+    [creaseEnd[0] + nx * FLAP, creaseEnd[1] + ny * FLAP],
+    [creaseStart[0] + nx * FLAP, creaseStart[1] + ny * FLAP],
+  ];
+  const flapClip = `polygon(${fmtPts(flapPts)})`;
+  // Gradient runs perpendicular to crease — from crease (darker) outward to flap edge (lighter back-of-sticker cream)
+  const flapAngleDeg = (Math.atan2(ny, nx) * 180) / Math.PI + 90;
 
   return (
     <div ref={wrapRef} className="absolute inset-0">
@@ -167,45 +232,32 @@ function SpoilerSticker({ onReveal, label = "Swipe to reveal score" }: { onRevea
         role="button"
         aria-label={label}
       >
+        {/* Sticker face — clipped diagonally; text stays put and gets clipped naturally */}
         <div
-          className="absolute inset-y-0 left-0 overflow-hidden bg-gradient-to-br from-amber-100 via-amber-200 to-amber-300 text-amber-800 text-[11px] font-semibold tracking-tight shadow-[inset_0_1px_0_rgba(255,255,255,0.7),0_1px_2px_rgba(0,0,0,0.15)] cursor-grab active:cursor-grabbing"
+          className="absolute inset-0 bg-gradient-to-br from-amber-100 via-amber-200 to-amber-300 text-amber-800 text-[11px] font-semibold tracking-tight shadow-[inset_0_1px_0_rgba(255,255,255,0.7)] cursor-grab active:cursor-grabbing"
           style={{
-            right: `${offset}px`,
-            transition: dragging ? "none" : "right 200ms ease-out",
-            clipPath:
-              "polygon(0 0, calc(100% - 10px) 0, 100% 10px, 100% 100%, 0 100%)",
+            clipPath: visibleClip,
+            transition: dragging ? "none" : "clip-path 220ms ease-out",
           }}
         >
-          {/* Label is full original width and translates with finger so it slides at the swipe rate */}
-          <span
-            className="absolute inset-0 flex items-center justify-center whitespace-nowrap gap-1"
-            style={{ width: `${width}px`, transform: `translateX(${-offset}px)` }}
-          >
+          <span className="absolute inset-0 flex items-center justify-center whitespace-nowrap gap-1">
             <Eye className="h-3 w-3" />
             <span>{label}</span>
           </span>
-          {/* trailing edge shadow */}
-          <div
-            className="absolute top-0 bottom-0 -right-1 w-1 bg-gradient-to-l from-amber-500/30 to-transparent pointer-events-none"
-            aria-hidden
-          />
         </div>
-        {/* Folded triangle underside — shows over the cut-out corner */}
-        <div
-          className="absolute pointer-events-none"
-          aria-hidden
-          style={{
-            top: 0,
-            right: `${offset}px`,
-            width: "10px",
-            height: "10px",
-            transition: dragging ? "none" : "right 200ms ease-out",
-            background:
-              "linear-gradient(225deg, rgb(252 211 77) 0%, rgb(251 191 36) 60%, rgb(180 83 9 / 0.6) 100%)",
-            clipPath: "polygon(100% 0, 100% 100%, 0 0)",
-            filter: "drop-shadow(-1px 1px 1px rgba(0,0,0,0.15))",
-          }}
-        />
+        {/* Folded underside flap along the diagonal crease */}
+        {p > 0.001 && p < 0.999 && (
+          <div
+            className="absolute inset-0 pointer-events-none"
+            aria-hidden
+            style={{
+              clipPath: flapClip,
+              transition: dragging ? "none" : "clip-path 220ms ease-out",
+              background: `linear-gradient(${flapAngleDeg}deg, rgba(146,64,14,0.35) 0%, rgb(254 243 199) 45%, rgb(253 230 138) 100%)`,
+              filter: "drop-shadow(-1px 1px 2px rgba(0,0,0,0.18))",
+            }}
+          />
+        )}
       </div>
     </div>
   );
