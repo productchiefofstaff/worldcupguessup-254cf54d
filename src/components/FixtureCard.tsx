@@ -197,11 +197,14 @@ function SpoilerSticker({ onReveal, label = "Swipe to reveal score" }: { onRevea
     creaseEnd = [0, h];
   }
 
+  const measured = w > 0 && h > 0;
   const fmtPts = (pts: Array<[number, number]>) =>
     pts.map(([x, y]) => `${x.toFixed(2)}px ${y.toFixed(2)}px`).join(", ");
-  const visibleClip = visiblePts.length
-    ? `polygon(${fmtPts(visiblePts)})`
-    : "polygon(0 0, 0 0, 0 0)";
+  const visibleClip = !measured
+    ? "none"
+    : visiblePts.length
+      ? `polygon(${fmtPts(visiblePts)})`
+      : "polygon(0 0, 0 0, 0 0)";
 
   // Folded-underside flap drawn on the peeled (top-right) side of the crease
   const FLAP = 16;
@@ -246,7 +249,7 @@ function SpoilerSticker({ onReveal, label = "Swipe to reveal score" }: { onRevea
           </span>
         </div>
         {/* Folded underside flap along the diagonal crease */}
-        {p > 0.001 && p < 0.999 && (
+        {measured && p > 0.001 && p < 0.999 && (
           <div
             className="absolute inset-0 pointer-events-none"
             aria-hidden
