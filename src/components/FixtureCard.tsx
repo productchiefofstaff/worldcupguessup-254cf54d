@@ -183,6 +183,7 @@ function SpoilerSticker({ onReveal, label = "Swipe to reveal score" }: { onRevea
             aria-hidden
           />
         </div>
+      </div>
     </div>
   );
 }
