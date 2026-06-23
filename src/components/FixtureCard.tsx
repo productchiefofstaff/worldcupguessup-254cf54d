@@ -1,7 +1,7 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { db as supabase } from "@/lib/db";
 import { Button } from "@/components/ui/button";
-import { Lock, ChevronDown, Radio, Check } from "lucide-react";
+import { Lock, ChevronDown, Radio, Check, Eye } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
 import { toast } from "sonner";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
@@ -117,6 +117,77 @@ function HighlightsPlayer({ url, title }: { url: string; title: string }) {
   );
 }
 
+function SpoilerSticker({ onReveal, label = "Swipe to reveal score" }: { onReveal: () => void; label?: string }) {
+  const wrapRef = useRef<HTMLDivElement>(null);
+  const startX = useRef<number | null>(null);
+  const [offset, setOffset] = useState(0);
+  const [width, setWidth] = useState(0);
+  const [dragging, setDragging] = useState(false);
+
+  useEffect(() => {
+    if (!wrapRef.current) return;
+    const measure = () => setWidth(wrapRef.current?.offsetWidth ?? 0);
+    measure();
+    const ro = new ResizeObserver(measure);
+    ro.observe(wrapRef.current);
+    return () => ro.disconnect();
+  }, []);
+
+  const handleDown = (e: React.PointerEvent) => {
+    startX.current = e.clientX;
+    setDragging(true);
+    (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId);
+  };
+  const handleMove = (e: React.PointerEvent) => {
+    if (startX.current === null || width === 0) return;
+    const dx = startX.current - e.clientX;
+    setOffset(Math.max(0, Math.min(width, dx)));
+  };
+  const handleUp = () => {
+    if (startX.current === null) return;
+    startX.current = null;
+    setDragging(false);
+    if (offset > width * 0.45) {
+      setOffset(width);
+      onReveal();
+    } else {
+      setOffset(0);
+    }
+  };
+
+  return (
+    <div ref={wrapRef} className="absolute inset-0">
+      <div
+        className="absolute inset-0 overflow-hidden rounded-sm touch-none select-none"
+        onPointerDown={handleDown}
+        onPointerMove={handleMove}
+        onPointerUp={handleUp}
+        onPointerCancel={handleUp}
+        role="button"
+        aria-label={label}
+      >
+        <div
+          className="absolute inset-y-0 left-0 flex items-center justify-center bg-gradient-to-br from-amber-300 via-amber-400 to-amber-500 text-amber-950 text-[11px] font-extrabold tracking-tight shadow-[inset_0_1px_0_rgba(255,255,255,0.6),0_1px_2px_rgba(0,0,0,0.25)] cursor-grab active:cursor-grabbing"
+          style={{
+            right: `${offset}px`,
+            transition: dragging ? "none" : "right 200ms ease-out",
+          }}
+        >
+          <span className="px-2 flex items-center gap-1 whitespace-nowrap">
+            <Eye className="h-3 w-3" />
+            <span>{label}</span>
+          </span>
+          {/* curling edge */}
+          <div
+            className="absolute top-0 bottom-0 -right-2 w-2 bg-gradient-to-l from-amber-600/60 to-transparent"
+            aria-hidden
+          />
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function FormBadge({ match }: { match: FormMatch }) {
   const [open, setOpen] = useState(false);
   const cls =
@@ -203,6 +274,27 @@ export function FixtureCard({
 
   const locked = new Date(fixture.kickoff_at).getTime() <= now;
   const hasResult = fixture.home_score !== null && fixture.away_score !== null;
+  const SPOILER_MS = 12 * 60 * 60 * 1000;
+  // We don't store an exact finish time; approximate it as kickoff + 2h.
+  const approxFinishTs = new Date(fixture.kickoff_at).getTime() + 2 * 60 * 60 * 1000;
+  const inSpoilerWindow = hasResult && now - approxFinishTs < SPOILER_MS;
+  const revealKey = `wcg-revealed-${fixture.id}`;
+  const [revealed, setRevealed] = useState<boolean>(() => {
+    try {
+      return localStorage.getItem(revealKey) === "1";
+    } catch {
+      return false;
+    }
+  });
+  const reveal = () => {
+    setRevealed(true);
+    try {
+      localStorage.setItem(revealKey, "1");
+    } catch {
+      // ignore
+    }
+  };
+  const hideScore = hasResult && inSpoilerWindow && !revealed;
   const isLive =
     !hasResult &&
     locked &&
@@ -325,7 +417,12 @@ export function FixtureCard({
             <span className="truncate">{fixture.team_home}</span>
             <span className="text-lg leading-none shrink-0" aria-hidden>{flagFor(fixture.team_home)}</span>
           </div>
-          <div className="flex items-center gap-1">
+          <div className="flex items-center gap-1 relative">
+            {hideScore && (
+              <div className="absolute inset-0 z-10">
+                <SpoilerSticker onReveal={reveal} label="Swipe to reveal" />
+              </div>
+            )}
             <input
               type="number"
               inputMode="numeric"
@@ -445,7 +542,7 @@ export function FixtureCard({
                         Your pick <span className="text-ink font-extrabold">{prediction.home_score}-{prediction.away_score}</span>
                       </span>
                     )}
-                    {prediction && pts !== null && (
+                    {prediction && pts !== null && !hideScore && (
                       <span
                         className={
                           "px-1.5 py-0.5 rounded-sm " +
@@ -479,10 +576,10 @@ export function FixtureCard({
 
         <Collapsible open={open} onOpenChange={setOpen} className="mt-2 border-t border-border -mx-3 -mb-3">
           <CollapsibleTrigger
-            disabled={!canSeeOthers}
+            disabled={!canSeeOthers || hideScore}
             className="w-full flex items-center justify-between px-3 py-2 text-xs font-semibold text-muted-foreground hover:text-ink disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            <span>{canSeeOthers ? "See the predictions" : "Lock in your predictions early & see the others"}</span>
+            <span>{hideScore ? "Reveal the score to see predictions" : canSeeOthers ? "See the predictions" : "Lock in your predictions early & see the others"}</span>
             <ChevronDown className={"h-4 w-4 transition-transform " + (open ? "rotate-180" : "")} />
           </CollapsibleTrigger>
           <CollapsibleContent className="px-3 pb-3">
