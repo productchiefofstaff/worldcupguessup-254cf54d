@@ -117,7 +117,7 @@ function HighlightsPlayer({ url, title }: { url: string; title: string }) {
   );
 }
 
-function SpoilerSticker({ onReveal, children, label = "Swipe to reveal score" }: { onReveal: () => void; children: React.ReactNode; label?: string }) {
+function SpoilerSticker({ onReveal, label = "Swipe to reveal score" }: { onReveal: () => void; label?: string }) {
   const wrapRef = useRef<HTMLDivElement>(null);
   const startX = useRef<number | null>(null);
   const [offset, setOffset] = useState(0);
@@ -156,8 +156,7 @@ function SpoilerSticker({ onReveal, children, label = "Swipe to reveal score" }:
   };
 
   return (
-    <div ref={wrapRef} className="relative">
-      {children}
+    <div ref={wrapRef} className="absolute inset-0">
       <div
         className="absolute inset-0 overflow-hidden rounded-sm touch-none select-none"
         onPointerDown={handleDown}
@@ -184,7 +183,6 @@ function SpoilerSticker({ onReveal, children, label = "Swipe to reveal score" }:
             aria-hidden
           />
         </div>
-      </div>
     </div>
   );
 }
