@@ -167,19 +167,33 @@ function SpoilerSticker({ onReveal, label = "Swipe to reveal score" }: { onRevea
         aria-label={label}
       >
         <div
-          className="absolute inset-y-0 left-0 flex items-center justify-center bg-gradient-to-br from-amber-300 via-amber-400 to-amber-500 text-amber-950 text-[11px] font-extrabold tracking-tight shadow-[inset_0_1px_0_rgba(255,255,255,0.6),0_1px_2px_rgba(0,0,0,0.25)] cursor-grab active:cursor-grabbing"
+          className="absolute inset-y-0 left-0 overflow-hidden bg-gradient-to-br from-amber-100 via-amber-200 to-amber-300 text-amber-800 text-[11px] font-semibold tracking-tight shadow-[inset_0_1px_0_rgba(255,255,255,0.7),0_1px_2px_rgba(0,0,0,0.15)] cursor-grab active:cursor-grabbing"
           style={{
             right: `${offset}px`,
             transition: dragging ? "none" : "right 200ms ease-out",
           }}
         >
-          <span className="px-2 flex items-center gap-1 whitespace-nowrap">
+          {/* Label slides with the sticker (translates left as it peels) */}
+          <span
+            className="absolute inset-0 flex items-center justify-center whitespace-nowrap gap-1"
+            style={{ transform: `translateX(${-offset}px)` }}
+          >
             <Eye className="h-3 w-3" />
             <span>{label}</span>
           </span>
-          {/* curling edge */}
+          {/* Folded top-right corner — peel hint */}
           <div
-            className="absolute top-0 bottom-0 -right-2 w-2 bg-gradient-to-l from-amber-600/60 to-transparent"
+            className="absolute top-0 right-0 w-3 h-3 pointer-events-none"
+            aria-hidden
+            style={{
+              background:
+                "linear-gradient(225deg, hsl(var(--card)) 50%, rgba(0,0,0,0.18) 50%, rgba(180,140,60,0.55) 60%, transparent 62%)",
+              boxShadow: "-1px 1px 1px rgba(0,0,0,0.08)",
+            }}
+          />
+          {/* trailing edge shadow */}
+          <div
+            className="absolute top-0 bottom-0 -right-1 w-1 bg-gradient-to-l from-amber-500/30 to-transparent pointer-events-none"
             aria-hidden
           />
         </div>
