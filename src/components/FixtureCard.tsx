@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { db as supabase } from "@/lib/db";
+import confetti from "canvas-confetti";
 import { Button } from "@/components/ui/button";
 import { Lock, ChevronDown, Radio, Check, Eye } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
@@ -314,6 +315,49 @@ export function FixtureCard({
       localStorage.setItem(revealKey, "1");
     } catch {
       // ignore
+    }
+    if (prediction) {
+      const earned = pointsFor(prediction, fixture);
+      if (earned === 40) {
+        // Big celebration — streams from top
+        const end = Date.now() + 1800;
+        const colors = ["#fde047", "#f59e0b", "#ef4444", "#22c55e", "#3b82f6", "#ec4899"];
+        (function frame() {
+          confetti({
+            particleCount: 6,
+            angle: 270,
+            spread: 90,
+            startVelocity: 45,
+            origin: { x: Math.random(), y: 0 },
+            colors,
+            gravity: 1.1,
+            scalar: 1.2,
+            ticks: 300,
+            disableForReducedMotion: true,
+          });
+          if (Date.now() < end) requestAnimationFrame(frame);
+        })();
+        confetti({
+          particleCount: 160,
+          spread: 100,
+          startVelocity: 55,
+          origin: { y: 0.2 },
+          colors,
+          scalar: 1.3,
+          disableForReducedMotion: true,
+        });
+      } else if (earned === 10) {
+        // Little burst
+        confetti({
+          particleCount: 45,
+          spread: 60,
+          startVelocity: 30,
+          origin: { y: 0.5 },
+          scalar: 0.8,
+          ticks: 120,
+          disableForReducedMotion: true,
+        });
+      }
     }
   };
   const hideScore = hasResult && inSpoilerWindow && !revealed;
