@@ -301,6 +301,10 @@ export function FixtureCard({
   // We don't store an exact finish time; approximate it as kickoff + 2h.
   const approxFinishTs = new Date(fixture.kickoff_at).getTime() + 2 * 60 * 60 * 1000;
   const inSpoilerWindow = hasResult && now - approxFinishTs < SPOILER_MS;
+  // TEMP TEST: force spoiler + perfect-score celebration for France vs Iraq
+  const isTestFixture =
+    /france/i.test(fixture.team_home + fixture.team_away) &&
+    /iraq/i.test(fixture.team_home + fixture.team_away);
   const revealKey = `wcg-revealed-${fixture.id}`;
   const [revealed, setRevealed] = useState<boolean>(() => {
     try {
@@ -318,7 +322,7 @@ export function FixtureCard({
     }
     if (prediction) {
       const earned = pointsFor(prediction, fixture);
-      if (earned === 40) {
+      if (earned === 40 || isTestFixture) {
         // Big celebration — streams from top
         const end = Date.now() + 1800;
         const colors = ["#fde047", "#f59e0b", "#ef4444", "#22c55e", "#3b82f6", "#ec4899"];
@@ -359,8 +363,36 @@ export function FixtureCard({
         });
       }
     }
+    if (!prediction && isTestFixture) {
+      const end = Date.now() + 1800;
+      const colors = ["#fde047", "#f59e0b", "#ef4444", "#22c55e", "#3b82f6", "#ec4899"];
+      (function frame() {
+        confetti({
+          particleCount: 6,
+          angle: 270,
+          spread: 90,
+          startVelocity: 45,
+          origin: { x: Math.random(), y: 0 },
+          colors,
+          gravity: 1.1,
+          scalar: 1.2,
+          ticks: 300,
+          disableForReducedMotion: true,
+        });
+        if (Date.now() < end) requestAnimationFrame(frame);
+      })();
+      confetti({
+        particleCount: 160,
+        spread: 100,
+        startVelocity: 55,
+        origin: { y: 0.2 },
+        colors,
+        scalar: 1.3,
+        disableForReducedMotion: true,
+      });
+    }
   };
-  const hideScore = hasResult && inSpoilerWindow && !revealed;
+  const hideScore = (hasResult && inSpoilerWindow && !revealed) || (isTestFixture && !revealed);
   const isLive =
     !hasResult &&
     locked &&
