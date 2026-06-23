@@ -117,6 +117,78 @@ function HighlightsPlayer({ url, title }: { url: string; title: string }) {
   );
 }
 
+function SpoilerSticker({ onReveal, children, label = "Swipe to reveal score" }: { onReveal: () => void; children: React.ReactNode; label?: string }) {
+  const wrapRef = useRef<HTMLDivElement>(null);
+  const startX = useRef<number | null>(null);
+  const [offset, setOffset] = useState(0);
+  const [width, setWidth] = useState(0);
+  const [dragging, setDragging] = useState(false);
+
+  useEffect(() => {
+    if (!wrapRef.current) return;
+    const measure = () => setWidth(wrapRef.current?.offsetWidth ?? 0);
+    measure();
+    const ro = new ResizeObserver(measure);
+    ro.observe(wrapRef.current);
+    return () => ro.disconnect();
+  }, []);
+
+  const handleDown = (e: React.PointerEvent) => {
+    startX.current = e.clientX;
+    setDragging(true);
+    (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId);
+  };
+  const handleMove = (e: React.PointerEvent) => {
+    if (startX.current === null || width === 0) return;
+    const dx = startX.current - e.clientX;
+    setOffset(Math.max(0, Math.min(width, dx)));
+  };
+  const handleUp = () => {
+    if (startX.current === null) return;
+    startX.current = null;
+    setDragging(false);
+    if (offset > width * 0.45) {
+      setOffset(width);
+      onReveal();
+    } else {
+      setOffset(0);
+    }
+  };
+
+  return (
+    <div ref={wrapRef} className="relative">
+      {children}
+      <div
+        className="absolute inset-0 overflow-hidden rounded-sm touch-none select-none"
+        onPointerDown={handleDown}
+        onPointerMove={handleMove}
+        onPointerUp={handleUp}
+        onPointerCancel={handleUp}
+        role="button"
+        aria-label={label}
+      >
+        <div
+          className="absolute inset-y-0 left-0 flex items-center justify-center bg-gradient-to-br from-amber-300 via-amber-400 to-amber-500 text-amber-950 text-[11px] font-extrabold tracking-tight shadow-[inset_0_1px_0_rgba(255,255,255,0.6),0_1px_2px_rgba(0,0,0,0.25)] cursor-grab active:cursor-grabbing"
+          style={{
+            right: `${offset}px`,
+            transition: dragging ? "none" : "right 200ms ease-out",
+          }}
+        >
+          <span className="px-2 flex items-center gap-1 whitespace-nowrap">
+            <Eye className="h-3 w-3" />
+            <span>{label}</span>
+          </span>
+          {/* curling edge */}
+          <div
+            className="absolute top-0 bottom-0 -right-2 w-2 bg-gradient-to-l from-amber-600/60 to-transparent"
+            aria-hidden
+          />
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function FormBadge({ match }: { match: FormMatch }) {
   const [open, setOpen] = useState(false);
   const cls =
