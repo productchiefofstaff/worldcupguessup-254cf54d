@@ -171,32 +171,40 @@ function SpoilerSticker({ onReveal, label = "Swipe to reveal score" }: { onRevea
           style={{
             right: `${offset}px`,
             transition: dragging ? "none" : "right 200ms ease-out",
+            clipPath:
+              "polygon(0 0, calc(100% - 10px) 0, 100% 10px, 100% 100%, 0 100%)",
           }}
         >
-          {/* Label slides with the sticker (translates left as it peels) */}
+          {/* Label is full original width and translates with finger so it slides at the swipe rate */}
           <span
             className="absolute inset-0 flex items-center justify-center whitespace-nowrap gap-1"
-            style={{ transform: `translateX(${-offset}px)` }}
+            style={{ width: `${width}px`, transform: `translateX(${-offset}px)` }}
           >
             <Eye className="h-3 w-3" />
             <span>{label}</span>
           </span>
-          {/* Folded top-right corner — peel hint */}
-          <div
-            className="absolute top-0 right-0 w-3 h-3 pointer-events-none"
-            aria-hidden
-            style={{
-              background:
-                "linear-gradient(225deg, hsl(var(--card)) 50%, rgba(0,0,0,0.18) 50%, rgba(180,140,60,0.55) 60%, transparent 62%)",
-              boxShadow: "-1px 1px 1px rgba(0,0,0,0.08)",
-            }}
-          />
           {/* trailing edge shadow */}
           <div
             className="absolute top-0 bottom-0 -right-1 w-1 bg-gradient-to-l from-amber-500/30 to-transparent pointer-events-none"
             aria-hidden
           />
         </div>
+        {/* Folded triangle underside — shows over the cut-out corner */}
+        <div
+          className="absolute pointer-events-none"
+          aria-hidden
+          style={{
+            top: 0,
+            right: `${offset}px`,
+            width: "10px",
+            height: "10px",
+            transition: dragging ? "none" : "right 200ms ease-out",
+            background:
+              "linear-gradient(225deg, rgb(252 211 77) 0%, rgb(251 191 36) 60%, rgb(180 83 9 / 0.6) 100%)",
+            clipPath: "polygon(100% 0, 100% 100%, 0 0)",
+            filter: "drop-shadow(-1px 1px 1px rgba(0,0,0,0.15))",
+          }}
+        />
       </div>
     </div>
   );
