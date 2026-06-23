@@ -67,20 +67,14 @@ function LeaderboardPage() {
     for (let i = 0; i < data.length; i++) {
       const prev = data[i - 1];
       const row = data[i];
-      if (
-        i > 0 &&
-        row.points === prev.points &&
-        row.correct_scores === prev.correct_scores
-      ) {
+      if (i > 0 && row.points === prev.points) {
         // tied with previous
         out.push({ ...row, rank: currentRank, tied: true });
       } else {
         currentRank = i + 1;
         const next = data[i + 1];
         const tiedWithNext =
-          next !== undefined &&
-          row.points === next.points &&
-          row.correct_scores === next.correct_scores;
+          next !== undefined && row.points === next.points;
         out.push({ ...row, rank: currentRank, tied: tiedWithNext });
       }
     }
