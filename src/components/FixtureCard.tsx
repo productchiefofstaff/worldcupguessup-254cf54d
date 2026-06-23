@@ -275,6 +275,27 @@ export function FixtureCard({
 
   const locked = new Date(fixture.kickoff_at).getTime() <= now;
   const hasResult = fixture.home_score !== null && fixture.away_score !== null;
+  const SPOILER_MS = 12 * 60 * 60 * 1000;
+  // We don't store an exact finish time; approximate it as kickoff + 2h.
+  const approxFinishTs = new Date(fixture.kickoff_at).getTime() + 2 * 60 * 60 * 1000;
+  const inSpoilerWindow = hasResult && now - approxFinishTs < SPOILER_MS;
+  const revealKey = `wcg-revealed-${fixture.id}`;
+  const [revealed, setRevealed] = useState<boolean>(() => {
+    try {
+      return localStorage.getItem(revealKey) === "1";
+    } catch {
+      return false;
+    }
+  });
+  const reveal = () => {
+    setRevealed(true);
+    try {
+      localStorage.setItem(revealKey, "1");
+    } catch {
+      // ignore
+    }
+  };
+  const hideScore = hasResult && inSpoilerWindow && !revealed;
   const isLive =
     !hasResult &&
     locked &&
