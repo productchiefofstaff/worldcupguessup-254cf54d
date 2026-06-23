@@ -418,7 +418,12 @@ export function FixtureCard({
             <span className="truncate">{fixture.team_home}</span>
             <span className="text-lg leading-none shrink-0" aria-hidden>{flagFor(fixture.team_home)}</span>
           </div>
-          <div className="flex items-center gap-1">
+          <div className="flex items-center gap-1 relative">
+            {hideScore && (
+              <div className="absolute inset-0 z-10">
+                <SpoilerSticker onReveal={reveal} label="Swipe to reveal" />
+              </div>
+            )}
             <input
               type="number"
               inputMode="numeric"
