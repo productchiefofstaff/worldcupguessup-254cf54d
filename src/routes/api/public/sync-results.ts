@@ -62,6 +62,7 @@ const TEAM_ALIASES: Record<string, string> = {
   aut: "austria",
   bel: "belgium",
   bih: "bosniaandherzegovina",
+  bosniaherzegovina: "bosniaandherzegovina",
   bra: "brazil",
   can: "canada",
   civ: "ivorycoast",
