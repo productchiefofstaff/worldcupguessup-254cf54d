@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { db as supabase } from "@/lib/db";
 import confetti from "canvas-confetti";
 import { Button } from "@/components/ui/button";
-import { Lock, ChevronDown, Radio, Check, Eye } from "lucide-react";
+import { Lock, ChevronDown, Radio, Check, Eye, ArrowLeft } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
 import { toast } from "sonner";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
@@ -246,8 +246,24 @@ function SpoilerSticker({ onReveal, label = "Swipe to reveal score" }: { onRevea
           <span className="absolute inset-0 flex items-center justify-center whitespace-nowrap gap-1">
             <Eye className="h-3 w-3" />
             <span>{label}</span>
+            <ArrowLeft className="h-3 w-3 animate-pulse" aria-hidden />
           </span>
         </div>
+        {/* Permanent dog-ear at top-right corner — hints the peel direction */}
+        {measured && p < 0.05 && (
+          <div
+            className="absolute top-0 right-0 pointer-events-none"
+            aria-hidden
+            style={{
+              width: 14,
+              height: 14,
+              clipPath: "polygon(100% 0, 0 0, 100% 100%)",
+              background:
+                "linear-gradient(225deg, rgb(254 243 199) 0%, rgb(253 230 138) 55%, rgba(146,64,14,0.35) 100%)",
+              filter: "drop-shadow(-1px 1px 1.5px rgba(0,0,0,0.2))",
+            }}
+          />
+        )}
         {/* Folded underside flap along the diagonal crease */}
         {measured && p > 0.001 && p < 0.999 && (
           <div
