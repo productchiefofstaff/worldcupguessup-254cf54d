@@ -3,17 +3,19 @@ import { createFileRoute } from "@tanstack/react-router";
 const SCOREBOARD_API_BASE =
   "https://site.api.espn.com/apis/site/v2/sports/soccer/fifa.world/scoreboard";
 
-// ESPN scoreboard shows ONE day at a time. We hit yesterday/today/tomorrow
-// in UTC so matches around local-time date boundaries are still picked up.
+// ESPN scoreboard shows ONE day at a time. We sweep a wider window so newly
+// announced knockout fixtures (often published 2–5 days ahead, once the
+// previous round's teams are known) get pulled in before kickoff. Cron runs
+// every 30 min so the extra fetches are cheap.
 function scoreboardUrls(): string[] {
   const today = new Date();
-  const yesterday = new Date(today.getTime() - 24 * 60 * 60 * 1000);
-  const tomorrow = new Date(today.getTime() + 24 * 60 * 60 * 1000);
   const fmt = (d: Date) =>
     `${d.getUTCFullYear()}${String(d.getUTCMonth() + 1).padStart(2, "0")}${String(d.getUTCDate()).padStart(2, "0")}`;
-  return [yesterday, today, tomorrow].map(
-    (date) => `${SCOREBOARD_API_BASE}?dates=${fmt(date)}`,
-  );
+  const offsets = [-1, 0, 1, 2, 3, 4, 5, 6, 7];
+  return offsets.map((offset) => {
+    const d = new Date(today.getTime() + offset * 24 * 60 * 60 * 1000);
+    return `${SCOREBOARD_API_BASE}?dates=${fmt(d)}`;
+  });
 }
 
 type SourceMatch = {
