@@ -73,6 +73,7 @@ const TEAM_ALIASES: Record<string, string> = {
   cuw: "curacao",
   cze: "czechia",
   cod: "drcongo",
+  congodr: "drcongo",
   ecu: "ecuador",
   egy: "egypt",
   eng: "england",
@@ -225,7 +226,6 @@ export const Route = createFileRoute("/api/public/sync-results")({
 
         let updated = 0;
         const details: Array<Record<string, unknown>> = [];
-        const debugSkips: Array<Record<string, unknown>> = [];
 
         for (const m of matches) {
           const mTs = m.kickoff_iso ? new Date(m.kickoff_iso).getTime() : NaN;
@@ -249,11 +249,6 @@ export const Route = createFileRoute("/api/public/sync-results")({
                 return ageMin >= 0 && ageMin <= 48 * 60;
               });
           if (!candidates.length) continue;
-          const debugEvent = {
-            espn: `${m.team_home} v ${m.team_away}`,
-            mTs: m.kickoff_iso,
-            candidates: candidates.map((c) => `#${c.match_number} ${c.team_home}/${c.team_away}`),
-          };
 
           let fixture =
             candidates.find(
@@ -281,10 +276,7 @@ export const Route = createFileRoute("/api/public/sync-results")({
                   )[0]
               : undefined);
 
-          if (!fixture) {
-            debugSkips.push({ ...debugEvent, reason: "no_fixture" });
-            continue;
-          }
+          if (!fixture) continue;
 
           // If the source row flipped home/away, swap the scores to match the
           // fixture's canonical orientation before we patch.
@@ -388,10 +380,7 @@ export const Route = createFileRoute("/api/public/sync-results")({
             }
           }
 
-          if (Object.keys(patch).length === 0) {
-            debugSkips.push({ ...debugEvent, matched: `#${fixture.match_number}`, reason: "no_patch" });
-            continue;
-          }
+          if (Object.keys(patch).length === 0) continue;
 
           const { error: upErr } = await supabaseAdmin
             .from("fixtures")
@@ -405,7 +394,7 @@ export const Route = createFileRoute("/api/public/sync-results")({
           details.push({ match_number: fixture.match_number, patch });
         }
 
-        return Response.json({ ok: true, parsed: matches.length, updated, details, debugSkips });
+        return Response.json({ ok: true, parsed: matches.length, updated, details });
       },
 
       GET: async () =>
