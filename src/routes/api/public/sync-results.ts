@@ -116,6 +116,21 @@ function norm(s: string | null | undefined): string {
   return TEAM_ALIASES[key] ?? key;
 }
 
+// Placeholder names used for not-yet-decided knockout slots, e.g.
+// "R32 Match 1 TBD", "R16 Match 3 TBD", "QF1 TBD", "SF2 TBD",
+// "3rd Place TBD", "Final TBD". Treat any name containing "TBD" — or
+// the legacy "Winner …"/"Runner-up …" formats — as a fillable slot.
+function isPlaceholderTeam(s: string | null | undefined): boolean {
+  if (!s) return true;
+  const u = s.toUpperCase();
+  return (
+    u.includes("TBD") ||
+    u.startsWith("WINNER ") ||
+    u.startsWith("RUNNER") ||
+    u.startsWith("LOSER ")
+  );
+}
+
 function parseEspnScoreboard(data: EspnScoreboard): SourceMatch[] {
   const fallbackStage = data.leagues?.[0]?.season?.type?.name ?? null;
   return (data.events ?? []).flatMap((event) => {
@@ -241,16 +256,16 @@ export const Route = createFileRoute("/api/public/sync-results")({
               (f) => norm(f.team_home) === ma && norm(f.team_away) === mh,
             ) ||
             (haveTs
-              ? candidates.find(
-                  (f) =>
-                    (norm(f.team_home) === "tbd" || norm(f.team_away) === "tbd") &&
-                    m.stage &&
-                    f.stage
-                      .toLowerCase()
-                      .includes((m.stage ?? "").toLowerCase().replace("group ", "")),
-                ) ||
+              ? // Knockout placeholder fixtures don't have real team names
+                // yet, so we can't match by team. Pick the closest-in-time
+                // placeholder fixture (within the ±6h window already applied
+                // to `candidates`) and fill in the teams.
                 candidates
-                  .slice()
+                  .filter(
+                    (f) =>
+                      isPlaceholderTeam(f.team_home) ||
+                      isPlaceholderTeam(f.team_away),
+                  )
                   .sort(
                     (a, b) =>
                       Math.abs(new Date(a.kickoff_at).getTime() - mTs) -
@@ -286,16 +301,16 @@ export const Route = createFileRoute("/api/public/sync-results")({
 
           // Fill in knockout teams as they're decided
           if (
-            norm(fixture.team_home) === "tbd" &&
+            isPlaceholderTeam(fixture.team_home) &&
             m.team_home &&
-            norm(m.team_home) !== "tbd"
+            !isPlaceholderTeam(m.team_home)
           ) {
             patch.team_home = m.team_home;
           }
           if (
-            norm(fixture.team_away) === "tbd" &&
+            isPlaceholderTeam(fixture.team_away) &&
             m.team_away &&
-            norm(m.team_away) !== "tbd"
+            !isPlaceholderTeam(m.team_away)
           ) {
             patch.team_away = m.team_away;
           }
