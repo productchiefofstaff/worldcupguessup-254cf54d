@@ -244,11 +244,14 @@ function SpoilerSticker({ onReveal, label = "Swipe to reveal score" }: { onRevea
           }}
         >
           <span className="absolute inset-0 flex flex-col items-center justify-center whitespace-nowrap leading-tight">
-            <span className="inline-flex items-center gap-1">
-              <Eye className="h-3 w-3" />
-              <span>{label}</span>
+            <span>Slide to reveal</span>
+            <span
+              className="inline-flex items-center mt-0.5 animate-pulse"
+              aria-hidden
+            >
+              <ArrowLeft className="h-3 w-3 -mr-1" />
+              <span className="block h-[1.5px] w-16 bg-current rounded-full" />
             </span>
-            <ArrowLeft className="h-3 w-3 animate-pulse mt-0.5" aria-hidden />
           </span>
         </div>
         {/* Permanent dog-ear at top-right corner — hints the peel direction */}
