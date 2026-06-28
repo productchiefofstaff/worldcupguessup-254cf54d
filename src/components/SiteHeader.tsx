@@ -3,7 +3,7 @@ import { useAuth } from "@/hooks/use-auth";
 import { useQuery } from "@tanstack/react-query";
 import { db } from "@/lib/db";
 import { useEffect, useState } from "react";
-import { LogOut, CalendarDays, Trophy, ClipboardList, Shield, Dices } from "lucide-react";
+import { LogOut, CalendarDays, Trophy, ClipboardList, Shield, Dices, Table2 } from "lucide-react";
 
 export function SiteHeader() {
   const [mounted, setMounted] = useState(false);
