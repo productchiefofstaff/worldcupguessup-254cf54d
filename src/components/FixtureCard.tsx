@@ -384,6 +384,14 @@ export function FixtureCard({
   const locked = new Date(fixture.kickoff_at).getTime() <= now;
   const hasResult = fixture.home_score !== null && fixture.away_score !== null;
 
+  // Extra time / penalties in progress: 90-min score is locked but the match
+  // is still being played. ESPN keeps streaming the live scoreline via
+  // live_* columns; decided_by isn't set until the match is fully settled.
+  const liveScorePresent =
+    fixture.live_home_score !== null && fixture.live_home_score !== undefined &&
+    fixture.live_away_score !== null && fixture.live_away_score !== undefined;
+  const isExtraTime = hasResult && liveScorePresent && !fixture.decided_by;
+
   // --- MOCK: temporary demo data so we can preview the AET / penalties UI
   // before any knockout matches are actually played. Remove once real
   // fields are populated by the sync job.
@@ -516,13 +524,19 @@ export function FixtureCard({
       });
     }
   };
-  const hideScore = (hasResult && inSpoilerWindow && !revealed) || (isTestFixture && !revealed);
+  // Don't show the spoiler sticker while extra time is ongoing — the live
+  // ET row below would give the score away anyway, and the match isn't
+  // truly "complete" yet.
+  const hideScore =
+    ((hasResult && inSpoilerWindow && !revealed) || (isTestFixture && !revealed)) &&
+    !isExtraTime;
   const isLive =
     !hasResult &&
     locked &&
     (fixture.live_home_score !== null && fixture.live_home_score !== undefined &&
      fixture.live_away_score !== null && fixture.live_away_score !== undefined);
   const liveLabel = displayLiveLabel(fixture.live_status_label ?? null, fixture.live_updated_at, now);
+  const extraTimeLabel = isExtraTime ? liveLabel : null;
   const userLocked = Boolean(prediction?.locked_at);
   const editable = !locked && !userLocked;
   const canSeeOthers = locked || userLocked;
