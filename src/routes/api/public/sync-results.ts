@@ -338,14 +338,16 @@ export const Route = createFileRoute("/api/public/sync-results")({
           if (
             isPlaceholderTeam(fixture.team_home) &&
             m.team_home &&
-            !isPlaceholderTeam(m.team_home)
+            !isPlaceholderTeam(m.team_home) &&
+            !teamAlreadyInKnockout(fixtures, m.team_home, fixture.id)
           ) {
             patch.team_home = m.team_home;
           }
           if (
             isPlaceholderTeam(fixture.team_away) &&
             m.team_away &&
-            !isPlaceholderTeam(m.team_away)
+            !isPlaceholderTeam(m.team_away) &&
+            !teamAlreadyInKnockout(fixtures, m.team_away, fixture.id)
           ) {
             patch.team_away = m.team_away;
           }
