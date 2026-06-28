@@ -17,10 +17,13 @@ export type Database = {
       fixtures: {
         Row: {
           away_score: number | null
+          away_score_aet: number | null
+          decided_by: string | null
           group_name: string | null
           highlights_checked_at: string | null
           highlights_url: string | null
           home_score: number | null
+          home_score_aet: number | null
           id: string
           kickoff_at: string
           live_away_score: number | null
@@ -28,16 +31,22 @@ export type Database = {
           live_status_label: string | null
           live_updated_at: string | null
           match_number: number
+          pens_away: number | null
+          pens_home: number | null
           stage: string
           team_away: string
           team_home: string
+          winner_team: string | null
         }
         Insert: {
           away_score?: number | null
+          away_score_aet?: number | null
+          decided_by?: string | null
           group_name?: string | null
           highlights_checked_at?: string | null
           highlights_url?: string | null
           home_score?: number | null
+          home_score_aet?: number | null
           id?: string
           kickoff_at: string
           live_away_score?: number | null
@@ -45,16 +54,22 @@ export type Database = {
           live_status_label?: string | null
           live_updated_at?: string | null
           match_number: number
+          pens_away?: number | null
+          pens_home?: number | null
           stage: string
           team_away: string
           team_home: string
+          winner_team?: string | null
         }
         Update: {
           away_score?: number | null
+          away_score_aet?: number | null
+          decided_by?: string | null
           group_name?: string | null
           highlights_checked_at?: string | null
           highlights_url?: string | null
           home_score?: number | null
+          home_score_aet?: number | null
           id?: string
           kickoff_at?: string
           live_away_score?: number | null
@@ -62,9 +77,12 @@ export type Database = {
           live_status_label?: string | null
           live_updated_at?: string | null
           match_number?: number
+          pens_away?: number | null
+          pens_home?: number | null
           stage?: string
           team_away?: string
           team_home?: string
+          winner_team?: string | null
         }
         Relationships: []
       }

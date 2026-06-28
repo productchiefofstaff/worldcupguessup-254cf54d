@@ -27,11 +27,15 @@ type SourceMatch = {
   away_score?: number | null;
   stage?: string | null;
   status_label?: string | null;
+  /** Penalty shootout score for the home side (if exposed by source). */
+  home_pens?: number | null;
+  away_pens?: number | null;
 };
 
 type EspnCompetitor = {
   homeAway?: string;
   score?: string;
+  shootoutScore?: number | string;
   team?: { displayName?: string; abbreviation?: string };
 };
 
@@ -172,6 +176,16 @@ function parseEspnScoreboard(data: EspnScoreboard): SourceMatch[] {
           const n = Number.parseInt(away.score ?? "", 10);
           return Number.isInteger(n) ? n : null;
         })(),
+        home_pens: (() => {
+          const raw = home.shootoutScore;
+          const n = typeof raw === "number" ? raw : Number.parseInt(String(raw ?? ""), 10);
+          return Number.isInteger(n) ? n : null;
+        })(),
+        away_pens: (() => {
+          const raw = away.shootoutScore;
+          const n = typeof raw === "number" ? raw : Number.parseInt(String(raw ?? ""), 10);
+          return Number.isInteger(n) ? n : null;
+        })(),
         stage: event.season?.type?.name ?? fallbackStage,
       },
     ];
@@ -224,7 +238,7 @@ export const Route = createFileRoute("/api/public/sync-results")({
         );
         const { data: fixtures, error: fxErr } = await supabaseAdmin
           .from("fixtures")
-          .select("id, match_number, stage, team_home, team_away, kickoff_at, home_score, away_score, live_home_score, live_away_score, live_status_label");
+          .select("id, match_number, stage, team_home, team_away, kickoff_at, home_score, away_score, home_score_aet, away_score_aet, pens_home, pens_away, decided_by, winner_team, live_home_score, live_away_score, live_status_label");
         if (fxErr || !fixtures) {
           return Response.json(
             { error: "db_read_failed", detail: fxErr?.message },
@@ -290,6 +304,8 @@ export const Route = createFileRoute("/api/public/sync-results")({
           // fixture's canonical orientation before we patch.
           let srcHome = m.home_score;
           let srcAway = m.away_score;
+          let srcHomePens = m.home_pens;
+          let srcAwayPens = m.away_pens;
           if (
             mh && ma &&
             norm(fixture.team_home) === ma &&
@@ -297,6 +313,8 @@ export const Route = createFileRoute("/api/public/sync-results")({
           ) {
             srcHome = m.away_score;
             srcAway = m.home_score;
+            srcHomePens = m.away_pens;
+            srcAwayPens = m.home_pens;
           }
 
           const patch: {
@@ -304,6 +322,12 @@ export const Route = createFileRoute("/api/public/sync-results")({
             team_away?: string;
             home_score?: number;
             away_score?: number;
+            home_score_aet?: number;
+            away_score_aet?: number;
+            pens_home?: number;
+            pens_away?: number;
+            decided_by?: "AET" | "PENS";
+            winner_team?: string;
             live_home_score?: number | null;
             live_away_score?: number | null;
             live_status_label?: string | null;
@@ -339,16 +363,31 @@ export const Route = createFileRoute("/api/public/sync-results")({
           const alreadyHasScore =
             fixture.home_score !== null && fixture.away_score !== null;
           const ftLabel = (m.status_label ?? "").trim().toLowerCase();
-          const labelConfirmsFinished =
+          // ESPN exposes a "FT" / "Full Time" label at the 90-min whistle
+          // even when a knockout match continues into extra time. Treat any
+          // of these as the moment to lock the 90-min score for prediction
+          // settlement, regardless of whether the overall match is finished.
+          const labelIs90MinFinal =
             ftLabel === "ft" ||
-            ftLabel === "aet" ||
-            ftLabel === "pens" ||
-            ftLabel === "final" ||
             ftLabel === "full time" ||
-            ftLabel === "full-time";
+            ftLabel === "full-time" ||
+            ftLabel === "end of regulation" ||
+            ftLabel === "end regulation" ||
+            ftLabel === "end regular time" ||
+            ftLabel === "final";
+          const labelIsAet =
+            ftLabel === "aet" ||
+            ftLabel === "after extra time" ||
+            ftLabel === "ft (aet)" ||
+            ftLabel === "end et";
+          const labelIsPens =
+            ftLabel === "pens" ||
+            ftLabel === "penalties" ||
+            ftLabel === "after penalties" ||
+            ftLabel === "ft (pens)";
+          const labelConfirmsFinished = labelIs90MinFinal || labelIsAet || labelIsPens;
           if (
             !alreadyHasScore &&
-            m.status === "finished" &&
             labelConfirmsFinished &&
             minutesSinceKickoff >= 110 &&
             Number.isInteger(srcHome) &&
@@ -356,11 +395,15 @@ export const Route = createFileRoute("/api/public/sync-results")({
           ) {
             patch.home_score = srcHome as number;
             patch.away_score = srcAway as number;
-            // Clear live state once the final score is settled.
-            patch.live_home_score = null;
-            patch.live_away_score = null;
-            patch.live_status_label = null;
-            patch.live_updated_at = null;
+            // Only clear live state when the match is fully finished. If it
+            // has gone to extra time, keep streaming live_* so the UI can
+            // show the ongoing ET scoreline below the locked 90-min boxes.
+            if (m.status === "finished") {
+              patch.live_home_score = null;
+              patch.live_away_score = null;
+              patch.live_status_label = null;
+              patch.live_updated_at = null;
+            }
           } else if (
             !alreadyHasScore &&
             m.status === "finished" &&
@@ -371,9 +414,55 @@ export const Route = createFileRoute("/api/public/sync-results")({
             );
           }
 
+          // Knockout AET / penalty settlement — only when the 90-min score
+          // is already locked AND was a draw AND source confirms tiebreaker.
+          const ninetyMinHome = patch.home_score ?? fixture.home_score;
+          const ninetyMinAway = patch.away_score ?? fixture.away_score;
+          const drewIn90 =
+            ninetyMinHome !== null && ninetyMinAway !== null && ninetyMinHome === ninetyMinAway;
+          if (
+            drewIn90 &&
+            m.status === "finished" &&
+            (labelIsAet || labelIsPens) &&
+            Number.isInteger(srcHome) &&
+            Number.isInteger(srcAway) &&
+            !fixture.decided_by
+          ) {
+            patch.home_score_aet = srcHome as number;
+            patch.away_score_aet = srcAway as number;
+            if (labelIsPens) {
+              patch.decided_by = "PENS";
+              if (Number.isInteger(srcHomePens) && Number.isInteger(srcAwayPens)) {
+                patch.pens_home = srcHomePens as number;
+                patch.pens_away = srcAwayPens as number;
+                patch.winner_team =
+                  (srcHomePens as number) > (srcAwayPens as number)
+                    ? fixture.team_home
+                    : fixture.team_away;
+              }
+            } else {
+              patch.decided_by = "AET";
+              if ((srcHome as number) !== (srcAway as number)) {
+                patch.winner_team =
+                  (srcHome as number) > (srcAway as number)
+                    ? fixture.team_home
+                    : fixture.team_away;
+              }
+            }
+            patch.live_home_score = null;
+            patch.live_away_score = null;
+            patch.live_status_label = null;
+            patch.live_updated_at = null;
+          }
+
           // Track in-progress live scores so the UI can show the current
           // scoreline and minute without affecting prediction settlement.
-          if (m.status === "live" && !alreadyHasScore) {
+          // We allow this even when a 90-min score is already locked — that
+          // happens once a knockout match enters extra time, and we want to
+          // keep showing the live ET scoreline below the locked boxes.
+          const stillInProgress =
+            m.status === "live" || (m.status === "finished" && false);
+          if (stillInProgress) {
             const liveHome = Number.isInteger(srcHome) ? (srcHome as number) : null;
             const liveAway = Number.isInteger(srcAway) ? (srcAway as number) : null;
             if (
