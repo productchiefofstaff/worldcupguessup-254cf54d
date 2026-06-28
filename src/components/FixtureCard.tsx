@@ -26,6 +26,13 @@ export type Fixture = {
   live_away_score?: number | null;
   live_status_label?: string | null;
   live_updated_at?: string | null;
+  /** Knockout-only: how the tie was decided after a 90-min draw. */
+  decided_by?: "AET" | "PENS" | null;
+  /** Team name that progressed (or won the final / 3rd place). */
+  winner_team?: string | null;
+  /** Penalty shootout score (only when decided_by === "PENS"). */
+  pens_home?: number | null;
+  pens_away?: number | null;
 };
 
 export type Prediction = {
@@ -373,6 +380,29 @@ export function FixtureCard({
 
   const locked = new Date(fixture.kickoff_at).getTime() <= now;
   const hasResult = fixture.home_score !== null && fixture.away_score !== null;
+
+  // --- MOCK: temporary demo data so we can preview the AET / penalties UI
+  // before any knockout matches are actually played. Remove once real
+  // fields are populated by the sync job.
+  let decidedBy = fixture.decided_by ?? null;
+  let winnerTeam = fixture.winner_team ?? null;
+  let pensHome = fixture.pens_home ?? null;
+  let pensAway = fixture.pens_away ?? null;
+  if (hasResult && !decidedBy) {
+    if (fixture.match_number === 71) {
+      // Algeria 3-3 Austria → Algeria win on pens 5-4 (mock)
+      decidedBy = "PENS";
+      winnerTeam = fixture.team_home;
+      pensHome = 5;
+      pensAway = 4;
+    } else if (fixture.match_number === 69) {
+      // Colombia 0-0 Portugal → Portugal win AET (mock)
+      decidedBy = "AET";
+      winnerTeam = fixture.team_away;
+    }
+  }
+  const showDecidedRow = hasResult && decidedBy && winnerTeam;
+
   const SPOILER_MS = 12 * 60 * 60 * 1000;
   // We don't store an exact finish time; approximate it as kickoff + 2h.
   const approxFinishTs = new Date(fixture.kickoff_at).getTime() + 2 * 60 * 60 * 1000;
@@ -660,6 +690,33 @@ export function FixtureCard({
             <span className="truncate">{fixture.team_away}</span>
           </div>
         </div>
+
+        {showDecidedRow && !hideScore && (
+          <div className="mt-2 flex items-center justify-center gap-2">
+            <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
+              Full-time
+            </span>
+            <span className="h-3 w-px bg-border" aria-hidden />
+            <span className="text-xs font-semibold text-ink">
+              <span className="text-base leading-none mr-1" aria-hidden>
+                {flagFor(winnerTeam!)}
+              </span>
+              {winnerTeam} won{" "}
+              {decidedBy === "AET" ? (
+                <span className="font-bold">after extra time</span>
+              ) : (
+                <>
+                  <span className="font-bold">on penalties</span>
+                  {pensHome !== null && pensAway !== null && (
+                    <span className="ml-1 tabular-nums text-muted-foreground">
+                      ({pensHome}–{pensAway})
+                    </span>
+                  )}
+                </>
+              )}
+            </span>
+          </div>
+        )}
 
         {showStatusRow && (
           <div className="mt-3 flex items-center justify-between gap-2 min-h-[2rem]">
