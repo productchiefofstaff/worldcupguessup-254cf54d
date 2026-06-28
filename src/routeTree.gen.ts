@@ -17,6 +17,7 @@ import { Route as AuthenticatedMyPredictionsRouteImport } from './routes/_authen
 import { Route as AuthenticatedLeaderboardRouteImport } from './routes/_authenticated/leaderboard'
 import { Route as AuthenticatedAdminRouteImport } from './routes/_authenticated/admin'
 import { Route as ApiPublicSyncResultsRouteImport } from './routes/api/public/sync-results'
+import { Route as ApiPublicHooksSyncFixtureGoalsRouteImport } from './routes/api/public/hooks/sync-fixture-goals'
 import { Route as ApiPublicHooksRefreshTeamFormRouteImport } from './routes/api/public/hooks/refresh-team-form'
 import { Route as ApiPublicHooksRefreshHighlightsRouteImport } from './routes/api/public/hooks/refresh-highlights'
 
@@ -61,6 +62,12 @@ const ApiPublicSyncResultsRoute = ApiPublicSyncResultsRouteImport.update({
   path: '/api/public/sync-results',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiPublicHooksSyncFixtureGoalsRoute =
+  ApiPublicHooksSyncFixtureGoalsRouteImport.update({
+    id: '/api/public/hooks/sync-fixture-goals',
+    path: '/api/public/hooks/sync-fixture-goals',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const ApiPublicHooksRefreshTeamFormRoute =
   ApiPublicHooksRefreshTeamFormRouteImport.update({
     id: '/api/public/hooks/refresh-team-form',
@@ -84,6 +91,7 @@ export interface FileRoutesByFullPath {
   '/api/public/sync-results': typeof ApiPublicSyncResultsRoute
   '/api/public/hooks/refresh-highlights': typeof ApiPublicHooksRefreshHighlightsRoute
   '/api/public/hooks/refresh-team-form': typeof ApiPublicHooksRefreshTeamFormRoute
+  '/api/public/hooks/sync-fixture-goals': typeof ApiPublicHooksSyncFixtureGoalsRoute
 }
 export interface FileRoutesByTo {
   '/auth': typeof AuthRoute
@@ -95,6 +103,7 @@ export interface FileRoutesByTo {
   '/api/public/sync-results': typeof ApiPublicSyncResultsRoute
   '/api/public/hooks/refresh-highlights': typeof ApiPublicHooksRefreshHighlightsRoute
   '/api/public/hooks/refresh-team-form': typeof ApiPublicHooksRefreshTeamFormRoute
+  '/api/public/hooks/sync-fixture-goals': typeof ApiPublicHooksSyncFixtureGoalsRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -108,6 +117,7 @@ export interface FileRoutesById {
   '/api/public/sync-results': typeof ApiPublicSyncResultsRoute
   '/api/public/hooks/refresh-highlights': typeof ApiPublicHooksRefreshHighlightsRoute
   '/api/public/hooks/refresh-team-form': typeof ApiPublicHooksRefreshTeamFormRoute
+  '/api/public/hooks/sync-fixture-goals': typeof ApiPublicHooksSyncFixtureGoalsRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -121,6 +131,7 @@ export interface FileRouteTypes {
     | '/api/public/sync-results'
     | '/api/public/hooks/refresh-highlights'
     | '/api/public/hooks/refresh-team-form'
+    | '/api/public/hooks/sync-fixture-goals'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/auth'
@@ -132,6 +143,7 @@ export interface FileRouteTypes {
     | '/api/public/sync-results'
     | '/api/public/hooks/refresh-highlights'
     | '/api/public/hooks/refresh-team-form'
+    | '/api/public/hooks/sync-fixture-goals'
   id:
     | '__root__'
     | '/_authenticated'
@@ -144,6 +156,7 @@ export interface FileRouteTypes {
     | '/api/public/sync-results'
     | '/api/public/hooks/refresh-highlights'
     | '/api/public/hooks/refresh-team-form'
+    | '/api/public/hooks/sync-fixture-goals'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -153,6 +166,7 @@ export interface RootRouteChildren {
   ApiPublicSyncResultsRoute: typeof ApiPublicSyncResultsRoute
   ApiPublicHooksRefreshHighlightsRoute: typeof ApiPublicHooksRefreshHighlightsRoute
   ApiPublicHooksRefreshTeamFormRoute: typeof ApiPublicHooksRefreshTeamFormRoute
+  ApiPublicHooksSyncFixtureGoalsRoute: typeof ApiPublicHooksSyncFixtureGoalsRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -213,6 +227,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicSyncResultsRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/hooks/sync-fixture-goals': {
+      id: '/api/public/hooks/sync-fixture-goals'
+      path: '/api/public/hooks/sync-fixture-goals'
+      fullPath: '/api/public/hooks/sync-fixture-goals'
+      preLoaderRoute: typeof ApiPublicHooksSyncFixtureGoalsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/hooks/refresh-team-form': {
       id: '/api/public/hooks/refresh-team-form'
       path: '/api/public/hooks/refresh-team-form'
@@ -254,6 +275,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiPublicSyncResultsRoute: ApiPublicSyncResultsRoute,
   ApiPublicHooksRefreshHighlightsRoute: ApiPublicHooksRefreshHighlightsRoute,
   ApiPublicHooksRefreshTeamFormRoute: ApiPublicHooksRefreshTeamFormRoute,
+  ApiPublicHooksSyncFixtureGoalsRoute: ApiPublicHooksSyncFixtureGoalsRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
