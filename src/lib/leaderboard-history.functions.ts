@@ -19,7 +19,7 @@ function pointsFor(ph: number, pa: number, fh: number, fa: number): number {
 
 // Tournament start: 14 June 2026. Snapshot taken at midday UK time each day.
 // June/July UK is BST (UTC+1) so 12:00 BST = 11:00 UTC.
-const START_ISO = "2026-06-14T11:00:00Z";
+const START_ISO = "2026-06-15T11:00:00Z";
 
 export const getLeaderboardHistory = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
