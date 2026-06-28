@@ -457,7 +457,12 @@ export const Route = createFileRoute("/api/public/sync-results")({
 
           // Track in-progress live scores so the UI can show the current
           // scoreline and minute without affecting prediction settlement.
-          if (m.status === "live" && !alreadyHasScore) {
+          // We allow this even when a 90-min score is already locked — that
+          // happens once a knockout match enters extra time, and we want to
+          // keep showing the live ET scoreline below the locked boxes.
+          const stillInProgress =
+            m.status === "live" || (m.status === "finished" && false);
+          if (stillInProgress) {
             const liveHome = Number.isInteger(srcHome) ? (srcHome as number) : null;
             const liveAway = Number.isInteger(srcAway) ? (srcAway as number) : null;
             if (
