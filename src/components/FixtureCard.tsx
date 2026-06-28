@@ -691,6 +691,33 @@ export function FixtureCard({
           </div>
         </div>
 
+        {showDecidedRow && !hideScore && (
+          <div className="mt-2 flex items-center justify-center gap-2">
+            <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
+              Full-time
+            </span>
+            <span className="h-3 w-px bg-border" aria-hidden />
+            <span className="text-xs font-semibold text-ink">
+              <span className="text-base leading-none mr-1" aria-hidden>
+                {flagFor(winnerTeam!)}
+              </span>
+              {winnerTeam} won{" "}
+              {decidedBy === "AET" ? (
+                <span className="font-bold">after extra time</span>
+              ) : (
+                <>
+                  <span className="font-bold">on penalties</span>
+                  {pensHome !== null && pensAway !== null && (
+                    <span className="ml-1 tabular-nums text-muted-foreground">
+                      ({pensHome}–{pensAway})
+                    </span>
+                  )}
+                </>
+              )}
+            </span>
+          </div>
+        )}
+
         {showStatusRow && (
           <div className="mt-3 flex items-center justify-between gap-2 min-h-[2rem]">
             {!locked ? (
