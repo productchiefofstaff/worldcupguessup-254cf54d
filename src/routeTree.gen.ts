@@ -14,7 +14,6 @@ import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as AuthenticatedIndexRouteImport } from './routes/_authenticated/index'
 import { Route as AuthenticatedMyPredictionsRouteImport } from './routes/_authenticated/my-predictions'
-import { Route as AuthenticatedLuckboxAdjustedRouteImport } from './routes/_authenticated/luckbox-adjusted'
 import { Route as AuthenticatedLuckboxRouteImport } from './routes/_authenticated/luckbox'
 import { Route as AuthenticatedLeaderboardRouteImport } from './routes/_authenticated/leaderboard'
 import { Route as AuthenticatedAdminRouteImport } from './routes/_authenticated/admin'
@@ -46,12 +45,6 @@ const AuthenticatedMyPredictionsRoute =
   AuthenticatedMyPredictionsRouteImport.update({
     id: '/my-predictions',
     path: '/my-predictions',
-    getParentRoute: () => AuthenticatedRouteRoute,
-  } as any)
-const AuthenticatedLuckboxAdjustedRoute =
-  AuthenticatedLuckboxAdjustedRouteImport.update({
-    id: '/luckbox-adjusted',
-    path: '/luckbox-adjusted',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
 const AuthenticatedLuckboxRoute = AuthenticatedLuckboxRouteImport.update({
@@ -101,7 +94,6 @@ export interface FileRoutesByFullPath {
   '/admin': typeof AuthenticatedAdminRoute
   '/leaderboard': typeof AuthenticatedLeaderboardRoute
   '/luckbox': typeof AuthenticatedLuckboxRoute
-  '/luckbox-adjusted': typeof AuthenticatedLuckboxAdjustedRoute
   '/my-predictions': typeof AuthenticatedMyPredictionsRoute
   '/api/public/sync-results': typeof ApiPublicSyncResultsRoute
   '/api/public/hooks/refresh-highlights': typeof ApiPublicHooksRefreshHighlightsRoute
@@ -114,7 +106,6 @@ export interface FileRoutesByTo {
   '/admin': typeof AuthenticatedAdminRoute
   '/leaderboard': typeof AuthenticatedLeaderboardRoute
   '/luckbox': typeof AuthenticatedLuckboxRoute
-  '/luckbox-adjusted': typeof AuthenticatedLuckboxAdjustedRoute
   '/my-predictions': typeof AuthenticatedMyPredictionsRoute
   '/': typeof AuthenticatedIndexRoute
   '/api/public/sync-results': typeof ApiPublicSyncResultsRoute
@@ -130,7 +121,6 @@ export interface FileRoutesById {
   '/_authenticated/admin': typeof AuthenticatedAdminRoute
   '/_authenticated/leaderboard': typeof AuthenticatedLeaderboardRoute
   '/_authenticated/luckbox': typeof AuthenticatedLuckboxRoute
-  '/_authenticated/luckbox-adjusted': typeof AuthenticatedLuckboxAdjustedRoute
   '/_authenticated/my-predictions': typeof AuthenticatedMyPredictionsRoute
   '/_authenticated/': typeof AuthenticatedIndexRoute
   '/api/public/sync-results': typeof ApiPublicSyncResultsRoute
@@ -147,7 +137,6 @@ export interface FileRouteTypes {
     | '/admin'
     | '/leaderboard'
     | '/luckbox'
-    | '/luckbox-adjusted'
     | '/my-predictions'
     | '/api/public/sync-results'
     | '/api/public/hooks/refresh-highlights'
@@ -160,7 +149,6 @@ export interface FileRouteTypes {
     | '/admin'
     | '/leaderboard'
     | '/luckbox'
-    | '/luckbox-adjusted'
     | '/my-predictions'
     | '/'
     | '/api/public/sync-results'
@@ -175,7 +163,6 @@ export interface FileRouteTypes {
     | '/_authenticated/admin'
     | '/_authenticated/leaderboard'
     | '/_authenticated/luckbox'
-    | '/_authenticated/luckbox-adjusted'
     | '/_authenticated/my-predictions'
     | '/_authenticated/'
     | '/api/public/sync-results'
@@ -229,13 +216,6 @@ declare module '@tanstack/react-router' {
       path: '/my-predictions'
       fullPath: '/my-predictions'
       preLoaderRoute: typeof AuthenticatedMyPredictionsRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/_authenticated/luckbox-adjusted': {
-      id: '/_authenticated/luckbox-adjusted'
-      path: '/luckbox-adjusted'
-      fullPath: '/luckbox-adjusted'
-      preLoaderRoute: typeof AuthenticatedLuckboxAdjustedRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/luckbox': {
@@ -294,7 +274,6 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedAdminRoute: typeof AuthenticatedAdminRoute
   AuthenticatedLeaderboardRoute: typeof AuthenticatedLeaderboardRoute
   AuthenticatedLuckboxRoute: typeof AuthenticatedLuckboxRoute
-  AuthenticatedLuckboxAdjustedRoute: typeof AuthenticatedLuckboxAdjustedRoute
   AuthenticatedMyPredictionsRoute: typeof AuthenticatedMyPredictionsRoute
   AuthenticatedIndexRoute: typeof AuthenticatedIndexRoute
 }
@@ -303,7 +282,6 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedAdminRoute: AuthenticatedAdminRoute,
   AuthenticatedLeaderboardRoute: AuthenticatedLeaderboardRoute,
   AuthenticatedLuckboxRoute: AuthenticatedLuckboxRoute,
-  AuthenticatedLuckboxAdjustedRoute: AuthenticatedLuckboxAdjustedRoute,
   AuthenticatedMyPredictionsRoute: AuthenticatedMyPredictionsRoute,
   AuthenticatedIndexRoute: AuthenticatedIndexRoute,
 }
