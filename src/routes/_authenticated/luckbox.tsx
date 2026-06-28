@@ -4,6 +4,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { getLuckBox, type LuckPlayer, type LuckGameDetail } from "@/lib/luckbox.functions";
 import { useAuth } from "@/hooks/use-auth";
+import { flagFor } from "@/lib/flags";
 import { Dices, TrendingUp, TrendingDown, ChevronDown, ChevronUp, Info } from "lucide-react";
 import {
   Dialog,
@@ -41,7 +42,7 @@ function GameRow({ game }: { game: LuckGameDetail }) {
     <li className="border-t border-border/60 px-3 py-2 text-xs">
       <div className="flex items-baseline justify-between gap-2">
         <div className="font-semibold text-ink truncate">
-          {game.team_home} {game.ft_home}–{game.ft_away} {game.team_away}
+          {flagFor(game.team_home)} {game.ft_home}–{game.ft_away} {flagFor(game.team_away)}
         </div>
         <div
           className={`shrink-0 font-bold tabular-nums ${gained ? "text-success" : "text-destructive"}`}
@@ -64,7 +65,7 @@ function GameRow({ game }: { game: LuckGameDetail }) {
           return (
             <li key={i} className="text-[11px] text-muted-foreground">
               <span className="font-semibold text-ink/80">{g.minute_display}</span>{" "}
-              {team}
+              {flagFor(team)}
               {g.scorer ? ` — ${g.scorer}` : ""}
             </li>
           );
