@@ -3,7 +3,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { db as supabase } from "@/lib/db";
 import { useAuth } from "@/hooks/use-auth";
-import { Trophy, Crown, ChevronDown } from "lucide-react";
+import { Trophy, Crown, ChevronDown, TrendingUp } from "lucide-react";
 import { useServerFn } from "@tanstack/react-start";
 import { getLeaderboardHistory } from "@/lib/leaderboard-history.functions";
 import {
@@ -192,12 +192,10 @@ function PointsOverTime() {
 
   return (
     <section className="mt-6">
-      <h2 className="text-lg sm:text-xl font-extrabold tracking-tight text-ink mb-2">
+      <h2 className="text-lg sm:text-xl font-extrabold tracking-tight text-ink mb-2 flex items-center gap-2">
+        <TrendingUp className="h-5 w-5 text-primary" />
         Points Over Time
       </h2>
-      <p className="text-xs text-muted-foreground mb-3">
-        Daily total at midday UK, from 14 June.
-      </p>
       <div className="bg-card border border-border rounded-xl p-3">
         {isLoading && (
           <p className="text-sm text-muted-foreground text-center py-8">Loading…</p>
@@ -227,18 +225,22 @@ function PointsOverTime() {
                   }}
                 />
                 <Legend wrapperStyle={{ fontSize: 11 }} iconType="circle" />
-                {data.players.map((p, i) => (
-                  <Line
-                    key={p.user_id}
-                    type="monotone"
-                    dataKey={p.user_id}
-                    name={p.name}
-                    stroke={LINE_COLORS[i % LINE_COLORS.length]}
-                    strokeWidth={2}
-                    dot={false}
-                    activeDot={{ r: 4 }}
-                  />
-                ))}
+                {data.players.map((p, i) => {
+                  const dashes = [undefined, "4 3", "2 2", "6 2 2 2"];
+                  return (
+                    <Line
+                      key={p.user_id}
+                      type="monotone"
+                      dataKey={p.user_id}
+                      name={p.name}
+                      stroke={LINE_COLORS[i % LINE_COLORS.length]}
+                      strokeWidth={2}
+                      strokeDasharray={dashes[i % dashes.length]}
+                      dot={false}
+                      activeDot={{ r: 4 }}
+                    />
+                  );
+                })}
               </LineChart>
             </ResponsiveContainer>
           </div>
