@@ -3,22 +3,19 @@ import { flagFor } from "@/lib/flags";
 import type { Fixture } from "@/components/FixtureCard";
 import { cn } from "@/lib/utils";
 
-// Round-of-32 bracket order mirrors the FIFA bracket published by ESPN/BBC.
-// Each pair of R32 winners feeds the corresponding R16 slot, and so on.
-// The match_numbers in the DB are 73–104; bracket adjacency is given by
-// pairing consecutive matches (73+74 → R16, 75+76 → R16, …).
-// Ordered to mirror the BBC bracket: consecutive pairs feed the same L16 tie.
+// Round-of-32 top-to-bottom order requested from the BBC knockout path.
+// Consecutive rows feed the same Last 16 tie.
 // L16 fixture → R32 feeder pair (match_number):
-//   89: 73 + 75   (SA/CAN vs GER/PAR)
-//   90: 78 + 84   (FRA/SWE vs POR/CRO)
-//   91: 76 + 83   (NED/MAR vs SPA/AUT)
+//   89: 75 + 78   (GER/PAR vs FRA/SWE)
+//   90: 73 + 76   (SA/CAN vs NED/MAR)
+//   91: 84 + 83   (POR/CRO vs SPA/AUT)
 //   92: 82 + 81   (USA/BIH vs BEL/SEN)
-//   93: 79 + 80   (MEX/ECU vs ENG/COD)
-//   94: 74 + 77   (BRA/JPN vs CIV/NOR)
-//   95: 86 + 88   (AUS/EGY vs COL/GHA)
-//   96: 85 + 87   (SUI/ALG vs ARG/CPV)
+//   93: 74 + 77   (BRA/JPN vs CIV/NOR)
+//   94: 79 + 80   (MEX/ECU vs ENG/COD)
+//   95: 87 + 86   (ARG/CPV vs AUS/EGY)
+//   96: 85 + 88   (SUI/ALG vs COL/GHA)
 const R32_NUMBERS = [
-  73, 75, 78, 84, 76, 83, 82, 81, 79, 80, 74, 77, 86, 88, 85, 87,
+  75, 78, 73, 76, 84, 83, 82, 81, 74, 77, 79, 80, 87, 86, 85, 88,
 ];
 const R16_NUMBERS = Array.from({ length: 8 }, (_, i) => 89 + i);
 const QF_NUMBERS = [97, 98, 99, 100];
