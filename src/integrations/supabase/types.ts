@@ -14,11 +14,54 @@ export type Database = {
   }
   public: {
     Tables: {
+      fixture_goals: {
+        Row: {
+          created_at: string
+          fixture_id: string
+          id: string
+          minute: number
+          minute_display: string
+          scorer: string | null
+          scoring_play_id: string | null
+          side: string
+        }
+        Insert: {
+          created_at?: string
+          fixture_id: string
+          id?: string
+          minute: number
+          minute_display: string
+          scorer?: string | null
+          scoring_play_id?: string | null
+          side: string
+        }
+        Update: {
+          created_at?: string
+          fixture_id?: string
+          id?: string
+          minute?: number
+          minute_display?: string
+          scorer?: string | null
+          scoring_play_id?: string | null
+          side?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fixture_goals_fixture_id_fkey"
+            columns: ["fixture_id"]
+            isOneToOne: false
+            referencedRelation: "fixtures"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       fixtures: {
         Row: {
           away_score: number | null
           away_score_aet: number | null
           decided_by: string | null
+          espn_event_id: string | null
+          goals_synced_at: string | null
           group_name: string | null
           highlights_checked_at: string | null
           highlights_url: string | null
@@ -42,6 +85,8 @@ export type Database = {
           away_score?: number | null
           away_score_aet?: number | null
           decided_by?: string | null
+          espn_event_id?: string | null
+          goals_synced_at?: string | null
           group_name?: string | null
           highlights_checked_at?: string | null
           highlights_url?: string | null
@@ -65,6 +110,8 @@ export type Database = {
           away_score?: number | null
           away_score_aet?: number | null
           decided_by?: string | null
+          espn_event_id?: string | null
+          goals_synced_at?: string | null
           group_name?: string | null
           highlights_checked_at?: string | null
           highlights_url?: string | null
