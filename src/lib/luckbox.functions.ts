@@ -26,6 +26,7 @@ export type LuckPlayer = {
   points_lost: number;
   net: number;
   affected_games: number;
+  actual_points?: number;
   games: LuckGameDetail[];
 };
 
