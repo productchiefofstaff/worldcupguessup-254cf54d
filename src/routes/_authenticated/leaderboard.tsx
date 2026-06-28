@@ -181,31 +181,55 @@ function PointsOverTime() {
   const chartData = React.useMemo(() => {
     if (!data) return [];
     const ids = data.players.map((pl) => pl.user_id);
-    return data.points.map((p) => {
-      const scored = ids.map((id) => ({ id, pts: Number((p as any)[id] ?? 0) }));
-      const sorted = [...scored].sort((a, b) => b.pts - a.pts);
-      const rankMap: Record<string, number> = {};
-      let lastPts = Number.NaN;
-      let lastRank = 0;
-      sorted.forEach((s, i) => {
-        if (s.pts !== lastPts) {
-          lastRank = i + 1;
-          lastPts = s.pts;
-        }
-        rankMap[s.id] = lastRank;
+    return data.points
+      .filter((p) => {
+        const d = new Date(p.date as string);
+        return !(d.getUTCMonth() === 5 && d.getUTCDate() === 14);
+      })
+      .map((p) => {
+        const scored = ids.map((id) => ({ id, pts: Number((p as any)[id] ?? 0) }));
+        const sorted = [...scored].sort((a, b) => b.pts - a.pts);
+        const rankMap: Record<string, number> = {};
+        let lastPts = Number.NaN;
+        let lastRank = 0;
+        sorted.forEach((s, i) => {
+          if (s.pts !== lastPts) {
+            lastRank = i + 1;
+            lastPts = s.pts;
+          }
+          rankMap[s.id] = lastRank;
+        });
+        const row: Record<string, any> = {
+          label: new Date(p.date as string).toLocaleDateString("en-GB", {
+            day: "numeric",
+            month: "short",
+          }),
+        };
+        ids.forEach((id) => {
+          row[id] = rankMap[id];
+        });
+        return row;
       });
-      const row: Record<string, any> = {
-        label: new Date(p.date as string).toLocaleDateString(undefined, {
-          day: "numeric",
-          month: "short",
-        }),
-      };
-      ids.forEach((id) => {
-        row[id] = rankMap[id];
-      });
-      return row;
-    });
   }, [data]);
+
+  const tickLabels = React.useMemo(() => {
+    if (!chartData.length) return [];
+    const explicit: string[] = [];
+    chartData.forEach((row, i) => {
+      if (i % 3 === 0) explicit.push(row.label as string);
+    });
+    const jun26 = chartData.find((r) => {
+      const d = new Date(data!.points.find((p) => (p as any).label === r.label)?.date ?? "");
+      return d.getUTCMonth() === 5 && d.getUTCDate() === 26;
+    });
+    // Better: check labels for "26 Jun"
+    const has26 = explicit.some((l) => l.includes("26"));
+    if (!has26) {
+      const jun26Label = chartData.find((r) => (r.label as string).includes("26"));
+      if (jun26Label) explicit.push(jun26Label.label as string);
+    }
+    return explicit;
+  }, [chartData, data]);
 
   return (
     <section className="mt-6">
