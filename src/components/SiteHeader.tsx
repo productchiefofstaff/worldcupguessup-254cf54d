@@ -73,6 +73,14 @@ export function SiteHeader() {
             <Dices className="h-4 w-4" />
             LuckBox
           </Link>
+          <Link
+            to="/luckbox-adjusted"
+            className="inline-flex items-center gap-1.5 px-2 py-1 rounded-md text-primary-foreground/80 hover:text-primary-foreground hover:bg-white/5"
+            activeProps={{ className: "inline-flex items-center gap-1.5 px-2 py-1 rounded-md bg-primary/15 text-primary" }}
+          >
+            <Table2 className="h-4 w-4" />
+            Adjusted
+          </Link>
           {isAdmin && (
             <Link
               to="/admin"
