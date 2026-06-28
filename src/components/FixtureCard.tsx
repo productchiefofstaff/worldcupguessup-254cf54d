@@ -393,11 +393,15 @@ export function FixtureCard({
   let pensAway = fixture.pens_away ?? null;
   let aetHome: number | null = fixture.home_score_aet ?? null;
   let aetAway: number | null = fixture.away_score_aet ?? null;
+  let dispHome = fixture.home_score;
+  let dispAway = fixture.away_score;
   if (hasResult && !decidedBy) {
     if (fixture.match_number === 71) {
       // Algeria 1-1 Austria (FT) → 2-2 (AET) → Algeria win on pens 5-4 (mock)
       decidedBy = "PENS";
       winnerTeam = fixture.team_home;
+      dispHome = 1;
+      dispAway = 1;
       aetHome = 2;
       aetAway = 2;
       pensHome = 5;
