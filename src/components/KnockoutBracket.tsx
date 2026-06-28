@@ -165,10 +165,72 @@ export function KnockoutBracket({ fixtures }: { fixtures: Fixture[] }) {
   const SF_OFFSET = (SF_PITCH - R32_PITCH) / 2; // 238
   const FINAL_OFFSET = (R32_PITCH * 16 - R32_PITCH) / 2; // 510
 
+  // Geometry for the SVG connector overlay.
+  const COL_W = 200;
+  const GAP = 16;
+  const TITLE_H = 24; // h3 text + mb-3
+  const CARD_H = 60;
+  const STUB = 10; // horizontal stub length out of each card
+
+  // Card center y inside a column (relative to overlay top).
+  const centerY = (offset: number, pitch: number, i: number) =>
+    TITLE_H + offset + i * pitch + CARD_H / 2;
+
+  const columns = [
+    { offset: 0, pitch: R32_PITCH, count: 16 },
+    { offset: R16_OFFSET, pitch: R16_PITCH, count: 8 },
+    { offset: QF_OFFSET, pitch: QF_PITCH, count: 4 },
+    { offset: SF_OFFSET, pitch: SF_PITCH, count: 2 },
+    { offset: FINAL_OFFSET, pitch: 0, count: 1 },
+  ];
+
+  const totalW = columns.length * COL_W + (columns.length - 1) * GAP;
+  const totalH = TITLE_H + R32_PITCH * 16 + 20;
+
+  const lines: Array<{ x1: number; y1: number; x2: number; y2: number }> = [];
+  for (let c = 0; c < columns.length - 1; c++) {
+    const from = columns[c];
+    const to = columns[c + 1];
+    const fromRight = (c + 1) * COL_W + c * GAP; // right edge of column c
+    const toLeft = fromRight + GAP; // left edge of column c+1
+    const midX = (fromRight + toLeft) / 2;
+    for (let i = 0; i < to.count; i++) {
+      const yTop = centerY(from.offset, from.pitch, 2 * i);
+      const yBot = centerY(from.offset, from.pitch, 2 * i + 1);
+      const yNext = centerY(to.offset, to.pitch, i);
+      // stub out of top feeder
+      lines.push({ x1: fromRight, y1: yTop, x2: midX, y2: yTop });
+      // stub out of bottom feeder
+      lines.push({ x1: fromRight, y1: yBot, x2: midX, y2: yBot });
+      // vertical join
+      lines.push({ x1: midX, y1: yTop, x2: midX, y2: yBot });
+      // stub into next round
+      lines.push({ x1: midX, y1: yNext, x2: toLeft, y2: yNext });
+    }
+  }
+
   return (
     <div className="rounded-lg border border-border bg-card/40 p-3">
       <div className="overflow-x-auto -mx-3 px-3 pb-2">
-        <div className="flex gap-4 min-w-max">
+        <div className="relative flex gap-4 min-w-max">
+          <svg
+            className="absolute inset-0 pointer-events-none"
+            width={totalW}
+            height={totalH}
+            aria-hidden
+          >
+            {lines.map((l, idx) => (
+              <line
+                key={idx}
+                x1={l.x1}
+                y1={l.y1}
+                x2={l.x2}
+                y2={l.y2}
+                stroke="hsl(var(--border))"
+                strokeWidth={1.5}
+              />
+            ))}
+          </svg>
           <Column
             title="Last 32"
             fixtures={byNumber}
