@@ -245,8 +245,7 @@ function PointsOverTime() {
                 <XAxis
                   dataKey="label"
                   tick={{ fontSize: 10, fill: "hsl(var(--muted-foreground))" }}
-                  interval="preserveStartEnd"
-                  minTickGap={20}
+                  ticks={tickLabels}
                 />
                 <YAxis
                   tick={{ fontSize: 10, fill: "hsl(var(--muted-foreground))" }}
