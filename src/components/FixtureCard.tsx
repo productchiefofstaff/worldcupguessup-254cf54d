@@ -418,10 +418,11 @@ export function FixtureCard({
   // We don't store an exact finish time; approximate it as kickoff + 2h.
   const approxFinishTs = new Date(fixture.kickoff_at).getTime() + 2 * 60 * 60 * 1000;
   const inSpoilerWindow = hasResult && now - approxFinishTs < SPOILER_MS;
-  // TEMP TEST: force spoiler + perfect-score celebration for France vs Iraq
+  // TEMP TEST: force spoiler + perfect-score celebration for France vs Iraq, and reveal Algeria vs Austria mock
   const isTestFixture =
-    /france/i.test(fixture.team_home + fixture.team_away) &&
-    /iraq/i.test(fixture.team_home + fixture.team_away);
+    (/france/i.test(fixture.team_home + fixture.team_away) &&
+      /iraq/i.test(fixture.team_home + fixture.team_away)) ||
+    fixture.match_number === 71;
   const revealKey = `wcg-revealed-${fixture.id}`;
   const [revealed, setRevealed] = useState<boolean>(() => {
     try {
