@@ -26,6 +26,7 @@ export type LuckPlayer = {
   points_lost: number;
   net: number;
   affected_games: number;
+  actual_points?: number;
   games: LuckGameDetail[];
 };
 
@@ -186,6 +187,16 @@ export const getLuckBox = createServerFn({ method: "GET" })
       ),
     }));
     players.sort((a, b) => b.net - a.net || b.points_won - a.points_won || a.name.localeCompare(b.name));
+
+    // Pull actual leaderboard points so downstream pages can compute adjusted scores.
+    const { data: lbData } = await supabase
+      .from("leaderboard")
+      .select("user_id, points");
+    const lbMap = new Map<string, number>();
+    (lbData ?? []).forEach((r: any) => lbMap.set(r.user_id, r.points));
+    players.forEach((p) => {
+      p.actual_points = lbMap.get(p.user_id) ?? 0;
+    });
 
     return { players };
   });
