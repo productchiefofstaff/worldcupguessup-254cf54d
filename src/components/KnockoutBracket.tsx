@@ -214,7 +214,7 @@ export function KnockoutBracket({ fixtures }: { fixtures: Fixture[] }) {
       <div className="overflow-x-auto -mx-3 px-3 pb-2">
         <div className="relative flex gap-4 min-w-max">
           <svg
-            className="absolute inset-0 pointer-events-none text-muted-foreground/60"
+            className="absolute inset-0 pointer-events-none text-ink/40"
             width={totalW}
             height={totalH}
             aria-hidden
