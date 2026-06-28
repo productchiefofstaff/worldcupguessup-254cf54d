@@ -33,6 +33,9 @@ export type Fixture = {
   /** Penalty shootout score (only when decided_by === "PENS"). */
   pens_home?: number | null;
   pens_away?: number | null;
+  /** Extra-time score (knockout mock / future field). */
+  home_score_aet?: number | null;
+  away_score_aet?: number | null;
 };
 
 export type Prediction = {
@@ -388,11 +391,19 @@ export function FixtureCard({
   let winnerTeam = fixture.winner_team ?? null;
   let pensHome = fixture.pens_home ?? null;
   let pensAway = fixture.pens_away ?? null;
+  let aetHome: number | null = fixture.home_score_aet ?? null;
+  let aetAway: number | null = fixture.away_score_aet ?? null;
+  let dispHome = fixture.home_score;
+  let dispAway = fixture.away_score;
   if (hasResult && !decidedBy) {
     if (fixture.match_number === 71) {
-      // Algeria 3-3 Austria → Algeria win on pens 5-4 (mock)
+      // Algeria 1-1 Austria (FT) → 2-2 (AET) → Algeria win on pens 5-4 (mock)
       decidedBy = "PENS";
       winnerTeam = fixture.team_home;
+      dispHome = 1;
+      dispAway = 1;
+      aetHome = 2;
+      aetAway = 2;
       pensHome = 5;
       pensAway = 4;
     } else if (fixture.match_number === 69) {
@@ -407,10 +418,11 @@ export function FixtureCard({
   // We don't store an exact finish time; approximate it as kickoff + 2h.
   const approxFinishTs = new Date(fixture.kickoff_at).getTime() + 2 * 60 * 60 * 1000;
   const inSpoilerWindow = hasResult && now - approxFinishTs < SPOILER_MS;
-  // TEMP TEST: force spoiler + perfect-score celebration for France vs Iraq
+  // TEMP TEST: force spoiler + perfect-score celebration for France vs Iraq, and reveal Algeria vs Austria mock
   const isTestFixture =
-    /france/i.test(fixture.team_home + fixture.team_away) &&
-    /iraq/i.test(fixture.team_home + fixture.team_away);
+    (/france/i.test(fixture.team_home + fixture.team_away) &&
+      /iraq/i.test(fixture.team_home + fixture.team_away)) ||
+    fixture.match_number === 71;
   const revealKey = `wcg-revealed-${fixture.id}`;
   const [revealed, setRevealed] = useState<boolean>(() => {
     try {
@@ -640,7 +652,7 @@ export function FixtureCard({
               max={30}
               value={
                 hasResult
-                  ? (fixture.home_score as number)
+                  ? (dispHome as number)
                   : isLive
                     ? (fixture.live_home_score as number)
                     : !editable
@@ -666,7 +678,7 @@ export function FixtureCard({
               max={30}
               value={
                 hasResult
-                  ? (fixture.away_score as number)
+                  ? (dispAway as number)
                   : isLive
                     ? (fixture.live_away_score as number)
                     : !editable
@@ -692,29 +704,36 @@ export function FixtureCard({
         </div>
 
         {showDecidedRow && !hideScore && (
-          <div className="mt-2 flex items-center justify-center gap-2">
-            <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
-              Full-time
-            </span>
-            <span className="h-3 w-px bg-border" aria-hidden />
-            <span className="text-xs font-semibold text-ink">
-              <span className="text-base leading-none mr-1" aria-hidden>
-                {flagFor(winnerTeam!)}
+          <div className="mt-2 flex flex-col items-center gap-1">
+            <div className="flex items-center justify-center gap-2">
+              <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
+                Full-time
               </span>
-              {winnerTeam} won{" "}
-              {decidedBy === "AET" ? (
-                <span className="font-bold">after extra time</span>
-              ) : (
-                <>
-                  <span className="font-bold">on penalties</span>
-                  {pensHome !== null && pensAway !== null && (
-                    <span className="ml-1 tabular-nums text-muted-foreground">
-                      ({pensHome}–{pensAway})
-                    </span>
-                  )}
-                </>
-              )}
-            </span>
+              <span className="h-3 w-px bg-border" aria-hidden />
+              <span className="text-xs font-semibold text-ink">
+                <span className="text-base leading-none mr-1" aria-hidden>
+                  {flagFor(winnerTeam!)}
+                </span>
+                {winnerTeam} won{" "}
+                {decidedBy === "AET" ? (
+                  <span className="font-bold">after extra time</span>
+                ) : (
+                  <>
+                    <span className="font-bold">on penalties</span>
+                    {pensHome !== null && pensAway !== null && (
+                      <span className="ml-1 tabular-nums text-muted-foreground">
+                        ({pensHome}–{pensAway})
+                      </span>
+                    )}
+                  </>
+                )}
+              </span>
+            </div>
+            {aetHome !== null && aetAway !== null && (
+              <span className="text-[10px] text-muted-foreground">
+                {dispHome}–{dispAway} at 90 mins · {aetHome}–{aetAway} a.e.t.
+              </span>
+            )}
           </div>
         )}
 
