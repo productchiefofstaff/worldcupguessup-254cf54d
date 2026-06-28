@@ -12,7 +12,6 @@ import {
   XAxis,
   YAxis,
   CartesianGrid,
-  Tooltip,
   Legend,
   ResponsiveContainer,
 } from "recharts";
@@ -171,8 +170,6 @@ const LINE_COLORS = [
   "var(--warning)",
 ];
 
-const LINE_PATTERNS = ["", "7 4", "2 4", "10 3 2 3"];
-
 function PointsOverTime() {
   const fetchHistory = useServerFn(getLeaderboardHistory);
   const { data, isLoading } = useQuery({
@@ -239,14 +236,6 @@ function PointsOverTime() {
                   domain={[1, data.players.length]}
                   ticks={Array.from({ length: data.players.length }, (_, i) => i + 1)}
                 />
-                <Tooltip
-                  contentStyle={{
-                    background: "hsl(var(--card))",
-                    border: "1px solid hsl(var(--border))",
-                    borderRadius: 8,
-                    fontSize: 12,
-                  }}
-                />
                 <Legend wrapperStyle={{ fontSize: 11 }} iconType="circle" />
                 {data.players.map((p, i) => (
                   <Line
@@ -255,12 +244,10 @@ function PointsOverTime() {
                     dataKey={p.user_id}
                     name={p.name}
                     stroke={LINE_COLORS[i % LINE_COLORS.length]}
-                    strokeWidth={3}
-                    strokeDasharray={LINE_PATTERNS[i % LINE_PATTERNS.length]}
+                    strokeWidth={1.5}
                     strokeLinecap="round"
                     strokeLinejoin="round"
-                    dot={{ r: 2, strokeWidth: 2 }}
-                    activeDot={{ r: 5, strokeWidth: 2 }}
+                    dot={false}
                     connectNulls
                     isAnimationActive={false}
                   />
