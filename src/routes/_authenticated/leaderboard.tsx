@@ -233,6 +233,7 @@ function PointsOverTime() {
                     name={p.name}
                     stroke={LINE_COLORS[i % LINE_COLORS.length]}
                     strokeWidth={2}
+                    strokeDasharray={i % 2 === 0 ? undefined : "4 3"}
                     dot={false}
                     activeDot={{ r: 4 }}
                   />
