@@ -27,11 +27,15 @@ type SourceMatch = {
   away_score?: number | null;
   stage?: string | null;
   status_label?: string | null;
+  /** Penalty shootout score for the home side (if exposed by source). */
+  home_pens?: number | null;
+  away_pens?: number | null;
 };
 
 type EspnCompetitor = {
   homeAway?: string;
   score?: string;
+  shootoutScore?: number | string;
   team?: { displayName?: string; abbreviation?: string };
 };
 
@@ -170,6 +174,16 @@ function parseEspnScoreboard(data: EspnScoreboard): SourceMatch[] {
         })(),
         away_score: (() => {
           const n = Number.parseInt(away.score ?? "", 10);
+          return Number.isInteger(n) ? n : null;
+        })(),
+        home_pens: (() => {
+          const raw = home.shootoutScore;
+          const n = typeof raw === "number" ? raw : Number.parseInt(String(raw ?? ""), 10);
+          return Number.isInteger(n) ? n : null;
+        })(),
+        away_pens: (() => {
+          const raw = away.shootoutScore;
+          const n = typeof raw === "number" ? raw : Number.parseInt(String(raw ?? ""), 10);
           return Number.isInteger(n) ? n : null;
         })(),
         stage: event.season?.type?.name ?? fallbackStage,
