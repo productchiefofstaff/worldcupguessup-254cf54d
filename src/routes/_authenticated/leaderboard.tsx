@@ -161,15 +161,17 @@ function LeaderboardPage() {
 }
 
 const LINE_COLORS = [
-  "hsl(var(--primary))",
-  "hsl(var(--warning))",
-  "hsl(var(--destructive))",
-  "hsl(217 91% 60%)",
-  "hsl(160 84% 39%)",
-  "hsl(280 65% 60%)",
-  "hsl(25 95% 53%)",
-  "hsl(190 95% 40%)",
+  "var(--chart-1)",
+  "var(--chart-2)",
+  "var(--chart-3)",
+  "var(--chart-4)",
+  "var(--chart-5)",
+  "var(--primary)",
+  "var(--success)",
+  "var(--warning)",
 ];
+
+const LINE_PATTERNS = ["", "7 4", "2 4", "10 3 2 3"];
 
 function PointsOverTime() {
   const fetchHistory = useServerFn(getLeaderboardHistory);
@@ -225,22 +227,23 @@ function PointsOverTime() {
                   }}
                 />
                 <Legend wrapperStyle={{ fontSize: 11 }} iconType="circle" />
-                {data.players.map((p, i) => {
-                  const dashes = [undefined, "4 3", "2 2", "6 2 2 2"];
-                  return (
-                    <Line
-                      key={p.user_id}
-                      type="monotone"
-                      dataKey={p.user_id}
-                      name={p.name}
-                      stroke={LINE_COLORS[i % LINE_COLORS.length]}
-                      strokeWidth={2}
-                      strokeDasharray={dashes[i % dashes.length]}
-                      dot={false}
-                      activeDot={{ r: 4 }}
-                    />
-                  );
-                })}
+                {data.players.map((p, i) => (
+                  <Line
+                    key={p.user_id}
+                    type="monotone"
+                    dataKey={p.user_id}
+                    name={p.name}
+                    stroke={LINE_COLORS[i % LINE_COLORS.length]}
+                    strokeWidth={3}
+                    strokeDasharray={LINE_PATTERNS[i % LINE_PATTERNS.length]}
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    dot={{ r: 2, strokeWidth: 2 }}
+                    activeDot={{ r: 5, strokeWidth: 2 }}
+                    connectNulls
+                    isAnimationActive={false}
+                  />
+                ))}
               </LineChart>
             </ResponsiveContainer>
           </div>
