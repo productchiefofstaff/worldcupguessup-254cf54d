@@ -214,7 +214,7 @@ export function KnockoutBracket({ fixtures }: { fixtures: Fixture[] }) {
       <div className="overflow-x-auto -mx-3 px-3 pb-2">
         <div className="relative flex gap-4 min-w-max">
           <svg
-            className="absolute inset-0 pointer-events-none"
+            className="absolute inset-0 pointer-events-none text-muted-foreground/60"
             width={totalW}
             height={totalH}
             aria-hidden
@@ -226,8 +226,9 @@ export function KnockoutBracket({ fixtures }: { fixtures: Fixture[] }) {
                 y1={l.y1}
                 x2={l.x2}
                 y2={l.y2}
-                stroke="hsl(var(--border))"
-                strokeWidth={1.5}
+                stroke="currentColor"
+                strokeWidth={2}
+                strokeLinecap="round"
               />
             ))}
           </svg>
