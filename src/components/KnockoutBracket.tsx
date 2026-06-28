@@ -167,9 +167,6 @@ export function KnockoutBracket({ fixtures }: { fixtures: Fixture[] }) {
 
   return (
     <div className="rounded-lg border border-border bg-card/40 p-3">
-      <p className="text-[11px] text-muted-foreground mb-3 text-center">
-        Scroll sideways → · Updates daily at 5am UK
-      </p>
       <div className="overflow-x-auto -mx-3 px-3 pb-2">
         <div className="flex gap-4 min-w-max">
           <Column
