@@ -189,7 +189,7 @@ function LuckBoxPage() {
       {!isLoading && !error && (
         <div className="space-y-2">
           {players.map((p) => (
-            <PlayerCard key={p.user_id} player={p} defaultOpen={p.user_id === user?.id} />
+            <PlayerCard key={p.user_id} player={p} defaultOpen={false} />
           ))}
           {players.length === 0 && (
             <p className="text-sm text-muted-foreground">
