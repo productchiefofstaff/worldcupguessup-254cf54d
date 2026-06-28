@@ -4,6 +4,18 @@ import { useQuery } from "@tanstack/react-query";
 import { db as supabase } from "@/lib/db";
 import { useAuth } from "@/hooks/use-auth";
 import { Trophy, Crown, ChevronDown } from "lucide-react";
+import { useServerFn } from "@tanstack/react-start";
+import { getLeaderboardHistory } from "@/lib/leaderboard-history.functions";
+import {
+  LineChart,
+  Line,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  Legend,
+  ResponsiveContainer,
+} from "recharts";
 
 export const Route = createFileRoute("/_authenticated/leaderboard")({
   head: () => ({
@@ -141,8 +153,101 @@ function LeaderboardPage() {
             No players yet — be the first to predict!
           </div>
         )}
+
+        <PointsOverTime />
       </div>
     </main>
+  );
+}
+
+const LINE_COLORS = [
+  "hsl(var(--primary))",
+  "hsl(var(--warning))",
+  "hsl(var(--destructive))",
+  "hsl(217 91% 60%)",
+  "hsl(160 84% 39%)",
+  "hsl(280 65% 60%)",
+  "hsl(25 95% 53%)",
+  "hsl(190 95% 40%)",
+];
+
+function PointsOverTime() {
+  const fetchHistory = useServerFn(getLeaderboardHistory);
+  const { data, isLoading } = useQuery({
+    queryKey: ["leaderboard-history"],
+    queryFn: () => fetchHistory(),
+    staleTime: 5 * 60_000,
+  });
+
+  const chartData = React.useMemo(() => {
+    if (!data) return [];
+    return data.points.map((p) => ({
+      ...p,
+      label: new Date(p.date as string).toLocaleDateString(undefined, {
+        day: "numeric",
+        month: "short",
+      }),
+    }));
+  }, [data]);
+
+  return (
+    <section className="mt-6">
+      <h2 className="text-lg sm:text-xl font-extrabold tracking-tight text-ink mb-2">
+        Points Over Time
+      </h2>
+      <p className="text-xs text-muted-foreground mb-3">
+        Daily total at midday UK, from 14 June.
+      </p>
+      <div className="bg-card border border-border rounded-xl p-3">
+        {isLoading && (
+          <p className="text-sm text-muted-foreground text-center py-8">Loading…</p>
+        )}
+        {!isLoading && data && data.players.length > 0 && (
+          <div className="h-72 w-full">
+            <ResponsiveContainer width="100%" height="100%">
+              <LineChart data={chartData} margin={{ top: 8, right: 8, left: -16, bottom: 0 }}>
+                <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                <XAxis
+                  dataKey="label"
+                  tick={{ fontSize: 10, fill: "hsl(var(--muted-foreground))" }}
+                  interval="preserveStartEnd"
+                  minTickGap={20}
+                />
+                <YAxis
+                  tick={{ fontSize: 10, fill: "hsl(var(--muted-foreground))" }}
+                  width={32}
+                  allowDecimals={false}
+                />
+                <Tooltip
+                  contentStyle={{
+                    background: "hsl(var(--card))",
+                    border: "1px solid hsl(var(--border))",
+                    borderRadius: 8,
+                    fontSize: 12,
+                  }}
+                />
+                <Legend wrapperStyle={{ fontSize: 11 }} iconType="circle" />
+                {data.players.map((p, i) => (
+                  <Line
+                    key={p.user_id}
+                    type="monotone"
+                    dataKey={p.user_id}
+                    name={p.name}
+                    stroke={LINE_COLORS[i % LINE_COLORS.length]}
+                    strokeWidth={2}
+                    dot={false}
+                    activeDot={{ r: 4 }}
+                  />
+                ))}
+              </LineChart>
+            </ResponsiveContainer>
+          </div>
+        )}
+        {!isLoading && (!data || data.players.length === 0) && (
+          <p className="text-sm text-muted-foreground text-center py-8">No data yet.</p>
+        )}
+      </div>
+    </section>
   );
 }
 
