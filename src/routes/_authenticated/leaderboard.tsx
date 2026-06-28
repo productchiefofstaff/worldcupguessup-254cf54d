@@ -192,12 +192,10 @@ function PointsOverTime() {
 
   return (
     <section className="mt-6">
-      <h2 className="text-lg sm:text-xl font-extrabold tracking-tight text-ink mb-2">
+      <h2 className="text-lg sm:text-xl font-extrabold tracking-tight text-ink mb-2 flex items-center gap-2">
+        <TrendingUp className="h-5 w-5 text-primary" />
         Points Over Time
       </h2>
-      <p className="text-xs text-muted-foreground mb-3">
-        Daily total at midday UK, from 14 June.
-      </p>
       <div className="bg-card border border-border rounded-xl p-3">
         {isLoading && (
           <p className="text-sm text-muted-foreground text-center py-8">Loading…</p>
