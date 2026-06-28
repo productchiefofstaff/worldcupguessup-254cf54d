@@ -3,7 +3,7 @@ import { useAuth } from "@/hooks/use-auth";
 import { useQuery } from "@tanstack/react-query";
 import { db } from "@/lib/db";
 import { useEffect, useState } from "react";
-import { LogOut, CalendarDays, Trophy, ClipboardList, Shield } from "lucide-react";
+import { LogOut, CalendarDays, Trophy, ClipboardList, Shield, Dices } from "lucide-react";
 
 export function SiteHeader() {
   const [mounted, setMounted] = useState(false);
@@ -56,6 +56,14 @@ export function SiteHeader() {
           >
             <Trophy className="h-4 w-4" />
             Leaderboard
+          </Link>
+          <Link
+            to="/luckbox"
+            className="inline-flex items-center gap-1.5 px-2 py-1 rounded-md text-primary-foreground/80 hover:text-primary-foreground hover:bg-white/5"
+            activeProps={{ className: "inline-flex items-center gap-1.5 px-2 py-1 rounded-md bg-primary/15 text-primary" }}
+          >
+            <Dices className="h-4 w-4" />
+            LuckBox
           </Link>
           <Link
             to="/my-predictions"
