@@ -214,22 +214,18 @@ function PointsOverTime() {
 
   const tickLabels = React.useMemo(() => {
     if (!chartData.length) return [];
+    const labels = chartData.map((r) => r.label as string);
     const explicit: string[] = [];
-    chartData.forEach((row, i) => {
-      if (i % 3 === 0) explicit.push(row.label as string);
+    labels.forEach((l, i) => {
+      if (i % 3 === 0) explicit.push(l);
     });
-    const jun26 = chartData.find((r) => {
-      const d = new Date(data!.points.find((p) => (p as any).label === r.label)?.date ?? "");
-      return d.getUTCMonth() === 5 && d.getUTCDate() === 26;
-    });
-    // Better: check labels for "26 Jun"
-    const has26 = explicit.some((l) => l.includes("26"));
+    const has26 = explicit.some((l) => l.startsWith("26"));
     if (!has26) {
-      const jun26Label = chartData.find((r) => (r.label as string).includes("26"));
-      if (jun26Label) explicit.push(jun26Label.label as string);
+      const l26 = labels.find((l) => l.startsWith("26"));
+      if (l26) explicit.push(l26);
     }
     return explicit;
-  }, [chartData, data]);
+  }, [chartData]);
 
   return (
     <section className="mt-6">
