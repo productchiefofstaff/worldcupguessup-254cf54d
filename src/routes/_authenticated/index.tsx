@@ -58,30 +58,10 @@ function dayKey(iso: string) {
 }
 
 const TABS = ["Upcoming", "Completed", "Knockout Path"] as const;
-const FIXTURES_TAB_KEY = "wcg-fixtures-tab";
-
-function loadTab(): (typeof TABS)[number] {
-  try {
-    const v = localStorage.getItem(FIXTURES_TAB_KEY);
-    if (v === "Completed") return "Completed";
-    if (v === "Knockout Path") return "Knockout Path";
-    return "Upcoming";
-  } catch {
-    return "Upcoming";
-  }
-}
 
 function FixturesPage() {
   const { user } = useAuth();
-  const [tab, setTabState] = useState<(typeof TABS)[number]>(loadTab);
-  const setTab = (next: (typeof TABS)[number]) => {
-    setTabState(next);
-    try {
-      localStorage.setItem(FIXTURES_TAB_KEY, next);
-    } catch {
-      // ignore
-    }
-  };
+  const [tab, setTab] = useState<(typeof TABS)[number]>("Upcoming");
   const [whatsNewOpen, setWhatsNewOpen] = useState(!hasDismissedWhatsNew());
   const [rulesOpen, setRulesOpen] = useState(false);
 
