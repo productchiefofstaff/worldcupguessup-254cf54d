@@ -26,6 +26,13 @@ export type Fixture = {
   live_away_score?: number | null;
   live_status_label?: string | null;
   live_updated_at?: string | null;
+  /** Knockout-only: how the tie was decided after a 90-min draw. */
+  decided_by?: "AET" | "PENS" | null;
+  /** Team name that progressed (or won the final / 3rd place). */
+  winner_team?: string | null;
+  /** Penalty shootout score (only when decided_by === "PENS"). */
+  pens_home?: number | null;
+  pens_away?: number | null;
 };
 
 export type Prediction = {
