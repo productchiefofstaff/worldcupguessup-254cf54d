@@ -4,6 +4,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { getLuckBox, type LuckPlayer, type LuckGameDetail } from "@/lib/luckbox.functions";
 import { useAuth } from "@/hooks/use-auth";
+import { flagFor } from "@/lib/flags";
 import { Dices, TrendingUp, TrendingDown, ChevronDown, ChevronUp, Info } from "lucide-react";
 import {
   Dialog,
