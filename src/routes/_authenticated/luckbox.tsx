@@ -207,6 +207,8 @@ function LuckBoxPage() {
         </div>
       )}
 
+      {!isLoading && !error && <AdjustedTableSection players={players} />}
+
       <Dialog open={helpOpen} onOpenChange={setHelpOpen}>
         <DialogContent className="sm:max-w-md bg-white/70 backdrop-blur-xl border-white/40 shadow-2xl">
           <DialogHeader>
