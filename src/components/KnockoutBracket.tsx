@@ -7,7 +7,19 @@ import { cn } from "@/lib/utils";
 // Each pair of R32 winners feeds the corresponding R16 slot, and so on.
 // The match_numbers in the DB are 73–104; bracket adjacency is given by
 // pairing consecutive matches (73+74 → R16, 75+76 → R16, …).
-const R32_NUMBERS = Array.from({ length: 16 }, (_, i) => 73 + i);
+// Ordered to mirror the BBC bracket: consecutive pairs feed the same L16 tie.
+// L16 fixture → R32 feeder pair (match_number):
+//   89: 73 + 75   (SA/CAN vs GER/PAR)
+//   90: 78 + 84   (FRA/SWE vs POR/CRO)
+//   91: 76 + 83   (NED/MAR vs SPA/AUT)
+//   92: 82 + 81   (USA/BIH vs BEL/SEN)
+//   93: 79 + 80   (MEX/ECU vs ENG/COD)
+//   94: 74 + 77   (BRA/JPN vs CIV/NOR)
+//   95: 86 + 88   (AUS/EGY vs COL/GHA)
+//   96: 85 + 87   (SUI/ALG vs ARG/CPV)
+const R32_NUMBERS = [
+  73, 75, 78, 84, 76, 83, 82, 81, 79, 80, 74, 77, 86, 88, 85, 87,
+];
 const R16_NUMBERS = Array.from({ length: 8 }, (_, i) => 89 + i);
 const QF_NUMBERS = [97, 98, 99, 100];
 const SF_NUMBERS = [101, 102];
