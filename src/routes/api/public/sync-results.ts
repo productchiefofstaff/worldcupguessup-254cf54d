@@ -437,15 +437,15 @@ type FeederRule = {
   away: { from: number; pick: FeederPick };
 };
 const KNOCKOUT_FEEDERS: Record<number, FeederRule> = {
-  // Round of 16 — pairings mirror the BBC bracket (matched by kickoff slot).
-  89: { home: { from: 73, pick: "winner" }, away: { from: 75, pick: "winner" } },
-  90: { home: { from: 78, pick: "winner" }, away: { from: 84, pick: "winner" } },
-  91: { home: { from: 76, pick: "winner" }, away: { from: 83, pick: "winner" } },
+  // Round of 16 — pairings mirror the requested BBC top-to-bottom bracket.
+  89: { home: { from: 75, pick: "winner" }, away: { from: 78, pick: "winner" } },
+  90: { home: { from: 73, pick: "winner" }, away: { from: 76, pick: "winner" } },
+  91: { home: { from: 84, pick: "winner" }, away: { from: 83, pick: "winner" } },
   92: { home: { from: 82, pick: "winner" }, away: { from: 81, pick: "winner" } },
-  93: { home: { from: 79, pick: "winner" }, away: { from: 80, pick: "winner" } },
-  94: { home: { from: 74, pick: "winner" }, away: { from: 77, pick: "winner" } },
-  95: { home: { from: 86, pick: "winner" }, away: { from: 88, pick: "winner" } },
-  96: { home: { from: 85, pick: "winner" }, away: { from: 87, pick: "winner" } },
+  93: { home: { from: 74, pick: "winner" }, away: { from: 77, pick: "winner" } },
+  94: { home: { from: 79, pick: "winner" }, away: { from: 80, pick: "winner" } },
+  95: { home: { from: 87, pick: "winner" }, away: { from: 86, pick: "winner" } },
+  96: { home: { from: 85, pick: "winner" }, away: { from: 88, pick: "winner" } },
   // Quarter-finals
   97: { home: { from: 89, pick: "winner" }, away: { from: 90, pick: "winner" } },
   98: { home: { from: 91, pick: "winner" }, away: { from: 92, pick: "winner" } },
