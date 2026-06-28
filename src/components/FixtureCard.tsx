@@ -810,7 +810,7 @@ export function FixtureCard({
                         Your pick <span className="text-ink font-extrabold">{prediction.home_score}-{prediction.away_score}</span>
                       </span>
                     )}
-                    {prediction && pts !== null && !hideScore && (
+                    {prediction && pts !== null && !hideScore && !isExtraTime && (
                       <span
                         className={
                           "px-1.5 py-0.5 rounded-sm " +
