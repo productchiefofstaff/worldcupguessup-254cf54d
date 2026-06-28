@@ -42,7 +42,7 @@ function GameRow({ game }: { game: LuckGameDetail }) {
     <li className="border-t border-border/60 px-3 py-2 text-xs">
       <div className="flex items-baseline justify-between gap-2">
         <div className="font-semibold text-ink truncate">
-          {game.team_home} {game.ft_home}–{game.ft_away} {game.team_away}
+          {flagFor(game.team_home)} {game.ft_home}–{game.ft_away} {flagFor(game.team_away)}
         </div>
         <div
           className={`shrink-0 font-bold tabular-nums ${gained ? "text-success" : "text-destructive"}`}
