@@ -183,20 +183,38 @@ function PointsOverTime() {
 
   const chartData = React.useMemo(() => {
     if (!data) return [];
-    return data.points.map((p) => ({
-      ...p,
-      label: new Date(p.date as string).toLocaleDateString(undefined, {
-        day: "numeric",
-        month: "short",
-      }),
-    }));
+    const ids = data.players.map((pl) => pl.user_id);
+    return data.points.map((p) => {
+      const scored = ids.map((id) => ({ id, pts: Number((p as any)[id] ?? 0) }));
+      const sorted = [...scored].sort((a, b) => b.pts - a.pts);
+      const rankMap: Record<string, number> = {};
+      let lastPts = Number.NaN;
+      let lastRank = 0;
+      sorted.forEach((s, i) => {
+        if (s.pts !== lastPts) {
+          lastRank = i + 1;
+          lastPts = s.pts;
+        }
+        rankMap[s.id] = lastRank;
+      });
+      const row: Record<string, any> = {
+        label: new Date(p.date as string).toLocaleDateString(undefined, {
+          day: "numeric",
+          month: "short",
+        }),
+      };
+      ids.forEach((id) => {
+        row[id] = rankMap[id];
+      });
+      return row;
+    });
   }, [data]);
 
   return (
     <section className="mt-6">
       <h2 className="text-lg sm:text-xl font-extrabold tracking-tight text-ink mb-2 flex items-center gap-2">
         <TrendingUp className="h-5 w-5 text-primary" />
-        Points Over Time
+        League Position Over Time
       </h2>
       <div className="bg-card border border-border rounded-xl p-3">
         {isLoading && (
@@ -217,6 +235,9 @@ function PointsOverTime() {
                   tick={{ fontSize: 10, fill: "hsl(var(--muted-foreground))" }}
                   width={32}
                   allowDecimals={false}
+                  reversed
+                  domain={[1, data.players.length]}
+                  ticks={Array.from({ length: data.players.length }, (_, i) => i + 1)}
                 />
                 <Tooltip
                   contentStyle={{
