@@ -146,6 +146,26 @@ function isPlaceholderTeam(s: string | null | undefined): boolean {
   );
 }
 
+// Guard against duplicates: if a real team name already appears in any other
+// knockout fixture (R32 onwards), don't fill it into a new placeholder slot.
+// Prevents ESPN's closest-in-time placeholder fallback from cloning a team
+// across two upcoming knockout fixtures.
+function teamAlreadyInKnockout(
+  fixtures: Array<{ id: string; match_number: number; team_home: string; team_away: string }>,
+  team: string,
+  excludeFixtureId: string,
+): boolean {
+  const t = norm(team);
+  if (!t) return false;
+  return fixtures.some(
+    (f) =>
+      f.id !== excludeFixtureId &&
+      f.match_number >= 73 &&
+      f.match_number <= 104 &&
+      (norm(f.team_home) === t || norm(f.team_away) === t),
+  );
+}
+
 function parseEspnScoreboard(data: EspnScoreboard): SourceMatch[] {
   const fallbackStage = data.leagues?.[0]?.season?.type?.name ?? null;
   return (data.events ?? []).flatMap((event) => {
@@ -338,14 +358,16 @@ export const Route = createFileRoute("/api/public/sync-results")({
           if (
             isPlaceholderTeam(fixture.team_home) &&
             m.team_home &&
-            !isPlaceholderTeam(m.team_home)
+            !isPlaceholderTeam(m.team_home) &&
+            !teamAlreadyInKnockout(fixtures, m.team_home, fixture.id)
           ) {
             patch.team_home = m.team_home;
           }
           if (
             isPlaceholderTeam(fixture.team_away) &&
             m.team_away &&
-            !isPlaceholderTeam(m.team_away)
+            !isPlaceholderTeam(m.team_away) &&
+            !teamAlreadyInKnockout(fixtures, m.team_away, fixture.id)
           ) {
             patch.team_away = m.team_away;
           }
