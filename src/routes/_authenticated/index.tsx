@@ -14,6 +14,7 @@ import {
 } from "@/components/ui/dialog";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Lightbulb, CalendarDays, Info } from "lucide-react";
+import { KnockoutBracket } from "@/components/KnockoutBracket";
 
 const WHATS_NEW_KEY = "wcg-whats-new-dismissed-v2-lock";
 
@@ -56,13 +57,15 @@ function dayKey(iso: string) {
   return `${d.getFullYear()}-${d.getMonth()}-${d.getDate()}`;
 }
 
-const TABS = ["Upcoming", "Completed"] as const;
+const TABS = ["Upcoming", "Completed", "Knockout Path"] as const;
 const FIXTURES_TAB_KEY = "wcg-fixtures-tab";
 
 function loadTab(): (typeof TABS)[number] {
   try {
     const v = localStorage.getItem(FIXTURES_TAB_KEY);
-    return v === "Completed" ? "Completed" : "Upcoming";
+    if (v === "Completed") return "Completed";
+    if (v === "Knockout Path") return "Knockout Path";
+    return "Upcoming";
   } catch {
     return "Upcoming";
   }
@@ -162,6 +165,11 @@ function FixturesPage() {
     });
   }, [fixturesQ.data, tab]);
 
+  const knockoutFixtures = useMemo(
+    () => (fixturesQ.data ?? []).filter((f) => f.match_number >= 73 && f.match_number <= 104),
+    [fixturesQ.data],
+  );
+
   const grouped = useMemo(() => {
     const map = new Map<string, Fixture[]>();
     filtered.forEach((f) => {
@@ -216,7 +224,11 @@ function FixturesPage() {
       )}
       {fixturesQ.error && <p className="text-sm text-destructive">Failed to load fixtures.</p>}
 
-      {!fixturesQ.isLoading && !predsQ.isLoading && (
+      {!fixturesQ.isLoading && !predsQ.isLoading && tab === "Knockout Path" && (
+        <KnockoutBracket fixtures={knockoutFixtures} />
+      )}
+
+      {!fixturesQ.isLoading && !predsQ.isLoading && tab !== "Knockout Path" && (
       <div className="space-y-6">
         {grouped.map(([k, fixtures]) => (
           <section key={k}>
