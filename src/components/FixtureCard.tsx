@@ -766,7 +766,7 @@ export function FixtureCard({
                     />
                   </label>
                 ) : (
-                  <span className="text-xs text-muted-foreground">Enter your prediction</span>
+                  <span className="text-xs text-muted-foreground">Enter your full-time prediction</span>
                 )}
                 {!userLocked && (
                   <div className="flex items-center gap-2">
