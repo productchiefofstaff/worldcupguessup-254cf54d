@@ -62,6 +62,7 @@ type ScoringPlay = {
 
 type EspnSummary = {
   scoringPlays?: ScoringPlay[];
+  keyEvents?: ScoringPlay[];
   header?: {
     competitions?: Array<{
       competitors?: Array<{ id?: string; homeAway?: string }>;
@@ -113,8 +114,10 @@ function minuteFromPlay(play: ScoringPlay): { minute: number; display: string } 
   // period.number = 1 (first half), 2 (second half), 3 (ET first half),
   // 4 (ET second half), 5 (penalty shootout).
   const period = play.period?.number ?? 0;
-  // displayValue is the most reliable representation ("45+2'", "90+5'", "112'").
-  const m = /^(\d+)(?:\+(\d+))?/.exec(display);
+  // displayValue is the most reliable representation. ESPN formats vary:
+  // "7'", "45'+2'", "45+2'", "90'+4'", "112'". Strip apostrophes before parsing.
+  const cleaned = display.replace(/'/g, "");
+  const m = /^(\d+)(?:\+(\d+))?/.exec(cleaned);
   if (m) {
     const base = Number(m[1]);
     const added = m[2] ? Number(m[2]) : 0;
@@ -133,7 +136,14 @@ function minuteFromPlay(play: ScoringPlay): { minute: number; display: string } 
   return null;
 }
 
-function isGoalPlay(play: ScoringPlay): boolean {
+function isGoalPlay(play: ScoringPlay & { scoringPlay?: boolean; shootout?: boolean }): boolean {
+  if (play.shootout) return false;
+  if (play.scoringPlay === true) {
+    const t = (play.type?.text ?? "").toLowerCase();
+    // Exclude shootout entries even if scoringPlay flagged.
+    if (t.includes("shootout")) return false;
+    return true;
+  }
   const t = (play.type?.text ?? play.type?.abbreviation ?? "").toLowerCase();
   if (t.includes("goal")) return true;
   if (t.includes("penalty - scored")) return true;
@@ -193,7 +203,11 @@ export const Route = createFileRoute("/api/public/hooks/sync-fixture-goals")({
               continue;
             }
             const summary = (await sumRes.json()) as EspnSummary;
-            const plays = (summary.scoringPlays ?? []).filter(isGoalPlay);
+            const rawPlays =
+              (summary.scoringPlays && summary.scoringPlays.length > 0
+                ? summary.scoringPlays
+                : summary.keyEvents) ?? [];
+            const plays = rawPlays.filter(isGoalPlay);
 
             // Map ESPN team id → home/away
             const comp = summary.header?.competitions?.[0];
