@@ -130,7 +130,15 @@ function isPlaceholderTeam(s: string | null | undefined): boolean {
     u.includes("TBD") ||
     u.startsWith("WINNER ") ||
     u.startsWith("RUNNER") ||
-    u.startsWith("LOSER ")
+    u.startsWith("LOSER ") ||
+    // FIFA-style knockout slot names ESPN publishes before standings settle:
+    //   "Group F Winner", "Group F 2nd Place",
+    //   "Third Place Group A/B/C/D/F",
+    //   "Round of 32 1 Winner", "R16 Match 5 TBD", etc.
+    /^GROUP [A-Z] (WINNER|2ND PLACE|RUNNER-UP)$/.test(u) ||
+    u.startsWith("THIRD PLACE GROUP") ||
+    /^ROUND OF 32 \d+ WINNER$/.test(u) ||
+    /^ROUND OF 16 \d+ WINNER$/.test(u)
   );
 }
 
