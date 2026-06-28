@@ -33,6 +33,9 @@ export type Fixture = {
   /** Penalty shootout score (only when decided_by === "PENS"). */
   pens_home?: number | null;
   pens_away?: number | null;
+  /** Extra-time score (knockout mock / future field). */
+  home_score_aet?: number | null;
+  away_score_aet?: number | null;
 };
 
 export type Prediction = {
