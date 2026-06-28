@@ -380,6 +380,29 @@ export function FixtureCard({
 
   const locked = new Date(fixture.kickoff_at).getTime() <= now;
   const hasResult = fixture.home_score !== null && fixture.away_score !== null;
+
+  // --- MOCK: temporary demo data so we can preview the AET / penalties UI
+  // before any knockout matches are actually played. Remove once real
+  // fields are populated by the sync job.
+  let decidedBy = fixture.decided_by ?? null;
+  let winnerTeam = fixture.winner_team ?? null;
+  let pensHome = fixture.pens_home ?? null;
+  let pensAway = fixture.pens_away ?? null;
+  if (hasResult && !decidedBy) {
+    if (fixture.match_number === 71) {
+      // Algeria 3-3 Austria → Algeria win on pens 5-4 (mock)
+      decidedBy = "PENS";
+      winnerTeam = fixture.team_home;
+      pensHome = 5;
+      pensAway = 4;
+    } else if (fixture.match_number === 69) {
+      // Colombia 0-0 Portugal → Portugal win AET (mock)
+      decidedBy = "AET";
+      winnerTeam = fixture.team_away;
+    }
+  }
+  const showDecidedRow = hasResult && decidedBy && winnerTeam;
+
   const SPOILER_MS = 12 * 60 * 60 * 1000;
   // We don't store an exact finish time; approximate it as kickoff + 2h.
   const approxFinishTs = new Date(fixture.kickoff_at).getTime() + 2 * 60 * 60 * 1000;
