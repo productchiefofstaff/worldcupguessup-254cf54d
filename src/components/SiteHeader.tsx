@@ -3,7 +3,7 @@ import { useAuth } from "@/hooks/use-auth";
 import { useQuery } from "@tanstack/react-query";
 import { db } from "@/lib/db";
 import { useEffect, useState } from "react";
-import { LogOut, CalendarDays, Trophy, ClipboardList, Shield, Dices, Table2 } from "lucide-react";
+import { LogOut, CalendarDays, Trophy, ClipboardList, Shield, Dices } from "lucide-react";
 
 export function SiteHeader() {
   const [mounted, setMounted] = useState(false);
@@ -72,14 +72,6 @@ export function SiteHeader() {
           >
             <Dices className="h-4 w-4" />
             LuckBox
-          </Link>
-          <Link
-            to="/luckbox-adjusted"
-            className="inline-flex items-center gap-1.5 px-2 py-1 rounded-md text-primary-foreground/80 hover:text-primary-foreground hover:bg-white/5"
-            activeProps={{ className: "inline-flex items-center gap-1.5 px-2 py-1 rounded-md bg-primary/15 text-primary" }}
-          >
-            <Table2 className="h-4 w-4" />
-            Adjusted
           </Link>
           {isAdmin && (
             <Link
