@@ -402,6 +402,20 @@ export const Route = createFileRoute("/api/public/sync-results")({
           details.push({ match_number: fixture.match_number, patch });
         }
 
+        // Knockout progression: winners of each completed knockout match flow
+        // into the next round's slot. Semi-final losers flow into the
+        // 3rd-place play-off. This runs every sync so any newly settled match
+        // updates downstream fixtures immediately.
+        try {
+          const advanced = await advanceKnockoutBracket(supabaseAdmin);
+          if (advanced.length) {
+            updated += advanced.length;
+            details.push({ advanced });
+          }
+        } catch (e) {
+          console.warn("[sync-results] knockout advance failed", e);
+        }
+
         return Response.json({ ok: true, parsed: matches.length, updated, details });
       },
 
@@ -413,3 +427,104 @@ export const Route = createFileRoute("/api/public/sync-results")({
     },
   },
 });
+
+// Feeder map: each downstream fixture is filled from two upstream matches.
+// `from`: [homeFeederMatchNumber, awayFeederMatchNumber]
+// `pick`: "winner" (default) or "loser" — used for the 3rd-place play-off.
+type FeederPick = "winner" | "loser";
+type FeederRule = {
+  home: { from: number; pick: FeederPick };
+  away: { from: number; pick: FeederPick };
+};
+const KNOCKOUT_FEEDERS: Record<number, FeederRule> = {
+  // Round of 16 — pairings mirror the published FIFA bracket.
+  89: { home: { from: 73, pick: "winner" }, away: { from: 75, pick: "winner" } },
+  90: { home: { from: 74, pick: "winner" }, away: { from: 77, pick: "winner" } },
+  91: { home: { from: 76, pick: "winner" }, away: { from: 78, pick: "winner" } },
+  92: { home: { from: 79, pick: "winner" }, away: { from: 80, pick: "winner" } },
+  93: { home: { from: 81, pick: "winner" }, away: { from: 83, pick: "winner" } },
+  94: { home: { from: 82, pick: "winner" }, away: { from: 85, pick: "winner" } },
+  95: { home: { from: 84, pick: "winner" }, away: { from: 86, pick: "winner" } },
+  96: { home: { from: 87, pick: "winner" }, away: { from: 88, pick: "winner" } },
+  // Quarter-finals
+  97: { home: { from: 89, pick: "winner" }, away: { from: 90, pick: "winner" } },
+  98: { home: { from: 91, pick: "winner" }, away: { from: 92, pick: "winner" } },
+  99: { home: { from: 93, pick: "winner" }, away: { from: 94, pick: "winner" } },
+  100: { home: { from: 95, pick: "winner" }, away: { from: 96, pick: "winner" } },
+  // Semi-finals
+  101: { home: { from: 97, pick: "winner" }, away: { from: 98, pick: "winner" } },
+  102: { home: { from: 99, pick: "winner" }, away: { from: 100, pick: "winner" } },
+  // 3rd-place play-off (losers of the semi-finals)
+  103: { home: { from: 101, pick: "loser" }, away: { from: 102, pick: "loser" } },
+  // Final (winners of the semi-finals)
+  104: { home: { from: 101, pick: "winner" }, away: { from: 102, pick: "winner" } },
+};
+
+type AdvanceFixture = {
+  id: string;
+  match_number: number;
+  team_home: string;
+  team_away: string;
+  home_score: number | null;
+  away_score: number | null;
+};
+
+function pickTeam(f: AdvanceFixture, pick: FeederPick): string | null {
+  if (f.home_score === null || f.away_score === null) return null;
+  if (f.home_score === f.away_score) return null; // Draw — winner unresolved (penalties not modelled)
+  const homeWon = f.home_score > f.away_score;
+  if (pick === "winner") return homeWon ? f.team_home : f.team_away;
+  return homeWon ? f.team_away : f.team_home;
+}
+
+async function advanceKnockoutBracket(
+  supabaseAdmin: typeof import("@/integrations/supabase/client.server")["supabaseAdmin"],
+): Promise<Array<{ match_number: number; team_home?: string; team_away?: string }>> {
+  const { data, error } = await supabaseAdmin
+    .from("fixtures")
+    .select("id, match_number, team_home, team_away, home_score, away_score")
+    .gte("match_number", 73)
+    .lte("match_number", 104);
+  if (error || !data) return [];
+  const byNum = new Map<number, AdvanceFixture>();
+  data.forEach((f) => byNum.set(f.match_number, f as AdvanceFixture));
+
+  const results: Array<{ match_number: number; team_home?: string; team_away?: string }> = [];
+  // Iterate rounds in order so a freshly-filled R16 winner can immediately
+  // propagate into a QF in the same pass (only matters at round boundaries).
+  const order = Object.keys(KNOCKOUT_FEEDERS)
+    .map(Number)
+    .sort((a, b) => a - b);
+  for (const num of order) {
+    const target = byNum.get(num);
+    const rule = KNOCKOUT_FEEDERS[num];
+    if (!target) continue;
+    const patch: { team_home?: string; team_away?: string } = {};
+
+    const homeFeeder = byNum.get(rule.home.from);
+    if (homeFeeder && isPlaceholderTeam(target.team_home)) {
+      const t = pickTeam(homeFeeder, rule.home.pick);
+      if (t) patch.team_home = t;
+    }
+    const awayFeeder = byNum.get(rule.away.from);
+    if (awayFeeder && isPlaceholderTeam(target.team_away)) {
+      const t = pickTeam(awayFeeder, rule.away.pick);
+      if (t) patch.team_away = t;
+    }
+
+    if (Object.keys(patch).length === 0) continue;
+    const { error: upErr } = await supabaseAdmin
+      .from("fixtures")
+      .update(patch)
+      .eq("id", target.id);
+    if (upErr) {
+      console.warn(`[advance] update ${num} failed`, upErr.message);
+      continue;
+    }
+    // Update local cache so downstream rounds see the new team in this pass.
+    if (patch.team_home) target.team_home = patch.team_home;
+    if (patch.team_away) target.team_away = patch.team_away;
+    results.push({ match_number: num, ...patch });
+  }
+  return results;
+}
