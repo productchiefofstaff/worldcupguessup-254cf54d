@@ -623,7 +623,7 @@ export function FixtureCard({
     <div
       className={
         "bg-card rounded-md overflow-hidden flex flex-col h-full " +
-        (isLive
+        (isLive || isExtraTime
           ? "border-2 border-destructive"
           : "border border-border")
       }
@@ -733,6 +733,18 @@ export function FixtureCard({
                   , {aetHome}–{aetAway} AET
                 </span>
               )}
+            </span>
+          </div>
+        )}
+
+        {isExtraTime && (
+          <div className="mt-2 flex items-center justify-center gap-2 text-xs font-semibold">
+            <span className="inline-flex items-center gap-1 text-destructive">
+              <Radio className="h-3 w-3" />
+              <span>{extraTimeLabel ? `Live · ${extraTimeLabel}` : "Live"}</span>
+            </span>
+            <span className="text-muted-foreground">
+              ET <span className="text-ink font-extrabold tabular-nums">{fixture.live_home_score}–{fixture.live_away_score}</span>
             </span>
           </div>
         )}
