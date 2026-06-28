@@ -4,7 +4,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { getLuckBox, type LuckPlayer, type LuckGameDetail } from "@/lib/luckbox.functions";
 import { useAuth } from "@/hooks/use-auth";
-import { Dices, TrendingUp, TrendingDown, ChevronDown, ChevronUp, Info } from "lucide-react";
+import { Dices, TrendingUp, TrendingDown, ChevronDown, ChevronUp, Info, Table2 } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -12,6 +12,14 @@ import {
   DialogTitle,
   DialogDescription,
 } from "@/components/ui/dialog";
+import {
+  Table,
+  TableHeader,
+  TableBody,
+  TableRow,
+  TableHead,
+  TableCell,
+} from "@/components/ui/table";
 
 export const Route = createFileRoute("/_authenticated/luckbox")({
   head: () => ({
