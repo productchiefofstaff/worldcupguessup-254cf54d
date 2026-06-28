@@ -651,7 +651,7 @@ export function FixtureCard({
               max={30}
               value={
                 hasResult
-                  ? (fixture.home_score as number)
+                  ? (dispHome as number)
                   : isLive
                     ? (fixture.live_home_score as number)
                     : !editable
@@ -677,7 +677,7 @@ export function FixtureCard({
               max={30}
               value={
                 hasResult
-                  ? (fixture.away_score as number)
+                  ? (dispAway as number)
                   : isLive
                     ? (fixture.live_away_score as number)
                     : !editable
