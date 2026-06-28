@@ -225,19 +225,22 @@ function PointsOverTime() {
                   }}
                 />
                 <Legend wrapperStyle={{ fontSize: 11 }} iconType="circle" />
-                {data.players.map((p, i) => (
-                  <Line
-                    key={p.user_id}
-                    type="monotone"
-                    dataKey={p.user_id}
-                    name={p.name}
-                    stroke={LINE_COLORS[i % LINE_COLORS.length]}
-                    strokeWidth={2}
-                    strokeDasharray={i % 2 === 0 ? undefined : "4 3"}
-                    dot={false}
-                    activeDot={{ r: 4 }}
-                  />
-                ))}
+                {data.players.map((p, i) => {
+                  const dashes = [undefined, "4 3", "2 2", "6 2 2 2"];
+                  return (
+                    <Line
+                      key={p.user_id}
+                      type="monotone"
+                      dataKey={p.user_id}
+                      name={p.name}
+                      stroke={LINE_COLORS[i % LINE_COLORS.length]}
+                      strokeWidth={2}
+                      strokeDasharray={dashes[i % dashes.length]}
+                      dot={false}
+                      activeDot={{ r: 4 }}
+                    />
+                  );
+                })}
               </LineChart>
             </ResponsiveContainer>
           </div>
