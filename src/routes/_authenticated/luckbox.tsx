@@ -155,6 +155,101 @@ function Stat({
   );
 }
 
+function AdjustedTableSection({ players }: { players: LuckPlayer[] }) {
+  const { user } = useAuth();
+
+  const rows = React.useMemo(() => {
+    const out = players.map((p) => {
+      const actual = p.actual_points ?? 0;
+      const adjusted = actual - p.net;
+      const adjustment = -p.net;
+      return {
+        user_id: p.user_id,
+        name: p.name,
+        actual,
+        adjusted,
+        adjustment,
+        isMe: user?.id === p.user_id,
+      };
+    });
+    out.sort(
+      (a, b) =>
+        b.adjusted - a.adjusted ||
+        b.actual - a.actual ||
+        a.name.localeCompare(b.name),
+    );
+    return out;
+  }, [players, user?.id]);
+
+  return (
+    <section className="mt-8">
+      <h2 className="text-xl sm:text-2xl font-extrabold tracking-tight text-ink flex items-center gap-2 mb-3">
+        <Table2 className="h-5 w-5 text-primary" />
+        The LuckBox Adjusted Table
+      </h2>
+      <p className="text-xs text-muted-foreground mb-3">
+        What the leaderboard would look like if injury-time goals were ignored.
+      </p>
+      <div className="border border-border rounded-xl overflow-hidden bg-card">
+        <Table>
+          <TableHeader>
+            <TableRow className="hover:bg-transparent">
+              <TableHead className="w-12 text-center">#</TableHead>
+              <TableHead>Name</TableHead>
+              <TableHead className="text-right">Adjusted Score</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {rows.map((r, i) => {
+              const adjClass =
+                r.adjustment > 0
+                  ? "text-success"
+                  : r.adjustment < 0
+                    ? "text-destructive"
+                    : "text-muted-foreground";
+              return (
+                <TableRow
+                  key={r.user_id}
+                  className={r.isMe ? "bg-primary/5" : undefined}
+                >
+                  <TableCell className="text-center text-muted-foreground font-medium tabular-nums">
+                    {i + 1}
+                  </TableCell>
+                  <TableCell className="font-medium text-ink">
+                    {r.name}
+                  </TableCell>
+                  <TableCell className="text-right">
+                    <span
+                      className="text-xl tabular-nums text-ink"
+                      style={BEBAS}
+                    >
+                      {r.adjusted}
+                    </span>
+                    <span className={`ml-2 text-sm font-semibold tabular-nums ${adjClass}`}>
+                      ({r.adjustment > 0 ? "+" : ""}
+                      {r.adjustment})
+                    </span>
+                  </TableCell>
+                </TableRow>
+              );
+            })}
+            {rows.length === 0 && (
+              <TableRow>
+                <TableCell
+                  colSpan={3}
+                  className="text-center text-sm text-muted-foreground py-6"
+                >
+                  No players yet.
+                </TableCell>
+              </TableRow>
+            )}
+          </TableBody>
+        </Table>
+      </div>
+    </section>
+  );
+}
+
 function LuckBoxPage() {
   const { user } = useAuth();
   const fetchLuck = useServerFn(getLuckBox);
