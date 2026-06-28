@@ -65,7 +65,7 @@ function GameRow({ game }: { game: LuckGameDetail }) {
           return (
             <li key={i} className="text-[11px] text-muted-foreground">
               <span className="font-semibold text-ink/80">{g.minute_display}</span>{" "}
-              {team}
+              {flagFor(team)}
               {g.scorer ? ` — ${g.scorer}` : ""}
             </li>
           );
