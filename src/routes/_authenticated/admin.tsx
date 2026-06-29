@@ -6,6 +6,7 @@ import {
   setUserLeaderboardVisibility,
   deleteUser,
   upsertPredictionForUser,
+  setPredictionLock,
 } from "@/lib/admin-fixtures.functions";
 import { db as supabase } from "@/lib/db";
 import { useAuth } from "@/hooks/use-auth";
@@ -28,6 +29,7 @@ type Row = {
   away_score: number;
   created_at: string;
   updated_at: string;
+  locked_at: string | null;
 };
 type Fixture = {
   id: string;
@@ -49,6 +51,7 @@ function AdminPage() {
   const setVisibilityFn = useServerFn(setUserLeaderboardVisibility);
   const deleteUserFn = useServerFn(deleteUser);
   const upsertPredFn = useServerFn(upsertPredictionForUser);
+  const setLockFn = useServerFn(setPredictionLock);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editHome, setEditHome] = useState<string>("");
   const [editAway, setEditAway] = useState<string>("");
@@ -106,6 +109,14 @@ function AdminPage() {
     },
   });
 
+  const lockMut = useMutation({
+    mutationFn: (vars: { predictionId: string; locked: boolean }) =>
+      setLockFn({ data: vars }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["all-predictions"] });
+    },
+  });
+
   const roleQ = useQuery({
     queryKey: ["my-role", user?.id],
     enabled: !!user,
@@ -125,7 +136,7 @@ function AdminPage() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("predictions")
-        .select("id, user_id, fixture_id, home_score, away_score, created_at, updated_at")
+        .select("id, user_id, fixture_id, home_score, away_score, created_at, updated_at, locked_at")
         .order("updated_at", { ascending: false });
       if (error) throw error;
       return (data ?? []) as Row[];
@@ -427,6 +438,7 @@ function AdminPage() {
               <th className="text-left px-3 py-2">Match</th>
               <th className="text-right px-3 py-2">Pick</th>
               <th className="text-right px-3 py-2">Result</th>
+              <th className="text-center px-3 py-2">Locked</th>
               <th className="text-right px-3 py-2 whitespace-nowrap">Updated</th>
               <th className="text-right px-3 py-2">Edit</th>
             </tr>
@@ -477,6 +489,50 @@ function AdminPage() {
                   </td>
                   <td className="px-3 py-2 text-right text-muted-foreground">
                     {hasResult ? `${f!.home_score} – ${f!.away_score}` : "—"}
+                  </td>
+                  <td className="px-3 py-2 text-center">
+                    {(() => {
+                      const kickoffPassed = f
+                        ? new Date(f.kickoff_at).getTime() <= now
+                        : false;
+                      const userLocked = !!r.locked_at;
+                      const on = kickoffPassed || userLocked;
+                      const pending =
+                        lockMut.isPending &&
+                        lockMut.variables?.predictionId === r.id;
+                      const disabled = kickoffPassed || pending;
+                      return (
+                        <button
+                          role="switch"
+                          aria-checked={on}
+                          disabled={disabled}
+                          onClick={() =>
+                            lockMut.mutate({
+                              predictionId: r.id,
+                              locked: !userLocked,
+                            })
+                          }
+                          className={
+                            "relative inline-flex h-5 w-9 items-center rounded-full transition-colors disabled:opacity-50 disabled:cursor-not-allowed " +
+                            (on ? "bg-primary" : "bg-muted")
+                          }
+                          title={
+                            kickoffPassed
+                              ? "Locked – match has kicked off"
+                              : userLocked
+                                ? "Locked by user – click to unlock"
+                                : "Unlocked"
+                          }
+                        >
+                          <span
+                            className={
+                              "inline-block h-4 w-4 transform rounded-full bg-white transition-transform " +
+                              (on ? "translate-x-4" : "translate-x-0.5")
+                            }
+                          />
+                        </button>
+                      );
+                    })()}
                   </td>
                   <td className="px-3 py-2 text-right text-[11px] text-muted-foreground whitespace-nowrap">
                     {new Date(r.updated_at).toLocaleString(undefined, {
@@ -539,7 +595,7 @@ function AdminPage() {
             })}
             {!predsQ.isLoading && rows.length === 0 && (
               <tr>
-                <td colSpan={6} className="p-6 text-center text-sm text-muted-foreground">
+                <td colSpan={7} className="p-6 text-center text-sm text-muted-foreground">
                   No predictions yet.
                 </td>
               </tr>
