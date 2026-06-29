@@ -496,39 +496,30 @@ function AdminPage() {
                         ? new Date(f.kickoff_at).getTime() <= now
                         : false;
                       const userLocked = !!r.locked_at;
-                      const on = kickoffPassed || userLocked;
+                      if (kickoffPassed) {
+                        return <span className="text-[11px] text-muted-foreground">—</span>;
+                      }
+                      if (!userLocked) {
+                        return <span className="text-[11px] text-muted-foreground">—</span>;
+                      }
                       const pending =
                         lockMut.isPending &&
                         lockMut.variables?.predictionId === r.id;
-                      const disabled = kickoffPassed || pending;
                       return (
                         <button
                           role="switch"
-                          aria-checked={on}
-                          disabled={disabled}
+                          aria-checked={true}
+                          disabled={pending}
                           onClick={() =>
-                            lockMut.mutate({
-                              predictionId: r.id,
-                              locked: !userLocked,
-                            })
+                            lockMut.mutate({ predictionId: r.id, locked: false })
                           }
                           className={
-                            "relative inline-flex h-5 w-9 items-center rounded-full transition-colors disabled:opacity-50 disabled:cursor-not-allowed " +
-                            (on ? "bg-primary" : "bg-muted")
+                            "relative inline-flex h-5 w-9 items-center rounded-full transition-colors bg-primary disabled:opacity-50"
                           }
-                          title={
-                            kickoffPassed
-                              ? "Locked – match has kicked off"
-                              : userLocked
-                                ? "Locked by user – click to unlock"
-                                : "Unlocked"
-                          }
+                          title="Locked early by user – click to unlock"
                         >
                           <span
-                            className={
-                              "inline-block h-4 w-4 transform rounded-full bg-white transition-transform " +
-                              (on ? "translate-x-4" : "translate-x-0.5")
-                            }
+                            className="inline-block h-4 w-4 transform rounded-full bg-white translate-x-4"
                           />
                         </button>
                       );
