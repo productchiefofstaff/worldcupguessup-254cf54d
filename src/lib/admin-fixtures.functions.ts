@@ -191,3 +191,33 @@ export const upsertPredictionForUser = createServerFn({ method: "POST" })
     }
     return { ok: true };
   });
+
+export const setPredictionLock = createServerFn({ method: "POST" })
+  .inputValidator((input: { predictionId: string; locked: boolean }) => {
+    if (!input || typeof input.predictionId !== "string") {
+      throw new Error("predictionId required");
+    }
+    if (typeof input.locked !== "boolean") {
+      throw new Error("locked must be boolean");
+    }
+    return input;
+  })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ data, context }) => {
+    const { data: isAdmin, error: roleErr } = await context.supabase.rpc(
+      "has_role",
+      { _user_id: context.userId, _role: "admin" },
+    );
+    if (roleErr) throw new Error(roleErr.message);
+    if (!isAdmin) throw new Error("Forbidden");
+
+    const { supabaseAdmin } = await import(
+      "@/integrations/supabase/client.server"
+    );
+    const { error } = await supabaseAdmin
+      .from("predictions")
+      .update({ locked_at: data.locked ? new Date().toISOString() : null })
+      .eq("id", data.predictionId);
+    if (error) throw new Error(error.message);
+    return { ok: true };
+  });
