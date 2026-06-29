@@ -214,17 +214,7 @@ function PointsOverTime() {
 
   const tickLabels = React.useMemo(() => {
     if (!chartData.length) return [];
-    const labels = chartData.map((r) => r.label as string);
-    const explicit: string[] = [];
-    labels.forEach((l, i) => {
-      if (i % 3 === 0) explicit.push(l);
-    });
-    const has26 = explicit.some((l) => l.startsWith("26"));
-    if (!has26) {
-      const l26 = labels.find((l) => l.startsWith("26"));
-      if (l26) explicit.push(l26);
-    }
-    return explicit;
+    return chartData.filter((_, i) => i % 3 === 0).map((r) => r.label as string);
   }, [chartData]);
 
   return (
