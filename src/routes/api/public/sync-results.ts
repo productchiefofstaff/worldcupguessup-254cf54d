@@ -27,6 +27,7 @@ type SourceMatch = {
   away_score?: number | null;
   stage?: string | null;
   status_label?: string | null;
+  status_text?: string | null;
   /** Penalty shootout score for the home side (if exposed by source). */
   home_pens?: number | null;
   away_pens?: number | null;
@@ -50,6 +51,7 @@ type EspnEvent = {
         detail?: string;
         shortDetail?: string;
         description?: string;
+        name?: string;
       };
     };
   }>;
@@ -177,6 +179,14 @@ function parseEspnScoreboard(data: EspnScoreboard): SourceMatch[] {
 
     const statusLabel =
       statusType?.shortDetail ?? statusType?.detail ?? statusType?.description ?? null;
+    const statusText = [
+      statusType?.shortDetail,
+      statusType?.detail,
+      statusType?.description,
+      statusType?.name,
+    ]
+      .filter(Boolean)
+      .join(" ");
     const completed = statusType?.completed === true || statusType?.state === "post";
 
     return [
@@ -185,6 +195,7 @@ function parseEspnScoreboard(data: EspnScoreboard): SourceMatch[] {
         team_home: home.team?.displayName ?? home.team?.abbreviation ?? null,
         team_away: away.team?.displayName ?? away.team?.abbreviation ?? null,
         status_label: statusLabel,
+        status_text: statusText,
         status: completed ? "finished" : statusType?.state === "in" ? "live" : "scheduled",
         // Parse scores whenever ESPN provides them — both for completed
         // matches (final score) and in-progress matches (live score).
@@ -385,6 +396,7 @@ export const Route = createFileRoute("/api/public/sync-results")({
           const alreadyHasScore =
             fixture.home_score !== null && fixture.away_score !== null;
           const ftLabel = (m.status_label ?? "").trim().toLowerCase();
+          const statusText = `${m.status_label ?? ""} ${m.status_text ?? ""}`.toLowerCase();
           // ESPN exposes a "FT" / "Full Time" label at the 90-min whistle
           // even when a knockout match continues into extra time. Treat any
           // of these as the moment to lock the 90-min score for prediction
@@ -401,12 +413,15 @@ export const Route = createFileRoute("/api/public/sync-results")({
             ftLabel === "aet" ||
             ftLabel === "after extra time" ||
             ftLabel === "ft (aet)" ||
-            ftLabel === "end et";
+            ftLabel === "end et" ||
+            /\b(aet|extra time|after extra time|status_final_aet)\b/.test(statusText);
           const labelIsPens =
             ftLabel === "pens" ||
             ftLabel === "penalties" ||
             ftLabel === "after penalties" ||
-            ftLabel === "ft (pens)";
+            ftLabel === "ft (pens)" ||
+            ftLabel === "ft-pens" ||
+            /\b(pens|penalties|after penalties|status_final_pen)\b/.test(statusText);
           const labelConfirmsFinished = labelIs90MinFinal || labelIsAet || labelIsPens;
           if (
             !alreadyHasScore &&
@@ -471,6 +486,15 @@ export const Route = createFileRoute("/api/public/sync-results")({
                     : fixture.team_away;
               }
             }
+            patch.live_home_score = null;
+            patch.live_away_score = null;
+            patch.live_status_label = null;
+            patch.live_updated_at = null;
+          }
+
+          // If ESPN says the match is finished, clear stale live state even
+          // when the result had already been locked earlier at 90 minutes.
+          if (m.status === "finished") {
             patch.live_home_score = null;
             patch.live_away_score = null;
             patch.live_status_label = null;
@@ -578,11 +602,18 @@ type AdvanceFixture = {
   team_away: string;
   home_score: number | null;
   away_score: number | null;
+  winner_team: string | null;
 };
 
 function pickTeam(f: AdvanceFixture, pick: FeederPick): string | null {
   if (f.home_score === null || f.away_score === null) return null;
-  if (f.home_score === f.away_score) return null; // Draw — winner unresolved (penalties not modelled)
+  if (f.home_score === f.away_score) {
+    if (!f.winner_team) return null;
+    if (pick === "winner") return f.winner_team;
+    if (norm(f.winner_team) === norm(f.team_home)) return f.team_away;
+    if (norm(f.winner_team) === norm(f.team_away)) return f.team_home;
+    return null;
+  }
   const homeWon = f.home_score > f.away_score;
   if (pick === "winner") return homeWon ? f.team_home : f.team_away;
   return homeWon ? f.team_away : f.team_home;
@@ -593,7 +624,7 @@ async function advanceKnockoutBracket(
 ): Promise<Array<{ match_number: number; team_home?: string; team_away?: string }>> {
   const { data, error } = await supabaseAdmin
     .from("fixtures")
-    .select("id, match_number, team_home, team_away, home_score, away_score")
+    .select("id, match_number, team_home, team_away, home_score, away_score, winner_team")
     .gte("match_number", 73)
     .lte("match_number", 104);
   if (error || !data) return [];

@@ -392,45 +392,24 @@ export function FixtureCard({
     fixture.live_away_score !== null && fixture.live_away_score !== undefined;
   const isExtraTime = hasResult && liveScorePresent && !fixture.decided_by;
 
-  // --- MOCK: temporary demo data so we can preview the AET / penalties UI
-  // before any knockout matches are actually played. Remove once real
-  // fields are populated by the sync job.
-  let decidedBy = fixture.decided_by ?? null;
-  let winnerTeam = fixture.winner_team ?? null;
-  let pensHome = fixture.pens_home ?? null;
-  let pensAway = fixture.pens_away ?? null;
-  let aetHome: number | null = fixture.home_score_aet ?? null;
-  let aetAway: number | null = fixture.away_score_aet ?? null;
-  let dispHome = fixture.home_score;
-  let dispAway = fixture.away_score;
-  if (hasResult && !decidedBy && import.meta.env.DEV) {
-    if (fixture.match_number === 71) {
-      // Algeria 1-1 Austria (FT) → 2-2 (AET) → Algeria win on pens 5-4 (mock)
-      decidedBy = "PENS";
-      winnerTeam = fixture.team_home;
-      dispHome = 1;
-      dispAway = 1;
-      aetHome = 2;
-      aetAway = 2;
-      pensHome = 5;
-      pensAway = 4;
-    } else if (fixture.match_number === 69) {
-      // Colombia 0-0 Portugal → Portugal win AET (mock)
-      decidedBy = "AET";
-      winnerTeam = fixture.team_away;
-    }
-  }
+  const decidedBy = fixture.decided_by ?? null;
+  const winnerTeam = fixture.winner_team ?? null;
+  const pensHome = fixture.pens_home ?? null;
+  const pensAway = fixture.pens_away ?? null;
+  const aetHome: number | null = fixture.home_score_aet ?? null;
+  const aetAway: number | null = fixture.away_score_aet ?? null;
+  const dispHome = fixture.home_score;
+  const dispAway = fixture.away_score;
   const showDecidedRow = hasResult && decidedBy && winnerTeam;
 
   const SPOILER_MS = 12 * 60 * 60 * 1000;
   // We don't store an exact finish time; approximate it as kickoff + 2h.
   const approxFinishTs = new Date(fixture.kickoff_at).getTime() + 2 * 60 * 60 * 1000;
   const inSpoilerWindow = hasResult && now - approxFinishTs < SPOILER_MS;
-  // TEMP TEST: force spoiler + perfect-score celebration for France vs Iraq, and reveal Algeria vs Austria mock
+  // TEMP TEST: force spoiler + perfect-score celebration for France vs Iraq.
   const isTestFixture =
     (/france/i.test(fixture.team_home + fixture.team_away) &&
-      /iraq/i.test(fixture.team_home + fixture.team_away)) ||
-    fixture.match_number === 71;
+      /iraq/i.test(fixture.team_home + fixture.team_away));
   const revealKey = `wcg-revealed-${fixture.id}`;
   const [revealed, setRevealed] = useState<boolean>(() => {
     try {
@@ -718,22 +697,25 @@ export function FixtureCard({
         </div>
 
         {showDecidedRow && !hideScore && (
-          <div className="mt-2 flex flex-col items-center gap-0.5">
-            <span className="text-xs font-semibold text-ink">
-              {winnerTeam} won{" "}
-              {decidedBy === "AET" ? (
-                <span className="font-bold">after extra time</span>
+          <div className="mt-2 flex flex-col items-center gap-0.5 text-xs font-semibold text-ink">
+            <span>
+              {winnerTeam} win{" "}
+              {decidedBy === "PENS" && pensHome !== null && pensAway !== null ? (
+                <span className="font-bold">{pensHome}–{pensAway} on pens</span>
+              ) : decidedBy === "AET" && aetHome !== null && aetAway !== null ? (
+                <span className="font-bold">{aetHome}–{aetAway} AET</span>
               ) : (
-                <>
-                  <span className="font-bold">{pensHome}–{pensAway} on penalties</span>
-                </>
-              )}
-              {aetHome !== null && aetAway !== null && (
-                <span className="ml-1 text-muted-foreground">
-                  , {aetHome}–{aetAway} AET
-                </span>
+                <span className="font-bold">after extra time</span>
               )}
             </span>
+            <span className="text-muted-foreground">
+              FT: {fixture.team_home} {dispHome}, {fixture.team_away} {dispAway}
+            </span>
+            {aetHome !== null && aetAway !== null && (
+              <span className="text-muted-foreground">
+                AET: {fixture.team_home} {aetHome}, {fixture.team_away} {aetAway}
+              </span>
+            )}
           </div>
         )}
 
