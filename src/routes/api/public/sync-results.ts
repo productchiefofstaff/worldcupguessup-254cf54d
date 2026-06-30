@@ -602,11 +602,18 @@ type AdvanceFixture = {
   team_away: string;
   home_score: number | null;
   away_score: number | null;
+  winner_team: string | null;
 };
 
 function pickTeam(f: AdvanceFixture, pick: FeederPick): string | null {
   if (f.home_score === null || f.away_score === null) return null;
-  if (f.home_score === f.away_score) return null; // Draw — winner unresolved (penalties not modelled)
+  if (f.home_score === f.away_score) {
+    if (!f.winner_team) return null;
+    if (pick === "winner") return f.winner_team;
+    if (norm(f.winner_team) === norm(f.team_home)) return f.team_away;
+    if (norm(f.winner_team) === norm(f.team_away)) return f.team_home;
+    return null;
+  }
   const homeWon = f.home_score > f.away_score;
   if (pick === "winner") return homeWon ? f.team_home : f.team_away;
   return homeWon ? f.team_away : f.team_home;
@@ -617,7 +624,7 @@ async function advanceKnockoutBracket(
 ): Promise<Array<{ match_number: number; team_home?: string; team_away?: string }>> {
   const { data, error } = await supabaseAdmin
     .from("fixtures")
-    .select("id, match_number, team_home, team_away, home_score, away_score")
+    .select("id, match_number, team_home, team_away, home_score, away_score, winner_team")
     .gte("match_number", 73)
     .lte("match_number", 104);
   if (error || !data) return [];
