@@ -718,22 +718,25 @@ export function FixtureCard({
         </div>
 
         {showDecidedRow && !hideScore && (
-          <div className="mt-2 flex flex-col items-center gap-0.5">
-            <span className="text-xs font-semibold text-ink">
-              {winnerTeam} won{" "}
-              {decidedBy === "AET" ? (
-                <span className="font-bold">after extra time</span>
+          <div className="mt-2 flex flex-col items-center gap-0.5 text-xs font-semibold text-ink">
+            <span>
+              {winnerTeam} win{" "}
+              {decidedBy === "PENS" && pensHome !== null && pensAway !== null ? (
+                <span className="font-bold">{pensHome}–{pensAway} on pens</span>
+              ) : decidedBy === "AET" && aetHome !== null && aetAway !== null ? (
+                <span className="font-bold">{aetHome}–{aetAway} AET</span>
               ) : (
-                <>
-                  <span className="font-bold">{pensHome}–{pensAway} on penalties</span>
-                </>
-              )}
-              {aetHome !== null && aetAway !== null && (
-                <span className="ml-1 text-muted-foreground">
-                  , {aetHome}–{aetAway} AET
-                </span>
+                <span className="font-bold">after extra time</span>
               )}
             </span>
+            <span className="text-muted-foreground">
+              FT: {fixture.team_home} {dispHome}, {fixture.team_away} {dispAway}
+            </span>
+            {aetHome !== null && aetAway !== null && (
+              <span className="text-muted-foreground">
+                AET: {fixture.team_home} {aetHome}, {fixture.team_away} {aetAway}
+              </span>
+            )}
           </div>
         )}
 
