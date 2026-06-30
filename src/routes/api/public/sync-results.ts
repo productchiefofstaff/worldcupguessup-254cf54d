@@ -27,6 +27,7 @@ type SourceMatch = {
   away_score?: number | null;
   stage?: string | null;
   status_label?: string | null;
+  status_text?: string | null;
   /** Penalty shootout score for the home side (if exposed by source). */
   home_pens?: number | null;
   away_pens?: number | null;
@@ -50,6 +51,7 @@ type EspnEvent = {
         detail?: string;
         shortDetail?: string;
         description?: string;
+        name?: string;
       };
     };
   }>;
@@ -177,6 +179,14 @@ function parseEspnScoreboard(data: EspnScoreboard): SourceMatch[] {
 
     const statusLabel =
       statusType?.shortDetail ?? statusType?.detail ?? statusType?.description ?? null;
+    const statusText = [
+      statusType?.shortDetail,
+      statusType?.detail,
+      statusType?.description,
+      statusType?.name,
+    ]
+      .filter(Boolean)
+      .join(" ");
     const completed = statusType?.completed === true || statusType?.state === "post";
 
     return [
@@ -185,6 +195,7 @@ function parseEspnScoreboard(data: EspnScoreboard): SourceMatch[] {
         team_home: home.team?.displayName ?? home.team?.abbreviation ?? null,
         team_away: away.team?.displayName ?? away.team?.abbreviation ?? null,
         status_label: statusLabel,
+        status_text: statusText,
         status: completed ? "finished" : statusType?.state === "in" ? "live" : "scheduled",
         // Parse scores whenever ESPN provides them — both for completed
         // matches (final score) and in-progress matches (live score).
