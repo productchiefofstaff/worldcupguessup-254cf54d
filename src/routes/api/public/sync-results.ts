@@ -396,6 +396,7 @@ export const Route = createFileRoute("/api/public/sync-results")({
           const alreadyHasScore =
             fixture.home_score !== null && fixture.away_score !== null;
           const ftLabel = (m.status_label ?? "").trim().toLowerCase();
+          const statusText = `${m.status_label ?? ""} ${m.status_text ?? ""}`.toLowerCase();
           // ESPN exposes a "FT" / "Full Time" label at the 90-min whistle
           // even when a knockout match continues into extra time. Treat any
           // of these as the moment to lock the 90-min score for prediction
@@ -412,12 +413,15 @@ export const Route = createFileRoute("/api/public/sync-results")({
             ftLabel === "aet" ||
             ftLabel === "after extra time" ||
             ftLabel === "ft (aet)" ||
-            ftLabel === "end et";
+            ftLabel === "end et" ||
+            /\b(aet|extra time|after extra time|status_final_aet)\b/.test(statusText);
           const labelIsPens =
             ftLabel === "pens" ||
             ftLabel === "penalties" ||
             ftLabel === "after penalties" ||
-            ftLabel === "ft (pens)";
+            ftLabel === "ft (pens)" ||
+            ftLabel === "ft-pens" ||
+            /\b(pens|penalties|after penalties|status_final_pen)\b/.test(statusText);
           const labelConfirmsFinished = labelIs90MinFinal || labelIsAet || labelIsPens;
           if (
             !alreadyHasScore &&
@@ -482,6 +486,15 @@ export const Route = createFileRoute("/api/public/sync-results")({
                     : fixture.team_away;
               }
             }
+            patch.live_home_score = null;
+            patch.live_away_score = null;
+            patch.live_status_label = null;
+            patch.live_updated_at = null;
+          }
+
+          // If ESPN says the match is finished, clear stale live state even
+          // when the result had already been locked earlier at 90 minutes.
+          if (m.status === "finished") {
             patch.live_home_score = null;
             patch.live_away_score = null;
             patch.live_status_label = null;
