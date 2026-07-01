@@ -259,55 +259,62 @@ function PointsOverTime() {
     <section className="mt-6">
       <Tabs defaultValue="delta">
         <TabsList className="grid w-full grid-cols-2 h-auto">
-          <TabsTrigger value="delta" className="text-xs">Delta from 1st</TabsTrigger>
-          <TabsTrigger value="position" className="text-xs">Position Over Time</TabsTrigger>
+          <TabsTrigger value="delta" className="text-xs gap-1.5">
+            <Triangle className="h-3.5 w-3.5" fill="currentColor" />
+            Delta from 1st place
+          </TabsTrigger>
+          <TabsTrigger value="position" className="text-xs gap-1.5">
+            <TrendingUp className="h-3.5 w-3.5 text-destructive" />
+            Position over time
+          </TabsTrigger>
         </TabsList>
 
-        <TabsContent value="delta">
-          <h2 className="text-lg sm:text-xl font-extrabold tracking-tight text-ink mb-2 mt-3 flex items-center gap-2">
-            <TrendingUp className="h-5 w-5 text-primary" />
-            Delta From First Place
-          </h2>
+        <TabsContent value="delta" className="mt-3">
           <div className="bg-card border border-border rounded-xl p-3">
             {isLoading && (
               <p className="text-sm text-muted-foreground text-center py-8">Loading…</p>
             )}
             {!isLoading && data && data.players.length > 0 && (
-              <div className="h-72 w-full">
-                <ResponsiveContainer width="100%" height="100%">
-                  <LineChart data={deltaData} margin={{ top: 8, right: 8, left: -8, bottom: 8 }}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-                    <XAxis
-                      dataKey="label"
-                      orientation="top"
-                      tick={{ fontSize: 10, fill: "hsl(var(--muted-foreground))" }}
-                      ticks={tickLabels}
-                    />
-                    <YAxis
-                      tick={{ fontSize: 10, fill: "hsl(var(--muted-foreground))" }}
-                      width={40}
-                      allowDecimals={false}
-                      domain={[minDelta, 0]}
-                    />
-                    <Legend wrapperStyle={{ fontSize: 11 }} iconType="circle" />
-                    {data.players.map((p, i) => (
-                      <Line
-                        key={p.user_id}
-                        type="monotone"
-                        dataKey={p.user_id}
-                        name={p.name}
-                        stroke={LINE_COLORS[i % LINE_COLORS.length]}
-                        strokeWidth={1.5}
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        dot={false}
-                        connectNulls
-                        isAnimationActive={false}
+              <>
+                <ChartLegend players={data.players} hidden={hidden} onToggle={toggle} />
+                <div className="h-72 w-full">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <LineChart data={deltaData} margin={{ top: 8, right: 8, left: -8, bottom: 8 }}>
+                      <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                      <XAxis
+                        dataKey="label"
+                        orientation="top"
+                        tick={{ fontSize: 10, fill: "hsl(var(--muted-foreground))" }}
+                        ticks={tickLabels}
                       />
-                    ))}
-                  </LineChart>
-                </ResponsiveContainer>
-              </div>
+                      <YAxis
+                        tick={{ fontSize: 10, fill: "hsl(var(--muted-foreground))" }}
+                        width={40}
+                        allowDecimals={false}
+                        domain={[minDelta, 0]}
+                      />
+                      <Tooltip content={<ChartTooltip />} cursor={{ stroke: "hsl(var(--muted-foreground))", strokeDasharray: "3 3" }} />
+                      {data.players.map((p, i) => (
+                        <Line
+                          key={p.user_id}
+                          type="monotone"
+                          dataKey={p.user_id}
+                          name={p.name}
+                          stroke={LINE_COLORS[i % LINE_COLORS.length]}
+                          strokeWidth={1.5}
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          dot={false}
+                          activeDot={{ r: 4 }}
+                          connectNulls
+                          isAnimationActive={false}
+                          hide={hidden[p.user_id]}
+                        />
+                      ))}
+                    </LineChart>
+                  </ResponsiveContainer>
+                </div>
+              </>
             )}
             {!isLoading && (!data || data.players.length === 0) && (
               <p className="text-sm text-muted-foreground text-center py-8">No data yet.</p>
@@ -315,52 +322,53 @@ function PointsOverTime() {
           </div>
         </TabsContent>
 
-        <TabsContent value="position">
-          <h2 className="text-lg sm:text-xl font-extrabold tracking-tight text-ink mb-2 mt-3 flex items-center gap-2">
-            <TrendingUp className="h-5 w-5 text-primary" />
-            League Position Over Time
-          </h2>
+        <TabsContent value="position" className="mt-3">
           <div className="bg-card border border-border rounded-xl p-3">
             {isLoading && (
               <p className="text-sm text-muted-foreground text-center py-8">Loading…</p>
             )}
             {!isLoading && data && data.players.length > 0 && (
-              <div className="h-72 w-full">
-                <ResponsiveContainer width="100%" height="100%">
-                  <LineChart data={positionData} margin={{ top: 8, right: 8, left: -16, bottom: 0 }}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-                    <XAxis
-                      dataKey="label"
-                      tick={{ fontSize: 10, fill: "hsl(var(--muted-foreground))" }}
-                      ticks={tickLabels}
-                    />
-                    <YAxis
-                      tick={{ fontSize: 10, fill: "hsl(var(--muted-foreground))" }}
-                      width={32}
-                      allowDecimals={false}
-                      reversed
-                      domain={[1, data.players.length]}
-                      ticks={Array.from({ length: data.players.length }, (_, i) => i + 1)}
-                    />
-                    <Legend wrapperStyle={{ fontSize: 11 }} iconType="circle" />
-                    {data.players.map((p, i) => (
-                      <Line
-                        key={p.user_id}
-                        type="monotone"
-                        dataKey={p.user_id}
-                        name={p.name}
-                        stroke={LINE_COLORS[i % LINE_COLORS.length]}
-                        strokeWidth={1.5}
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        dot={false}
-                        connectNulls
-                        isAnimationActive={false}
+              <>
+                <ChartLegend players={data.players} hidden={hidden} onToggle={toggle} />
+                <div className="h-72 w-full">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <LineChart data={positionData} margin={{ top: 8, right: 8, left: -16, bottom: 0 }}>
+                      <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                      <XAxis
+                        dataKey="label"
+                        tick={{ fontSize: 10, fill: "hsl(var(--muted-foreground))" }}
+                        ticks={tickLabels}
                       />
-                    ))}
-                  </LineChart>
-                </ResponsiveContainer>
-              </div>
+                      <YAxis
+                        tick={{ fontSize: 10, fill: "hsl(var(--muted-foreground))" }}
+                        width={32}
+                        allowDecimals={false}
+                        reversed
+                        domain={[1, data.players.length]}
+                        ticks={Array.from({ length: data.players.length }, (_, i) => i + 1)}
+                      />
+                      <Tooltip content={<ChartTooltip valueSuffix="" formatter={(v) => ordinal(Number(v))} />} cursor={{ stroke: "hsl(var(--muted-foreground))", strokeDasharray: "3 3" }} />
+                      {data.players.map((p, i) => (
+                        <Line
+                          key={p.user_id}
+                          type="monotone"
+                          dataKey={p.user_id}
+                          name={p.name}
+                          stroke={LINE_COLORS[i % LINE_COLORS.length]}
+                          strokeWidth={1.5}
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          dot={false}
+                          activeDot={{ r: 4 }}
+                          connectNulls
+                          isAnimationActive={false}
+                          hide={hidden[p.user_id]}
+                        />
+                      ))}
+                    </LineChart>
+                  </ResponsiveContainer>
+                </div>
+              </>
             )}
             {!isLoading && (!data || data.players.length === 0) && (
               <p className="text-sm text-muted-foreground text-center py-8">No data yet.</p>
@@ -369,6 +377,70 @@ function PointsOverTime() {
         </TabsContent>
       </Tabs>
     </section>
+  );
+}
+
+function ChartLegend({
+  players,
+  hidden,
+  onToggle,
+}: {
+  players: { user_id: string; name: string }[];
+  hidden: Record<string, boolean>;
+  onToggle: (id: string) => void;
+}) {
+  return (
+    <div className="flex flex-wrap items-center justify-center gap-x-3 gap-y-1 mb-2 px-1">
+      {players.map((p, i) => {
+        const color = LINE_COLORS[i % LINE_COLORS.length];
+        const off = hidden[p.user_id];
+        return (
+          <button
+            key={p.user_id}
+            type="button"
+            onClick={() => onToggle(p.user_id)}
+            className={
+              "inline-flex items-center gap-1.5 text-[11px] font-medium transition-opacity " +
+              (off ? "opacity-40" : "opacity-100")
+            }
+          >
+            <span
+              className="inline-block w-2.5 h-2.5 rounded-full"
+              style={{ backgroundColor: color }}
+            />
+            <span className={off ? "line-through text-muted-foreground" : "text-foreground"}>
+              {p.name}
+            </span>
+          </button>
+        );
+      })}
+    </div>
+  );
+}
+
+function ChartTooltip({
+  active,
+  payload,
+  label,
+  formatter,
+}: any) {
+  if (!active || !payload || !payload.length) return null;
+  return (
+    <div className="rounded-md border border-border bg-background/95 backdrop-blur px-2 py-1.5 shadow-sm text-[11px]">
+      <div className="font-semibold text-foreground mb-0.5">{label}</div>
+      {payload.map((entry: any) => (
+        <div key={entry.dataKey} className="flex items-center gap-1.5">
+          <span
+            className="inline-block w-2 h-2 rounded-full"
+            style={{ backgroundColor: entry.color }}
+          />
+          <span className="text-muted-foreground">{entry.name}:</span>
+          <span className="font-semibold text-foreground tabular-nums">
+            {formatter ? formatter(entry.value) : entry.value}
+          </span>
+        </div>
+      ))}
+    </div>
   );
 }
 
