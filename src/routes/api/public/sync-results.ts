@@ -579,8 +579,8 @@ const KNOCKOUT_FEEDERS: Record<number, FeederRule> = {
   92: { home: { from: 82, pick: "winner" }, away: { from: 81, pick: "winner" } },
   93: { home: { from: 74, pick: "winner" }, away: { from: 77, pick: "winner" } },
   94: { home: { from: 79, pick: "winner" }, away: { from: 80, pick: "winner" } },
-  95: { home: { from: 87, pick: "winner" }, away: { from: 86, pick: "winner" } },
-  96: { home: { from: 85, pick: "winner" }, away: { from: 88, pick: "winner" } },
+  95: { home: { from: 86, pick: "winner" }, away: { from: 88, pick: "winner" } },
+  96: { home: { from: 85, pick: "winner" }, away: { from: 87, pick: "winner" } },
   // Quarter-finals
   97: { home: { from: 89, pick: "winner" }, away: { from: 90, pick: "winner" } },
   98: { home: { from: 91, pick: "winner" }, away: { from: 92, pick: "winner" } },
