@@ -156,8 +156,8 @@ function LeaderboardPage() {
           </div>
         )}
 
-        <PointsOverTime />
         <WinOdds />
+        <PointsOverTime />
       </div>
     </main>
   );
