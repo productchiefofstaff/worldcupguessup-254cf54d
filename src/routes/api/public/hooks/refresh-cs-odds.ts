@@ -97,8 +97,22 @@ function poisson(lambda: number, k: number): number {
   return (Math.exp(-lambda) * Math.pow(lambda, k)) / factorial(k);
 }
 
-// Deterministic implementation of the user's spec:
-// normalize 1X2 -> Poisson lambdas -> P(x,y) -> fair odds * 0.82 margin, clamp.
+// Bet365 / OddsPortal calibrated correct-score odds:
+// 1X2 -> Poisson lambdas -> P(x,y) -> fair odds -> shape adjustment by score
+// type -> round to 1dp -> clamp 1.01..1000.
+function scoreShapeMultiplier(x: number, y: number): number {
+  const total = x + y;
+  const maxSide = Math.max(x, y);
+  // Extreme (6+ on either side, or 8+ total)
+  if (maxSide >= 6 || total >= 8) return 2.25;
+  // Low (0-0, 1-0, 0-1, 1-1)
+  if (x <= 1 && y <= 1) return 0.925;
+  // High (3+ from either side, e.g. 3-0, 3-1, 4-1, 5-1)
+  if (maxSide >= 3 || total >= 5) return 1.30;
+  // Normal (2-0, 2-1, 1-2, 2-2)
+  return 1.025;
+}
+
 function correctScoreOdds(
   h1: number, d1: number, a1: number,
   x: number, y: number,
@@ -111,8 +125,9 @@ function correctScoreOdds(
   const awayLambda = TOTAL_GOALS * (npa + 0.5 * npd);
   const p = poisson(homeLambda, x) * poisson(awayLambda, y);
   const fair = 1 / Math.max(p, 1e-12);
-  const priced = fair * 0.82;
-  return Math.max(1.01, Math.min(1000, priced));
+  const priced = fair * scoreShapeMultiplier(x, y);
+  const clamped = Math.max(1.01, Math.min(1000, priced));
+  return Math.round(clamped * 10) / 10;
 }
 
 // Estimate plausible 1X2 for a match we couldn't price from live odds
@@ -214,7 +229,7 @@ export const Route = createFileRoute("/api/public/hooks/refresh-cs-odds")({
           );
           await supabase
             .from("fixtures")
-            .update({ cs_odds: Number(cs.toFixed(2)), cs_odds_computed_at: new Date().toISOString() })
+            .update({ cs_odds: Number(cs.toFixed(1)), cs_odds_computed_at: new Date().toISOString() })
             .eq("id", fx.id);
           cs_computed++;
         }
