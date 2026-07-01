@@ -1,0 +1,1 @@
+UPDATE fixtures SET team_home = 'USA' WHERE team_home = 'United States'; UPDATE fixtures SET team_away = 'USA' WHERE team_away = 'United States';
