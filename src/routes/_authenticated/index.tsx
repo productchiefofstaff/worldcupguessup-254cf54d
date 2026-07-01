@@ -45,16 +45,25 @@ export const Route = createFileRoute("/_authenticated/")({
 });
 
 function formatDay(iso: string) {
-  return new Date(iso).toLocaleDateString(undefined, {
+  return new Date(iso).toLocaleDateString("en-GB", {
     weekday: "long",
     day: "numeric",
     month: "long",
+    timeZone: "Europe/London",
   });
 }
 
 function dayKey(iso: string) {
-  const d = new Date(iso);
-  return `${d.getFullYear()}-${d.getMonth()}-${d.getDate()}`;
+  // Bucket by UK calendar day so a 01:00 BST fixture lands on the correct
+  // UK date regardless of the device timezone.
+  const parts = new Intl.DateTimeFormat("en-GB", {
+    timeZone: "Europe/London",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).formatToParts(new Date(iso));
+  const get = (t: string) => parts.find((p) => p.type === t)?.value ?? "";
+  return `${get("year")}-${get("month")}-${get("day")}`;
 }
 
 const TABS = ["Upcoming", "Completed", "Knockout Path"] as const;
