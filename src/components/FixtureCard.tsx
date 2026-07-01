@@ -701,7 +701,7 @@ export function FixtureCard({
             <span>
               {winnerTeam} win{" "}
               {decidedBy === "PENS" && pensHome !== null && pensAway !== null ? (
-                <span className="font-bold">{pensHome}–{pensAway} on pens</span>
+                <span className="font-bold">{Math.max(pensHome, pensAway)}–{Math.min(pensHome, pensAway)} on pens</span>
               ) : decidedBy === "AET" && aetHome !== null && aetAway !== null ? (
                 <span className="font-bold">{aetHome}–{aetAway} AET</span>
               ) : (
@@ -709,13 +709,11 @@ export function FixtureCard({
               )}
             </span>
             <span className="text-muted-foreground">
-              FT: {fixture.team_home} {dispHome}, {fixture.team_away} {dispAway}
+              FT {dispHome}–{dispAway}
+              {aetHome !== null && aetAway !== null && (
+                <> | AET {aetHome}–{aetAway}</>
+              )}
             </span>
-            {aetHome !== null && aetAway !== null && (
-              <span className="text-muted-foreground">
-                AET: {fixture.team_home} {aetHome}, {fixture.team_away} {aetAway}
-              </span>
-            )}
           </div>
         )}
 
