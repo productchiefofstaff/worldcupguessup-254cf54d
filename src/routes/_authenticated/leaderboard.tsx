@@ -352,7 +352,7 @@ function PointsOverTime() {
                         domain={[1, data.players.length]}
                         ticks={Array.from({ length: data.players.length }, (_, i) => i + 1)}
                       />
-                      <Tooltip content={<ChartTooltip valueSuffix="" formatter={(v) => ordinal(Number(v))} />} cursor={{ stroke: "hsl(var(--muted-foreground))", strokeDasharray: "3 3" }} />
+                      <Tooltip content={<ChartTooltip formatter={(v: number) => ordinal(Number(v))} />} cursor={{ stroke: "hsl(var(--muted-foreground))", strokeDasharray: "3 3" }} />
                       {data.players.map((p, i) => (
                         <Line
                           key={p.user_id}
