@@ -3,7 +3,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { db as supabase } from "@/lib/db";
 import { useAuth } from "@/hooks/use-auth";
-import { Trophy, Crown, ChevronDown, TrendingUp } from "lucide-react";
+import { Trophy, Crown, ChevronDown, TrendingUp, Triangle } from "lucide-react";
 import { useServerFn } from "@tanstack/react-start";
 import { getLeaderboardHistory } from "@/lib/leaderboard-history.functions";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
@@ -15,6 +15,7 @@ import {
   CartesianGrid,
   Legend,
   ResponsiveContainer,
+  Tooltip,
 } from "recharts";
 
 export const Route = createFileRoute("/_authenticated/leaderboard")({
