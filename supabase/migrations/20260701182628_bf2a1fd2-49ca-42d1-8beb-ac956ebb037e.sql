@@ -1,0 +1,1 @@
+update fixtures set kickoff_at = '2026-07-06 00:00:00+00' where match_number = 94 and team_home = 'Mexico' and team_away = 'England';
