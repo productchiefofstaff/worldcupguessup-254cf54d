@@ -6,6 +6,7 @@ import { useAuth } from "@/hooks/use-auth";
 import { Trophy, Crown, ChevronDown, TrendingUp } from "lucide-react";
 import { useServerFn } from "@tanstack/react-start";
 import { getLeaderboardHistory } from "@/lib/leaderboard-history.functions";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import {
   LineChart,
   Line,
@@ -178,7 +179,7 @@ function PointsOverTime() {
     staleTime: 5 * 60_000,
   });
 
-  const chartData = React.useMemo(() => {
+  const positionData = React.useMemo(() => {
     if (!data) return [];
     const ids = data.players.map((pl) => pl.user_id);
     return data.points
@@ -212,63 +213,160 @@ function PointsOverTime() {
       });
   }, [data]);
 
+  const deltaData = React.useMemo(() => {
+    if (!data) return [];
+    const ids = data.players.map((pl) => pl.user_id);
+    return data.points
+      .filter((p) => {
+        const d = new Date(p.date as string);
+        return !(d.getUTCMonth() === 5 && d.getUTCDate() === 14);
+      })
+      .map((p) => {
+        const scored = ids.map((id) => Number((p as any)[id] ?? 0));
+        const leader = Math.max(0, ...scored);
+        const row: Record<string, any> = {
+          label: new Date(p.date as string).toLocaleDateString("en-GB", {
+            day: "numeric",
+            month: "short",
+          }),
+        };
+        ids.forEach((id) => {
+          row[id] = Number((p as any)[id] ?? 0) - leader;
+        });
+        return row;
+      });
+  }, [data]);
+
   const tickLabels = React.useMemo(() => {
-    if (!chartData.length) return [];
-    return chartData.filter((_, i) => i % 3 === 0).map((r) => r.label as string);
-  }, [chartData]);
+    if (!positionData.length) return [];
+    return positionData.filter((_, i) => i % 3 === 0).map((r) => r.label as string);
+  }, [positionData]);
+
+  const minDelta = React.useMemo(() => {
+    if (!deltaData.length || !data) return 0;
+    let m = 0;
+    for (const row of deltaData) {
+      for (const pl of data.players) {
+        const v = Number(row[pl.user_id] ?? 0);
+        if (v < m) m = v;
+      }
+    }
+    return m;
+  }, [deltaData, data]);
 
   return (
     <section className="mt-6">
-      <h2 className="text-lg sm:text-xl font-extrabold tracking-tight text-ink mb-2 flex items-center gap-2">
-        <TrendingUp className="h-5 w-5 text-primary" />
-        League Position Over Time
-      </h2>
-      <div className="bg-card border border-border rounded-xl p-3">
-        {isLoading && (
-          <p className="text-sm text-muted-foreground text-center py-8">Loading…</p>
-        )}
-        {!isLoading && data && data.players.length > 0 && (
-          <div className="h-72 w-full">
-            <ResponsiveContainer width="100%" height="100%">
-              <LineChart data={chartData} margin={{ top: 8, right: 8, left: -16, bottom: 0 }}>
-                <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-                <XAxis
-                  dataKey="label"
-                  tick={{ fontSize: 10, fill: "hsl(var(--muted-foreground))" }}
-                  ticks={tickLabels}
-                />
-                <YAxis
-                  tick={{ fontSize: 10, fill: "hsl(var(--muted-foreground))" }}
-                  width={32}
-                  allowDecimals={false}
-                  reversed
-                  domain={[1, data.players.length]}
-                  ticks={Array.from({ length: data.players.length }, (_, i) => i + 1)}
-                />
-                <Legend wrapperStyle={{ fontSize: 11 }} iconType="circle" />
-                {data.players.map((p, i) => (
-                  <Line
-                    key={p.user_id}
-                    type="monotone"
-                    dataKey={p.user_id}
-                    name={p.name}
-                    stroke={LINE_COLORS[i % LINE_COLORS.length]}
-                    strokeWidth={1.5}
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    dot={false}
-                    connectNulls
-                    isAnimationActive={false}
-                  />
-                ))}
-              </LineChart>
-            </ResponsiveContainer>
+      <Tabs defaultValue="delta">
+        <TabsList className="grid w-full grid-cols-2 h-auto">
+          <TabsTrigger value="delta" className="text-xs">Delta from 1st</TabsTrigger>
+          <TabsTrigger value="position" className="text-xs">Position Over Time</TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="delta">
+          <h2 className="text-lg sm:text-xl font-extrabold tracking-tight text-ink mb-2 mt-3 flex items-center gap-2">
+            <TrendingUp className="h-5 w-5 text-primary" />
+            Delta From First Place
+          </h2>
+          <div className="bg-card border border-border rounded-xl p-3">
+            {isLoading && (
+              <p className="text-sm text-muted-foreground text-center py-8">Loading…</p>
+            )}
+            {!isLoading && data && data.players.length > 0 && (
+              <div className="h-72 w-full">
+                <ResponsiveContainer width="100%" height="100%">
+                  <LineChart data={deltaData} margin={{ top: 8, right: 8, left: -8, bottom: 8 }}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                    <XAxis
+                      dataKey="label"
+                      orientation="top"
+                      tick={{ fontSize: 10, fill: "hsl(var(--muted-foreground))" }}
+                      ticks={tickLabels}
+                    />
+                    <YAxis
+                      tick={{ fontSize: 10, fill: "hsl(var(--muted-foreground))" }}
+                      width={40}
+                      allowDecimals={false}
+                      domain={[minDelta, 0]}
+                    />
+                    <Legend wrapperStyle={{ fontSize: 11 }} iconType="circle" />
+                    {data.players.map((p, i) => (
+                      <Line
+                        key={p.user_id}
+                        type="monotone"
+                        dataKey={p.user_id}
+                        name={p.name}
+                        stroke={LINE_COLORS[i % LINE_COLORS.length]}
+                        strokeWidth={1.5}
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        dot={false}
+                        connectNulls
+                        isAnimationActive={false}
+                      />
+                    ))}
+                  </LineChart>
+                </ResponsiveContainer>
+              </div>
+            )}
+            {!isLoading && (!data || data.players.length === 0) && (
+              <p className="text-sm text-muted-foreground text-center py-8">No data yet.</p>
+            )}
           </div>
-        )}
-        {!isLoading && (!data || data.players.length === 0) && (
-          <p className="text-sm text-muted-foreground text-center py-8">No data yet.</p>
-        )}
-      </div>
+        </TabsContent>
+
+        <TabsContent value="position">
+          <h2 className="text-lg sm:text-xl font-extrabold tracking-tight text-ink mb-2 mt-3 flex items-center gap-2">
+            <TrendingUp className="h-5 w-5 text-primary" />
+            League Position Over Time
+          </h2>
+          <div className="bg-card border border-border rounded-xl p-3">
+            {isLoading && (
+              <p className="text-sm text-muted-foreground text-center py-8">Loading…</p>
+            )}
+            {!isLoading && data && data.players.length > 0 && (
+              <div className="h-72 w-full">
+                <ResponsiveContainer width="100%" height="100%">
+                  <LineChart data={positionData} margin={{ top: 8, right: 8, left: -16, bottom: 0 }}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                    <XAxis
+                      dataKey="label"
+                      tick={{ fontSize: 10, fill: "hsl(var(--muted-foreground))" }}
+                      ticks={tickLabels}
+                    />
+                    <YAxis
+                      tick={{ fontSize: 10, fill: "hsl(var(--muted-foreground))" }}
+                      width={32}
+                      allowDecimals={false}
+                      reversed
+                      domain={[1, data.players.length]}
+                      ticks={Array.from({ length: data.players.length }, (_, i) => i + 1)}
+                    />
+                    <Legend wrapperStyle={{ fontSize: 11 }} iconType="circle" />
+                    {data.players.map((p, i) => (
+                      <Line
+                        key={p.user_id}
+                        type="monotone"
+                        dataKey={p.user_id}
+                        name={p.name}
+                        stroke={LINE_COLORS[i % LINE_COLORS.length]}
+                        strokeWidth={1.5}
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        dot={false}
+                        connectNulls
+                        isAnimationActive={false}
+                      />
+                    ))}
+                  </LineChart>
+                </ResponsiveContainer>
+              </div>
+            )}
+            {!isLoading && (!data || data.players.length === 0) && (
+              <p className="text-sm text-muted-foreground text-center py-8">No data yet.</p>
+            )}
+          </div>
+        </TabsContent>
+      </Tabs>
     </section>
   );
 }
