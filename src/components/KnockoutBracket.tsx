@@ -41,13 +41,19 @@ function isPlaceholder(name: string) {
 
 function formatKickoff(iso: string) {
   const d = new Date(iso);
-  const weekday = d.toLocaleDateString("en-GB", { weekday: "short" }).toUpperCase();
+  const tz = "Europe/London";
+  const weekday = d
+    .toLocaleDateString("en-GB", { weekday: "short", timeZone: tz })
+    .toUpperCase();
   const time = d.toLocaleTimeString("en-GB", {
     hour: "2-digit",
     minute: "2-digit",
     hour12: false,
+    timeZone: tz,
   });
-  const day = d.toLocaleDateString("en-GB", { day: "numeric", month: "short" }).toUpperCase();
+  const day = d
+    .toLocaleDateString("en-GB", { day: "numeric", month: "short", timeZone: tz })
+    .toUpperCase();
   return { weekday, time, day };
 }
 
