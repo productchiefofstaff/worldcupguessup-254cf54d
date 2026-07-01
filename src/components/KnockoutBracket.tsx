@@ -12,10 +12,10 @@ import { cn } from "@/lib/utils";
 //   92: 82 + 81   (USA/BIH vs BEL/SEN)
 //   93: 74 + 77   (BRA/JPN vs CIV/NOR)
 //   94: 79 + 80   (MEX/ECU vs ENG/COD)
-//   95: 87 + 86   (ARG/CPV vs AUS/EGY)
-//   96: 85 + 88   (SUI/ALG vs COL/GHA)
+//   95: 86 + 88   (AUS/EGY vs COL/GHA)
+//   96: 85 + 87   (SUI/ALG vs ARG/CPV)
 const R32_NUMBERS = [
-  75, 78, 73, 76, 84, 83, 82, 81, 74, 77, 79, 80, 87, 86, 85, 88,
+  75, 78, 73, 76, 84, 83, 82, 81, 74, 77, 79, 80, 86, 88, 85, 87,
 ];
 const R16_NUMBERS = Array.from({ length: 8 }, (_, i) => 89 + i);
 const QF_NUMBERS = [97, 98, 99, 100];
