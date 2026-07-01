@@ -21,6 +21,7 @@ import { Route as ApiPublicSyncResultsRouteImport } from './routes/api/public/sy
 import { Route as ApiPublicHooksSyncFixtureGoalsRouteImport } from './routes/api/public/hooks/sync-fixture-goals'
 import { Route as ApiPublicHooksRefreshTeamFormRouteImport } from './routes/api/public/hooks/refresh-team-form'
 import { Route as ApiPublicHooksRefreshHighlightsRouteImport } from './routes/api/public/hooks/refresh-highlights'
+import { Route as ApiPublicHooksRefreshCsOddsRouteImport } from './routes/api/public/hooks/refresh-cs-odds'
 
 const ResetPasswordRoute = ResetPasswordRouteImport.update({
   id: '/reset-password',
@@ -86,6 +87,12 @@ const ApiPublicHooksRefreshHighlightsRoute =
     path: '/api/public/hooks/refresh-highlights',
     getParentRoute: () => rootRouteImport,
   } as any)
+const ApiPublicHooksRefreshCsOddsRoute =
+  ApiPublicHooksRefreshCsOddsRouteImport.update({
+    id: '/api/public/hooks/refresh-cs-odds',
+    path: '/api/public/hooks/refresh-cs-odds',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof AuthenticatedIndexRoute
@@ -96,6 +103,7 @@ export interface FileRoutesByFullPath {
   '/luckbox': typeof AuthenticatedLuckboxRoute
   '/my-predictions': typeof AuthenticatedMyPredictionsRoute
   '/api/public/sync-results': typeof ApiPublicSyncResultsRoute
+  '/api/public/hooks/refresh-cs-odds': typeof ApiPublicHooksRefreshCsOddsRoute
   '/api/public/hooks/refresh-highlights': typeof ApiPublicHooksRefreshHighlightsRoute
   '/api/public/hooks/refresh-team-form': typeof ApiPublicHooksRefreshTeamFormRoute
   '/api/public/hooks/sync-fixture-goals': typeof ApiPublicHooksSyncFixtureGoalsRoute
@@ -109,6 +117,7 @@ export interface FileRoutesByTo {
   '/my-predictions': typeof AuthenticatedMyPredictionsRoute
   '/': typeof AuthenticatedIndexRoute
   '/api/public/sync-results': typeof ApiPublicSyncResultsRoute
+  '/api/public/hooks/refresh-cs-odds': typeof ApiPublicHooksRefreshCsOddsRoute
   '/api/public/hooks/refresh-highlights': typeof ApiPublicHooksRefreshHighlightsRoute
   '/api/public/hooks/refresh-team-form': typeof ApiPublicHooksRefreshTeamFormRoute
   '/api/public/hooks/sync-fixture-goals': typeof ApiPublicHooksSyncFixtureGoalsRoute
@@ -124,6 +133,7 @@ export interface FileRoutesById {
   '/_authenticated/my-predictions': typeof AuthenticatedMyPredictionsRoute
   '/_authenticated/': typeof AuthenticatedIndexRoute
   '/api/public/sync-results': typeof ApiPublicSyncResultsRoute
+  '/api/public/hooks/refresh-cs-odds': typeof ApiPublicHooksRefreshCsOddsRoute
   '/api/public/hooks/refresh-highlights': typeof ApiPublicHooksRefreshHighlightsRoute
   '/api/public/hooks/refresh-team-form': typeof ApiPublicHooksRefreshTeamFormRoute
   '/api/public/hooks/sync-fixture-goals': typeof ApiPublicHooksSyncFixtureGoalsRoute
@@ -139,6 +149,7 @@ export interface FileRouteTypes {
     | '/luckbox'
     | '/my-predictions'
     | '/api/public/sync-results'
+    | '/api/public/hooks/refresh-cs-odds'
     | '/api/public/hooks/refresh-highlights'
     | '/api/public/hooks/refresh-team-form'
     | '/api/public/hooks/sync-fixture-goals'
@@ -152,6 +163,7 @@ export interface FileRouteTypes {
     | '/my-predictions'
     | '/'
     | '/api/public/sync-results'
+    | '/api/public/hooks/refresh-cs-odds'
     | '/api/public/hooks/refresh-highlights'
     | '/api/public/hooks/refresh-team-form'
     | '/api/public/hooks/sync-fixture-goals'
@@ -166,6 +178,7 @@ export interface FileRouteTypes {
     | '/_authenticated/my-predictions'
     | '/_authenticated/'
     | '/api/public/sync-results'
+    | '/api/public/hooks/refresh-cs-odds'
     | '/api/public/hooks/refresh-highlights'
     | '/api/public/hooks/refresh-team-form'
     | '/api/public/hooks/sync-fixture-goals'
@@ -176,6 +189,7 @@ export interface RootRouteChildren {
   AuthRoute: typeof AuthRoute
   ResetPasswordRoute: typeof ResetPasswordRoute
   ApiPublicSyncResultsRoute: typeof ApiPublicSyncResultsRoute
+  ApiPublicHooksRefreshCsOddsRoute: typeof ApiPublicHooksRefreshCsOddsRoute
   ApiPublicHooksRefreshHighlightsRoute: typeof ApiPublicHooksRefreshHighlightsRoute
   ApiPublicHooksRefreshTeamFormRoute: typeof ApiPublicHooksRefreshTeamFormRoute
   ApiPublicHooksSyncFixtureGoalsRoute: typeof ApiPublicHooksSyncFixtureGoalsRoute
@@ -267,6 +281,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicHooksRefreshHighlightsRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/hooks/refresh-cs-odds': {
+      id: '/api/public/hooks/refresh-cs-odds'
+      path: '/api/public/hooks/refresh-cs-odds'
+      fullPath: '/api/public/hooks/refresh-cs-odds'
+      preLoaderRoute: typeof ApiPublicHooksRefreshCsOddsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -294,6 +315,7 @@ const rootRouteChildren: RootRouteChildren = {
   AuthRoute: AuthRoute,
   ResetPasswordRoute: ResetPasswordRoute,
   ApiPublicSyncResultsRoute: ApiPublicSyncResultsRoute,
+  ApiPublicHooksRefreshCsOddsRoute: ApiPublicHooksRefreshCsOddsRoute,
   ApiPublicHooksRefreshHighlightsRoute: ApiPublicHooksRefreshHighlightsRoute,
   ApiPublicHooksRefreshTeamFormRoute: ApiPublicHooksRefreshTeamFormRoute,
   ApiPublicHooksSyncFixtureGoalsRoute: ApiPublicHooksSyncFixtureGoalsRoute,
