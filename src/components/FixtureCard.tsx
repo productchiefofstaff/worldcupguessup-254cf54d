@@ -709,10 +709,7 @@ export function FixtureCard({
               )}
             </span>
             <span className="text-muted-foreground">
-              FT {dispHome}–{dispAway}
-              {aetHome !== null && aetAway !== null && (
-                <> | AET {aetHome}–{aetAway}</>
-              )}
+              FT {dispHome}–{dispAway}{" | "}AET {aetHome}–{aetAway}
             </span>
           </div>
         )}
