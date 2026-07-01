@@ -255,6 +255,11 @@ function PointsOverTime() {
     return m;
   }, [deltaData, data]);
 
+  const [hidden, setHidden] = React.useState<Record<string, boolean>>({});
+  const toggle = React.useCallback((id: string) => {
+    setHidden((h) => ({ ...h, [id]: !h[id] }));
+  }, []);
+
   return (
     <section className="mt-6">
       <Tabs defaultValue="delta">
