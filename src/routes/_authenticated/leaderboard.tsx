@@ -281,7 +281,6 @@ function PointsOverTime() {
             )}
             {!isLoading && data && data.players.length > 0 && (
               <>
-                <ChartLegend players={data.players} hidden={hidden} onToggle={toggle} />
                 <div className="h-72 w-full">
                   <ResponsiveContainer width="100%" height="100%">
                     <LineChart data={deltaData} margin={{ top: 8, right: 8, left: -8, bottom: 8 }}>
@@ -319,6 +318,7 @@ function PointsOverTime() {
                     </LineChart>
                   </ResponsiveContainer>
                 </div>
+                <ChartLegend players={data.players} hidden={hidden} onToggle={toggle} />
               </>
             )}
             {!isLoading && (!data || data.players.length === 0) && (
@@ -334,7 +334,6 @@ function PointsOverTime() {
             )}
             {!isLoading && data && data.players.length > 0 && (
               <>
-                <ChartLegend players={data.players} hidden={hidden} onToggle={toggle} />
                 <div className="h-72 w-full">
                   <ResponsiveContainer width="100%" height="100%">
                     <LineChart data={positionData} margin={{ top: 8, right: 8, left: -16, bottom: 0 }}>
@@ -373,6 +372,7 @@ function PointsOverTime() {
                     </LineChart>
                   </ResponsiveContainer>
                 </div>
+                <ChartLegend players={data.players} hidden={hidden} onToggle={toggle} />
               </>
             )}
             {!isLoading && (!data || data.players.length === 0) && (
