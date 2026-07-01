@@ -56,12 +56,22 @@ function pointsFor(p: Prediction, f: Fixture): number | null {
 
 function kickoffLabel(iso: string) {
   const d = new Date(iso);
-  return d.toLocaleTimeString(undefined, { hour: "2-digit", minute: "2-digit" });
+  return d.toLocaleTimeString("en-GB", {
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: false,
+    timeZone: "Europe/London",
+  });
 }
 
 function formatMatchDate(iso: string) {
   const d = new Date(iso);
-  return d.toLocaleDateString(undefined, { day: "2-digit", month: "short", year: "numeric" });
+  return d.toLocaleDateString("en-GB", {
+    day: "2-digit",
+    month: "short",
+    year: "numeric",
+    timeZone: "Europe/London",
+  });
 }
 
 function displayLiveLabel(label: string | null, updatedAt: string | null | undefined, now: number) {
