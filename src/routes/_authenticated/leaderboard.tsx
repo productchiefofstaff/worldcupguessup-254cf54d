@@ -6,6 +6,7 @@ import { useAuth } from "@/hooks/use-auth";
 import { Trophy, Crown, ChevronDown, TrendingUp, Triangle } from "lucide-react";
 import { useServerFn } from "@tanstack/react-start";
 import { getLeaderboardHistory } from "@/lib/leaderboard-history.functions";
+import { getWinOdds } from "@/lib/win-odds.functions";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import {
   LineChart,
@@ -156,8 +157,70 @@ function LeaderboardPage() {
         )}
 
         <PointsOverTime />
+        <WinOdds />
       </div>
     </main>
+  );
+}
+
+function WinOdds() {
+  const fetchOdds = useServerFn(getWinOdds);
+  const { data, isLoading } = useQuery({
+    queryKey: ["win-odds"],
+    queryFn: () => fetchOdds(),
+    staleTime: 5 * 60_000,
+  });
+
+  return (
+    <section className="mt-6">
+      <div className="mb-2 flex items-baseline justify-between">
+        <h2 className="text-sm font-bold text-ink flex items-center gap-1.5">
+          <Crown className="h-4 w-4 text-warning" />
+          Chance of finishing 1st
+        </h2>
+        {data && (
+          <span className="text-[10px] text-muted-foreground">
+            {data.remainingFixtures} games left · {data.simulations.toLocaleString()} sims
+          </span>
+        )}
+      </div>
+      <div className="bg-card border border-border rounded-xl p-3">
+        {isLoading && (
+          <p className="text-sm text-muted-foreground text-center py-4">Crunching numbers…</p>
+        )}
+        {!isLoading && data && data.remainingFixtures === 0 && (
+          <p className="text-xs text-muted-foreground text-center py-2">
+            Tournament complete — no games left to simulate.
+          </p>
+        )}
+        {!isLoading && data && data.players.length > 0 && (
+          <ul className="space-y-2">
+            {data.players.map((p) => (
+              <li key={p.user_id} className="flex items-center gap-3">
+                <div className="w-20 shrink-0 text-xs font-semibold text-foreground truncate">
+                  {p.name}
+                </div>
+                <div className="flex-1 h-3 bg-muted rounded-full overflow-hidden">
+                  <div
+                    className="h-full bg-gradient-to-r from-warning to-warning/70 rounded-full transition-all"
+                    style={{ width: `${Math.max(2, p.winPct)}%` }}
+                  />
+                </div>
+                <div
+                  className="w-14 text-right text-sm font-bold tabular-nums text-foreground"
+                  style={BEBAS}
+                >
+                  {p.winPct.toFixed(1)}%
+                </div>
+              </li>
+            ))}
+          </ul>
+        )}
+        <p className="text-[10px] text-muted-foreground mt-3 leading-snug">
+          Monte Carlo simulation based on each player's historical hit rate across settled games. Ties split the win credit evenly.
+        </p>
+      </div>
+    </section>
   );
 }
 
