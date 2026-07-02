@@ -47,6 +47,12 @@ export const getWinOdds = createServerFn({ method: "GET" })
       (f: any) => f.home_score === null || f.away_score === null,
     );
     const settledById = new Map(settled.map((f: any) => [f.id, f]));
+    // Distribution is always drawn from ALL settled fixtures for the user,
+    // regardless of the window used to compute current/remaining points.
+    const allSettled = (fixtures ?? []).filter(
+      (f: any) => f.home_score !== null && f.away_score !== null,
+    );
+    const allSettledById = new Map(allSettled.map((f: any) => [f.id, f]));
 
     // Per-user historical points distribution across settled fixtures
     const perUserPts = new Map<string, number[]>();
@@ -56,11 +62,23 @@ export const getWinOdds = createServerFn({ method: "GET" })
 
     (preds ?? []).forEach((p: any) => {
       if (!nameById.has(p.user_id)) return;
+      // Historical distribution: use every settled fixture ever.
+      const anyFx: any = allSettledById.get(p.fixture_id);
+      if (anyFx) {
+        const ptsAll = pointsFor(
+          p.home_score,
+          p.away_score,
+          anyFx.home_score,
+          anyFx.away_score,
+        );
+        perUserPts.get(p.user_id)!.push(ptsAll);
+      }
+      // Current score: only fixtures inside the window count.
       const fx: any = settledById.get(p.fixture_id);
-      if (!fx) return;
-      const pts = pointsFor(p.home_score, p.away_score, fx.home_score, fx.away_score);
-      perUserPts.get(p.user_id)!.push(pts);
-      currentByUser.set(p.user_id, (currentByUser.get(p.user_id) ?? 0) + pts);
+      if (fx) {
+        const pts = pointsFor(p.home_score, p.away_score, fx.home_score, fx.away_score);
+        currentByUser.set(p.user_id, (currentByUser.get(p.user_id) ?? 0) + pts);
+      }
     });
 
     // Laplace-smoothed distribution over {0, 10, 40} for each user
