@@ -344,15 +344,22 @@ function LastChanceLeaderboard({ userId }: { userId?: string }) {
           );
         })}
       </div>
+
+      <WinOdds userIds={LAST_CHANCE_USER_IDS} fromKickoff={LAST_CHANCE_START} />
     </>
   );
 }
 
-function WinOdds() {
+function WinOdds({
+  userIds,
+  fromKickoff,
+}: { userIds?: string[]; fromKickoff?: string } = {}) {
   const fetchOdds = useServerFn(getWinOdds);
+  const hasParams = !!(userIds || fromKickoff);
   const { data, isLoading } = useQuery({
-    queryKey: ["win-odds"],
-    queryFn: () => fetchOdds(),
+    queryKey: ["win-odds", userIds ?? null, fromKickoff ?? null],
+    queryFn: () =>
+      hasParams ? fetchOdds({ data: { userIds, fromKickoff } }) : fetchOdds(),
     staleTime: 5 * 60_000,
   });
 
