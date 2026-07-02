@@ -3,11 +3,10 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { db as supabase } from "@/lib/db";
 import { useAuth } from "@/hooks/use-auth";
-import { Trophy, Crown, ChevronDown, TrendingUp, Triangle, PoundSterling } from "lucide-react";
+import { Trophy, Crown, ChevronDown, TrendingUp, Triangle } from "lucide-react";
 import { useServerFn } from "@tanstack/react-start";
 import { getLeaderboardHistory } from "@/lib/leaderboard-history.functions";
 import { getWinOdds } from "@/lib/win-odds.functions";
-import { getPnl } from "@/lib/pnl.functions";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import {
   LineChart,
@@ -158,7 +157,6 @@ function LeaderboardPage() {
         )}
 
         <WinOdds />
-        <BetPnl />
         <PointsOverTime />
       </div>
     </main>
@@ -220,88 +218,6 @@ function WinOdds() {
         )}
         <p className="text-[10px] text-muted-foreground mt-3 leading-snug">
           Monte Carlo simulation based on each player's historical hit rate across settled games. Ties split the win credit evenly.
-        </p>
-      </div>
-    </section>
-  );
-}
-
-function BetPnl() {
-  const fetchPnl = useServerFn(getPnl);
-  const { data, isLoading } = useQuery({
-    queryKey: ["bet-pnl"],
-    queryFn: () => fetchPnl(),
-    staleTime: 60_000,
-  });
-
-  const maxAbs = React.useMemo(() => {
-    if (!data) return 1;
-    return Math.max(1, ...data.players.map((p) => Math.abs(p.pnl)));
-  }, [data]);
-
-  return (
-    <section className="mt-6">
-      <div className="mb-2 flex items-baseline justify-between">
-        <h2 className="text-sm font-bold text-ink flex items-center gap-1.5">
-          <PoundSterling className="h-4 w-4 text-success" />
-          Bet PnL — £1 on each pick
-        </h2>
-        {data && (
-          <span className="text-[10px] text-muted-foreground">
-            {data.settled_with_odds} priced · {data.settled_without_odds} pending
-          </span>
-        )}
-      </div>
-      <div className="bg-card border border-border rounded-xl p-3">
-        {isLoading && (
-          <p className="text-sm text-muted-foreground text-center py-4">Calculating…</p>
-        )}
-        {!isLoading && data && data.players.length > 0 && (
-          <ul className="space-y-2">
-            {data.players.map((p) => {
-              const pos = p.pnl >= 0;
-              const w = Math.max(2, (Math.abs(p.pnl) / maxAbs) * 100);
-              return (
-                <li key={p.user_id} className="flex items-center gap-3">
-                  <div className="w-20 shrink-0 text-xs font-semibold text-foreground truncate">
-                    {p.name}
-                    <div className="text-[10px] font-normal text-muted-foreground">
-                      {p.wins}/{p.bets} hits
-                    </div>
-                  </div>
-                  <div className="flex-1 h-3 bg-muted rounded-full overflow-hidden relative">
-                    <div className="absolute inset-y-0 left-1/2 w-px bg-border" />
-                    <div
-                      className={`absolute inset-y-0 ${pos ? "left-1/2 bg-success/70" : "right-1/2 bg-destructive/70"}`}
-                      style={{ width: `${w / 2}%` }}
-                    />
-                  </div>
-                  <div
-                    className={`w-16 text-right text-sm font-bold tabular-nums ${pos ? "text-success" : "text-destructive"}`}
-                    style={BEBAS}
-                  >
-                    {pos ? "+" : "−"}£{Math.abs(p.pnl).toFixed(2)}
-                  </div>
-                </li>
-              );
-            })}
-          </ul>
-        )}
-        {!isLoading && data && data.players.length > 0 && data.players.some((p) => p.biggest_win) && (
-          <div className="mt-3 pt-3 border-t border-border space-y-1">
-            {data.players
-              .filter((p) => p.biggest_win)
-              .sort((a, b) => (b.biggest_win!.pnl - a.biggest_win!.pnl))
-              .slice(0, 3)
-              .map((p) => (
-                <p key={p.user_id} className="text-[10px] text-muted-foreground">
-                  <span className="font-semibold text-foreground">{p.name}</span> hit {p.biggest_win!.score} on {p.biggest_win!.teams} @ {p.biggest_win!.odds.toFixed(2)} (+£{p.biggest_win!.pnl.toFixed(2)})
-                </p>
-              ))}
-          </div>
-        )}
-        <p className="text-[10px] text-muted-foreground mt-3 leading-snug">
-          £1 staked on each player's predicted correct score. Odds priced from pre-match 1X2 via a Bet365-style Poisson model with 0.82 margin. Full-time (90 min) score settles knockouts.
         </p>
       </div>
     </section>

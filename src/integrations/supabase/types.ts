@@ -57,19 +57,14 @@ export type Database = {
       }
       fixtures: {
         Row: {
-          away_1x2: number | null
           away_score: number | null
           away_score_aet: number | null
-          cs_odds: number | null
-          cs_odds_computed_at: string | null
           decided_by: string | null
-          draw_1x2: number | null
           espn_event_id: string | null
           goals_synced_at: string | null
           group_name: string | null
           highlights_checked_at: string | null
           highlights_url: string | null
-          home_1x2: number | null
           home_score: number | null
           home_score_aet: number | null
           id: string
@@ -87,19 +82,14 @@ export type Database = {
           winner_team: string | null
         }
         Insert: {
-          away_1x2?: number | null
           away_score?: number | null
           away_score_aet?: number | null
-          cs_odds?: number | null
-          cs_odds_computed_at?: string | null
           decided_by?: string | null
-          draw_1x2?: number | null
           espn_event_id?: string | null
           goals_synced_at?: string | null
           group_name?: string | null
           highlights_checked_at?: string | null
           highlights_url?: string | null
-          home_1x2?: number | null
           home_score?: number | null
           home_score_aet?: number | null
           id?: string
@@ -117,19 +107,14 @@ export type Database = {
           winner_team?: string | null
         }
         Update: {
-          away_1x2?: number | null
           away_score?: number | null
           away_score_aet?: number | null
-          cs_odds?: number | null
-          cs_odds_computed_at?: string | null
           decided_by?: string | null
-          draw_1x2?: number | null
           espn_event_id?: string | null
           goals_synced_at?: string | null
           group_name?: string | null
           highlights_checked_at?: string | null
           highlights_url?: string | null
-          home_1x2?: number | null
           home_score?: number | null
           home_score_aet?: number | null
           id?: string
