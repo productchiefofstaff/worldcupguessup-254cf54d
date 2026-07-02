@@ -219,16 +219,18 @@ function AdjustedTableSection({ players }: { players: LuckPlayer[] }) {
                     {r.name}
                   </TableCell>
                   <TableCell className="text-right">
-                    <span
-                      className="text-xl tabular-nums text-ink"
-                      style={BEBAS}
-                    >
-                      {r.adjusted}
-                    </span>
-                    <span className={`ml-2 text-sm font-semibold tabular-nums ${adjClass}`}>
-                      ({r.adjustment > 0 ? "+" : ""}
-                      {r.adjustment})
-                    </span>
+                    <div className="inline-flex items-baseline justify-end gap-2">
+                      <span
+                        className="text-xl tabular-nums text-ink"
+                        style={BEBAS}
+                      >
+                        {r.adjusted}
+                      </span>
+                      <span className={`inline-block w-[4.5rem] text-right text-sm font-semibold tabular-nums ${adjClass}`}>
+                        ({r.adjustment >= 0 ? "+" : ""}
+                        {r.adjustment})
+                      </span>
+                    </div>
                   </TableCell>
                 </TableRow>
               );
