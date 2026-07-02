@@ -41,6 +41,14 @@ type Row = {
 
 const BEBAS = { fontFamily: "'Bebas Neue', sans-serif" } as const;
 
+// "Last Chance Saloon": restart from zero for these three players from this date.
+const LAST_CHANCE_START = "2026-07-02T00:00:00Z";
+const LAST_CHANCE_USER_IDS = [
+  "f56bc268-93da-4ae4-a37e-4c21aceec0c7", // Harrison Bani
+  "025e4e73-38c1-4118-8b32-82115d50e118", // Laura
+  "91cba29d-0fac-4a93-b20a-050f5d6f3066", // Joe E
+];
+
 function ordinal(n: number) {
   const s = ["th", "st", "nd", "rd"];
   const v = n % 100;
@@ -56,6 +64,43 @@ function rankAccent(rank: number) {
 
 function LeaderboardPage() {
   const { user } = useAuth();
+  return (
+    <main className="min-h-screen bg-surface py-4 sm:py-6">
+      <div className="max-w-xl mx-auto px-4">
+        <div className="mb-4">
+          <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-ink flex items-center gap-2">
+            <Trophy className="h-6 w-6 text-primary" />
+            Leaderboard
+          </h1>
+          <p className="text-xs text-muted-foreground mt-1">
+            Updated automatically as results come in
+          </p>
+        </div>
+
+        <Tabs defaultValue="overall">
+          <TabsList className="grid w-full grid-cols-2 h-auto">
+            <TabsTrigger value="overall" className="text-xs">
+              Overall Table
+            </TabsTrigger>
+            <TabsTrigger value="last-chance" className="text-xs">
+              Last Chance Saloon
+            </TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="overall" className="mt-4">
+            <OverallLeaderboard userId={user?.id} />
+          </TabsContent>
+
+          <TabsContent value="last-chance" className="mt-4">
+            <LastChanceLeaderboard userId={user?.id} />
+          </TabsContent>
+        </Tabs>
+      </div>
+    </main>
+  );
+}
+
+function OverallLeaderboard({ userId }: { userId?: string }) {
   const { data, isLoading, error } = useQuery({
     queryKey: ["leaderboard"],
     queryFn: async () => {
@@ -96,16 +141,7 @@ function LeaderboardPage() {
   }, [data]);
 
   return (
-    <main className="min-h-screen bg-surface py-4 sm:py-6">
-      <div className="max-w-xl mx-auto px-4">
-      <div className="mb-4">
-        <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-ink flex items-center gap-2">
-          <Trophy className="h-6 w-6 text-primary" />
-          Leaderboard
-        </h1>
-        <p className="text-xs text-muted-foreground mt-1">Updated automatically as results come in</p>
-      </div>
-
+    <>
         {data && data.length > 0 && (
           <div className="flex justify-start -mt-2 mb-0">
             <div className="inline-flex items-center gap-1.5 rounded-full bg-warning/10 border border-warning/30 px-2.5 py-1">
@@ -120,7 +156,7 @@ function LeaderboardPage() {
 
         <div className="space-y-2">
           {ranked.map((row) => {
-            const isMe = user?.id === row.user_id;
+            const isMe = userId === row.user_id;
             const rank = row.rank;
             const accent = rankAccent(rank);
             const accuracy =
@@ -158,8 +194,146 @@ function LeaderboardPage() {
 
         <WinOdds />
         <PointsOverTime />
+    </>
+  );
+}
+
+function LastChanceLeaderboard({ userId }: { userId?: string }) {
+  const { data, isLoading, error } = useQuery({
+    queryKey: ["leaderboard-last-chance"],
+    queryFn: async () => {
+      const [profRes, predRes, fixRes] = await Promise.all([
+        supabase
+          .from("profiles")
+          .select("id, display_name")
+          .in("id", LAST_CHANCE_USER_IDS),
+        supabase
+          .from("predictions")
+          .select("user_id, fixture_id, home_score, away_score")
+          .in("user_id", LAST_CHANCE_USER_IDS),
+        supabase
+          .from("fixtures")
+          .select("id, home_score, away_score, kickoff_at")
+          .gte("kickoff_at", LAST_CHANCE_START),
+      ]);
+      if (profRes.error) throw profRes.error;
+      if (predRes.error) throw predRes.error;
+      if (fixRes.error) throw fixRes.error;
+
+      const fixMap = new Map<string, any>();
+      (fixRes.data || []).forEach((f: any) => fixMap.set(f.id, f));
+
+      const rows: Row[] = (profRes.data || []).map((p: any) => ({
+        user_id: p.id,
+        name: p.display_name,
+        points: 0,
+        correct_results: 0,
+        correct_scores: 0,
+        settled_predictions: 0,
+        total_predictions: 0,
+      }));
+      const byId = new Map(rows.map((r) => [r.user_id, r]));
+
+      (predRes.data || []).forEach((pr: any) => {
+        const f = fixMap.get(pr.fixture_id);
+        if (!f) return; // only fixtures in the window
+        const r = byId.get(pr.user_id);
+        if (!r) return;
+        r.total_predictions += 1;
+        if (f.home_score == null || f.away_score == null) return;
+        r.settled_predictions += 1;
+        if (pr.home_score === f.home_score && pr.away_score === f.away_score) {
+          r.points += 40;
+          r.correct_scores += 1;
+        } else if (
+          Math.sign(pr.home_score - pr.away_score) ===
+          Math.sign(f.home_score - f.away_score)
+        ) {
+          r.points += 10;
+          r.correct_results += 1;
+        }
+      });
+
+      rows.sort(
+        (a, b) =>
+          b.points - a.points ||
+          b.correct_scores - a.correct_scores ||
+          b.correct_results - a.correct_results ||
+          a.name.localeCompare(b.name),
+      );
+      return rows;
+    },
+    staleTime: 30_000,
+    refetchInterval: 30_000,
+  });
+
+  const ranked = React.useMemo(() => {
+    if (!data) return [];
+    const out: (Row & { rank: number; tied: boolean })[] = [];
+    let currentRank = 0;
+    for (let i = 0; i < data.length; i++) {
+      const prev = data[i - 1];
+      const row = data[i];
+      if (i > 0 && row.points === prev.points) {
+        out.push({ ...row, rank: currentRank, tied: true });
+      } else {
+        currentRank = i + 1;
+        const next = data[i + 1];
+        const tiedWithNext = next !== undefined && row.points === next.points;
+        out.push({ ...row, rank: currentRank, tied: tiedWithNext });
+      }
+    }
+    return out;
+  }, [data]);
+
+  return (
+    <>
+      <div className="mb-3 rounded-lg border border-border bg-card p-3">
+        <p className="text-xs text-foreground font-semibold">
+          A fresh start from 2 July 2026
+        </p>
+        <p className="text-[11px] text-muted-foreground mt-0.5 leading-snug">
+          Same rules (40 for exact score, 10 for correct result). Only fixtures
+          from 2 July onwards count towards this table.
+        </p>
       </div>
-    </main>
+
+      {isLoading && <p className="text-sm text-muted-foreground mb-4">Loading…</p>}
+      {error && (
+        <p className="text-sm text-destructive mb-4">Failed to load leaderboard.</p>
+      )}
+
+      <div className="space-y-2">
+        {ranked.map((row) => {
+          const isMe = userId === row.user_id;
+          const rank = row.rank;
+          const accent = rankAccent(rank);
+          const accuracy =
+            row.settled_predictions > 0
+              ? Math.round(
+                  ((row.correct_results ?? 0) + (row.correct_scores ?? 0)) /
+                    row.settled_predictions *
+                    1000,
+                ) / 10
+              : 0;
+          const initial = (row.name || "?").trim().charAt(0).toUpperCase();
+          const ord = ordinal(rank);
+          const rankDisplay = row.tied ? `=${ord}` : ord;
+          return (
+            <LeaderboardCard
+              key={row.user_id}
+              row={row}
+              rank={rank}
+              rankDisplay={rankDisplay}
+              accent={accent}
+              accuracy={accuracy}
+              isMe={isMe}
+              initial={initial}
+            />
+          );
+        })}
+      </div>
+    </>
   );
 }
 
