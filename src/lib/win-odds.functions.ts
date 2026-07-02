@@ -37,9 +37,12 @@ export const getWinOdds = createServerFn({ method: "GET" })
     });
     const userIds = Array.from(nameById.keys());
 
-    const inWindow = (fixtures ?? []).filter((f: any) =>
-      fromKickoff ? f.kickoff_at && f.kickoff_at >= fromKickoff : true,
-    );
+    const fromMs = fromKickoff ? new Date(fromKickoff).getTime() : null;
+    const inWindow = (fixtures ?? []).filter((f: any) => {
+      if (fromMs === null) return true;
+      if (!f.kickoff_at) return false;
+      return new Date(f.kickoff_at).getTime() >= fromMs;
+    });
     const settled = inWindow.filter(
       (f: any) => f.home_score !== null && f.away_score !== null,
     );
