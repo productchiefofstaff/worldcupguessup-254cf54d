@@ -16,24 +16,34 @@ function pointsFor(ph: number, pa: number, fh: number, fa: number): number {
 
 export const getWinOdds = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
-  .handler(async ({ context }) => {
+  .inputValidator(
+    (input?: { userIds?: string[]; fromKickoff?: string }) => input ?? {},
+  )
+  .handler(async ({ context, data }) => {
     const { supabase } = context;
+    const filterUserIds = data?.userIds;
+    const fromKickoff = data?.fromKickoff;
     const [{ data: fixtures }, { data: preds }, { data: profiles }] = await Promise.all([
-      supabase.from("fixtures").select("id, home_score, away_score"),
+      supabase.from("fixtures").select("id, home_score, away_score, kickoff_at"),
       supabase.from("predictions").select("user_id, fixture_id, home_score, away_score"),
       supabase.from("profiles").select("id, display_name, show_on_leaderboard"),
     ]);
 
     const nameById = new Map<string, string>();
     (profiles ?? []).forEach((p: any) => {
-      if (p.show_on_leaderboard) nameById.set(p.id, p.display_name);
+      if (!p.show_on_leaderboard) return;
+      if (filterUserIds && !filterUserIds.includes(p.id)) return;
+      nameById.set(p.id, p.display_name);
     });
     const userIds = Array.from(nameById.keys());
 
-    const settled = (fixtures ?? []).filter(
+    const inWindow = (fixtures ?? []).filter((f: any) =>
+      fromKickoff ? f.kickoff_at && f.kickoff_at >= fromKickoff : true,
+    );
+    const settled = inWindow.filter(
       (f: any) => f.home_score !== null && f.away_score !== null,
     );
-    const remaining = (fixtures ?? []).filter(
+    const remaining = inWindow.filter(
       (f: any) => f.home_score === null || f.away_score === null,
     );
     const settledById = new Map(settled.map((f: any) => [f.id, f]));
