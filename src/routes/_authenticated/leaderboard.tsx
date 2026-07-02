@@ -42,7 +42,8 @@ type Row = {
 const BEBAS = { fontFamily: "'Bebas Neue', sans-serif" } as const;
 
 // "Last Chance Saloon": restart from zero for these three players from this date.
-const LAST_CHANCE_START = "2026-07-02T00:00:00Z";
+// First fixture that counts: Spain vs Austria, 2 July 2026 19:00 UTC.
+const LAST_CHANCE_START = "2026-07-02T19:00:00Z";
 const LAST_CHANCE_USER_IDS = [
   "f56bc268-93da-4ae4-a37e-4c21aceec0c7", // Harrison Bani
   "025e4e73-38c1-4118-8b32-82115d50e118", // Laura
@@ -288,13 +289,22 @@ function LastChanceLeaderboard({ userId }: { userId?: string }) {
 
   return (
     <>
+      {data && data.length > 0 && (
+        <div className="flex justify-start -mt-2 mb-2">
+          <div className="inline-flex items-center gap-1.5 rounded-full bg-warning/10 border border-warning/30 px-2.5 py-1">
+            <Crown className="h-3.5 w-3.5 text-warning shrink-0" />
+            <span className="text-[11px] font-bold text-foreground">1st place wins £60</span>
+          </div>
+        </div>
+      )}
+
       <div className="mb-3 rounded-lg border border-border bg-card p-3">
         <p className="text-xs text-foreground font-semibold">
-          A fresh start from 2 July 2026
+          A fresh start from Spain vs Austria
         </p>
         <p className="text-[11px] text-muted-foreground mt-0.5 leading-snug">
           Same rules (40 for exact score, 10 for correct result). Only fixtures
-          from 2 July onwards count towards this table.
+          from Spain vs Austria (2 July, 8pm UK) onwards count.
         </p>
       </div>
 
