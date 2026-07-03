@@ -7,7 +7,7 @@ import { ClipboardList } from "lucide-react";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { useState } from "react";
 
-export const Route = createFileRoute("/_authenticated/my-predictions")({
+export const Route = createFileRoute("/my-predictions")({
   head: () => ({
     meta: [
       { title: "Predictions – World Cup 2026 Predictor" },
@@ -99,13 +99,12 @@ function MyPredictionsPage() {
 
   const [activeTab, setActiveTab] = useState<string>("you");
 
-  if (!user) return null;
-
   const fixtureMap = new Map<string, FixtureRow>();
   (fixturesQ.data ?? []).forEach((f) => fixtureMap.set(f.id, f));
 
   const players = leaderboardQ.data ?? [];
-  const others = players.filter((p) => p.user_id !== user.id);
+  const others = user ? players.filter((p) => p.user_id !== user.id) : players;
+  const effectiveTab = !user && activeTab === "you" ? (players[0]?.user_id ?? "you") : activeTab;
 
   function rowsFor(userId: string) {
     const now = new Date();
@@ -144,9 +143,9 @@ function MyPredictionsPage() {
         <p className="text-sm text-destructive">Failed to load predictions.</p>
       )}
 
-      <Tabs value={activeTab} onValueChange={setActiveTab}>
+      <Tabs value={effectiveTab} onValueChange={setActiveTab}>
         <TabsList className="w-full justify-start overflow-x-auto flex-nowrap">
-          <TabsTrigger value="you" className="flex-1">You</TabsTrigger>
+          {user && <TabsTrigger value="you" className="flex-1">You</TabsTrigger>}
           {others.map((p) => (
             <TabsTrigger key={p.user_id} value={p.user_id} className="flex-1">
               {p.name}
@@ -154,9 +153,11 @@ function MyPredictionsPage() {
           ))}
         </TabsList>
 
-        <TabsContent value="you">
-          <PredictionsTable rows={sortRows(rowsFor(user.id))} isOther={false} loading={allPredsQ.isLoading} />
-        </TabsContent>
+        {user && (
+          <TabsContent value="you">
+            <PredictionsTable rows={sortRows(rowsFor(user.id))} isOther={false} loading={allPredsQ.isLoading} />
+          </TabsContent>
+        )}
         {others.map((p) => (
           <TabsContent key={p.user_id} value={p.user_id}>
             <PredictionsTable rows={sortRows(rowsFor(p.user_id))} isOther={true} loading={allPredsQ.isLoading} />

@@ -10,12 +10,12 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as ResetPasswordRouteImport } from './routes/reset-password'
+import { Route as MyPredictionsRouteImport } from './routes/my-predictions'
 import { Route as LuckboxRouteImport } from './routes/luckbox'
 import { Route as LeaderboardRouteImport } from './routes/leaderboard'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as IndexRouteImport } from './routes/index'
-import { Route as AuthenticatedMyPredictionsRouteImport } from './routes/_authenticated/my-predictions'
 import { Route as AuthenticatedAdminRouteImport } from './routes/_authenticated/admin'
 import { Route as ApiPublicSyncResultsRouteImport } from './routes/api/public/sync-results'
 import { Route as ApiPublicHooksSyncFixtureGoalsRouteImport } from './routes/api/public/hooks/sync-fixture-goals'
@@ -25,6 +25,11 @@ import { Route as ApiPublicHooksRefreshHighlightsRouteImport } from './routes/ap
 const ResetPasswordRoute = ResetPasswordRouteImport.update({
   id: '/reset-password',
   path: '/reset-password',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const MyPredictionsRoute = MyPredictionsRouteImport.update({
+  id: '/my-predictions',
+  path: '/my-predictions',
   getParentRoute: () => rootRouteImport,
 } as any)
 const LuckboxRoute = LuckboxRouteImport.update({
@@ -51,12 +56,6 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
-const AuthenticatedMyPredictionsRoute =
-  AuthenticatedMyPredictionsRouteImport.update({
-    id: '/my-predictions',
-    path: '/my-predictions',
-    getParentRoute: () => AuthenticatedRouteRoute,
-  } as any)
 const AuthenticatedAdminRoute = AuthenticatedAdminRouteImport.update({
   id: '/admin',
   path: '/admin',
@@ -91,9 +90,9 @@ export interface FileRoutesByFullPath {
   '/auth': typeof AuthRoute
   '/leaderboard': typeof LeaderboardRoute
   '/luckbox': typeof LuckboxRoute
+  '/my-predictions': typeof MyPredictionsRoute
   '/reset-password': typeof ResetPasswordRoute
   '/admin': typeof AuthenticatedAdminRoute
-  '/my-predictions': typeof AuthenticatedMyPredictionsRoute
   '/api/public/sync-results': typeof ApiPublicSyncResultsRoute
   '/api/public/hooks/refresh-highlights': typeof ApiPublicHooksRefreshHighlightsRoute
   '/api/public/hooks/refresh-team-form': typeof ApiPublicHooksRefreshTeamFormRoute
@@ -104,9 +103,9 @@ export interface FileRoutesByTo {
   '/auth': typeof AuthRoute
   '/leaderboard': typeof LeaderboardRoute
   '/luckbox': typeof LuckboxRoute
+  '/my-predictions': typeof MyPredictionsRoute
   '/reset-password': typeof ResetPasswordRoute
   '/admin': typeof AuthenticatedAdminRoute
-  '/my-predictions': typeof AuthenticatedMyPredictionsRoute
   '/api/public/sync-results': typeof ApiPublicSyncResultsRoute
   '/api/public/hooks/refresh-highlights': typeof ApiPublicHooksRefreshHighlightsRoute
   '/api/public/hooks/refresh-team-form': typeof ApiPublicHooksRefreshTeamFormRoute
@@ -119,9 +118,9 @@ export interface FileRoutesById {
   '/auth': typeof AuthRoute
   '/leaderboard': typeof LeaderboardRoute
   '/luckbox': typeof LuckboxRoute
+  '/my-predictions': typeof MyPredictionsRoute
   '/reset-password': typeof ResetPasswordRoute
   '/_authenticated/admin': typeof AuthenticatedAdminRoute
-  '/_authenticated/my-predictions': typeof AuthenticatedMyPredictionsRoute
   '/api/public/sync-results': typeof ApiPublicSyncResultsRoute
   '/api/public/hooks/refresh-highlights': typeof ApiPublicHooksRefreshHighlightsRoute
   '/api/public/hooks/refresh-team-form': typeof ApiPublicHooksRefreshTeamFormRoute
@@ -134,9 +133,9 @@ export interface FileRouteTypes {
     | '/auth'
     | '/leaderboard'
     | '/luckbox'
+    | '/my-predictions'
     | '/reset-password'
     | '/admin'
-    | '/my-predictions'
     | '/api/public/sync-results'
     | '/api/public/hooks/refresh-highlights'
     | '/api/public/hooks/refresh-team-form'
@@ -147,9 +146,9 @@ export interface FileRouteTypes {
     | '/auth'
     | '/leaderboard'
     | '/luckbox'
+    | '/my-predictions'
     | '/reset-password'
     | '/admin'
-    | '/my-predictions'
     | '/api/public/sync-results'
     | '/api/public/hooks/refresh-highlights'
     | '/api/public/hooks/refresh-team-form'
@@ -161,9 +160,9 @@ export interface FileRouteTypes {
     | '/auth'
     | '/leaderboard'
     | '/luckbox'
+    | '/my-predictions'
     | '/reset-password'
     | '/_authenticated/admin'
-    | '/_authenticated/my-predictions'
     | '/api/public/sync-results'
     | '/api/public/hooks/refresh-highlights'
     | '/api/public/hooks/refresh-team-form'
@@ -176,6 +175,7 @@ export interface RootRouteChildren {
   AuthRoute: typeof AuthRoute
   LeaderboardRoute: typeof LeaderboardRoute
   LuckboxRoute: typeof LuckboxRoute
+  MyPredictionsRoute: typeof MyPredictionsRoute
   ResetPasswordRoute: typeof ResetPasswordRoute
   ApiPublicSyncResultsRoute: typeof ApiPublicSyncResultsRoute
   ApiPublicHooksRefreshHighlightsRoute: typeof ApiPublicHooksRefreshHighlightsRoute
@@ -190,6 +190,13 @@ declare module '@tanstack/react-router' {
       path: '/reset-password'
       fullPath: '/reset-password'
       preLoaderRoute: typeof ResetPasswordRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/my-predictions': {
+      id: '/my-predictions'
+      path: '/my-predictions'
+      fullPath: '/my-predictions'
+      preLoaderRoute: typeof MyPredictionsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/luckbox': {
@@ -226,13 +233,6 @@ declare module '@tanstack/react-router' {
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
-    }
-    '/_authenticated/my-predictions': {
-      id: '/_authenticated/my-predictions'
-      path: '/my-predictions'
-      fullPath: '/my-predictions'
-      preLoaderRoute: typeof AuthenticatedMyPredictionsRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/admin': {
       id: '/_authenticated/admin'
@@ -274,12 +274,10 @@ declare module '@tanstack/react-router' {
 
 interface AuthenticatedRouteRouteChildren {
   AuthenticatedAdminRoute: typeof AuthenticatedAdminRoute
-  AuthenticatedMyPredictionsRoute: typeof AuthenticatedMyPredictionsRoute
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedAdminRoute: AuthenticatedAdminRoute,
-  AuthenticatedMyPredictionsRoute: AuthenticatedMyPredictionsRoute,
 }
 
 const AuthenticatedRouteRouteWithChildren =
@@ -291,6 +289,7 @@ const rootRouteChildren: RootRouteChildren = {
   AuthRoute: AuthRoute,
   LeaderboardRoute: LeaderboardRoute,
   LuckboxRoute: LuckboxRoute,
+  MyPredictionsRoute: MyPredictionsRoute,
   ResetPasswordRoute: ResetPasswordRoute,
   ApiPublicSyncResultsRoute: ApiPublicSyncResultsRoute,
   ApiPublicHooksRefreshHighlightsRoute: ApiPublicHooksRefreshHighlightsRoute,

@@ -57,16 +57,14 @@ export function SiteHeader() {
             <Trophy className="h-4 w-4" />
             Leaderboard
           </Link>
-          {user && (
-            <Link
-              to="/my-predictions"
-              className="inline-flex items-center gap-1.5 px-2 py-1 rounded-md text-primary-foreground/80 hover:text-primary-foreground hover:bg-white/5"
-              activeProps={{ className: "inline-flex items-center gap-1.5 px-2 py-1 rounded-md bg-primary/15 text-primary" }}
-            >
-              <ClipboardList className="h-4 w-4" />
-              Predictions
-            </Link>
-          )}
+          <Link
+            to="/my-predictions"
+            className="inline-flex items-center gap-1.5 px-2 py-1 rounded-md text-primary-foreground/80 hover:text-primary-foreground hover:bg-white/5"
+            activeProps={{ className: "inline-flex items-center gap-1.5 px-2 py-1 rounded-md bg-primary/15 text-primary" }}
+          >
+            <ClipboardList className="h-4 w-4" />
+            Predictions
+          </Link>
           <Link
             to="/luckbox"
             className="inline-flex items-center gap-1.5 px-2 py-1 rounded-md text-primary-foreground/80 hover:text-primary-foreground hover:bg-white/5"
