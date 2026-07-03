@@ -19,7 +19,7 @@ import {
   Tooltip,
 } from "recharts";
 
-export const Route = createFileRoute("/_authenticated/leaderboard")({
+export const Route = createFileRoute("/leaderboard")({
   head: () => ({
     meta: [
       { title: "Leaderboard – World Cup 2026 Predictor" },

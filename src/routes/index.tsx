@@ -34,7 +34,7 @@ function markWhatsNewDismissed() {
   }
 }
 
-export const Route = createFileRoute("/_authenticated/")({
+export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
       { title: "Fixtures – World Cup 2026 Predictor" },

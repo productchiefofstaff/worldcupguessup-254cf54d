@@ -21,7 +21,7 @@ import {
   TableCell,
 } from "@/components/ui/table";
 
-export const Route = createFileRoute("/_authenticated/luckbox")({
+export const Route = createFileRoute("/luckbox")({
   head: () => ({
     meta: [
       { title: "LuckBox – World Cup 2026 Predictor" },
