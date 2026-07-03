@@ -167,11 +167,15 @@ async function runSync(request: Request): Promise<Response> {
       processOdds(closingRes, "closing");
 
       if (rows.length) {
+        // Dedupe on the conflict key — same vendor can list multiple correct_score markets
+        const map = new Map<string, (typeof rows)[number]>();
+        for (const r of rows) map.set(`${r.vendor}|${r.odds_type}|${r.scoreline}`, r);
+        const unique = Array.from(map.values());
         const { error } = await supabaseAdmin
           .from("historic_odds")
-          .upsert(rows, { onConflict: "match_id,vendor,odds_type,scoreline" });
+          .upsert(unique, { onConflict: "match_id,vendor,odds_type,scoreline" });
         if (error) errors.push(`match ${m.id}: ${error.message}`);
-        else inserted += rows.length;
+        else inserted += unique.length;
       }
     } catch (e) {
       errors.push(`match ${m.id}: ${(e as Error).message}`);
