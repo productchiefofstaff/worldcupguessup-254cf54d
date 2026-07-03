@@ -15,6 +15,21 @@ export type TeamStrengths = {
   defense: Map<string, number>;
 };
 
+/**
+ * Calibration constants fitted against oddschecker "best odds" 1X2 markets
+ * on 9 upcoming World Cup fixtures (03–06 Jul 2026):
+ *   Argentina-Cape Verde, Australia-Egypt, Colombia-Ghana, Canada-Morocco,
+ *   Paraguay-France, Brazil-Norway, Mexico-England, Portugal-Spain,
+ *   USA-Belgium.
+ * Grid-searched α ∈ [0.1, 3.0] and goal scale ∈ [0.5, 2.0] minimising the
+ * summed squared error between market (overround-normalised) and Poisson
+ * H/D/A probabilities. Best fit: α = 0.5, scale = 1.2. α < 1 shrinks the
+ * raw ESPN 5-match GF/GA spread (which is noisy for small samples), and
+ * the 1.2 scale nudges overall goal totals to match observed WC-2026 pace.
+ */
+const STRENGTH_ALPHA = 0.5;
+const GOAL_SCALE = 1.2;
+
 function normKey(name: string): string {
   return name
     .normalize("NFD")
@@ -88,8 +103,13 @@ export function computeScoreOdds(
   if (attH === undefined || attA === undefined || defH === undefined || defA === undefined) {
     return null;
   }
-  const lambdaHome = attH * defA * strengths.leagueAvg;
-  const lambdaAway = attA * defH * strengths.leagueAvg;
+  // Apply calibrated strength stretch/shrink and goal-scale correction.
+  const attHc = Math.pow(attH, STRENGTH_ALPHA);
+  const attAc = Math.pow(attA, STRENGTH_ALPHA);
+  const defHc = Math.pow(defH, STRENGTH_ALPHA);
+  const defAc = Math.pow(defA, STRENGTH_ALPHA);
+  const lambdaHome = attHc * defAc * strengths.leagueAvg * GOAL_SCALE;
+  const lambdaAway = attAc * defHc * strengths.leagueAvg * GOAL_SCALE;
 
   const hProb: number[] = [];
   const aProb: number[] = [];
