@@ -25,7 +25,7 @@ export const Route = createFileRoute("/api/public/bdl-probe")({
           try {
             const r = await fetch(u, { headers: { Authorization: key, Accept: "application/json" } });
             const body = await r.text();
-            out.push({ url: u, status: r.status, body: body.slice(0, 1200) });
+            out.push({ url: u, status: r.status, body: body.slice(0, 20000) });
           } catch (e) {
             out.push({ url: u, error: (e as Error).message });
           }
