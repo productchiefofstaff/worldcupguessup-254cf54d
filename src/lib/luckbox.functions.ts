@@ -1,5 +1,5 @@
 import { createServerFn } from "@tanstack/react-start";
-import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import { db as supabase } from "@/lib/db";
 
 export type LuckGameDetail = {
   fixture_id: string;
@@ -38,10 +38,7 @@ function pointsFor(ph: number, pa: number, fh: number, fa: number): number {
 }
 
 export const getLuckBox = createServerFn({ method: "GET" })
-  .middleware([requireSupabaseAuth])
-  .handler(async ({ context }) => {
-    const { supabase } = context;
-
+  .handler(async () => {
     // Pull settled fixtures (90-min score locked).
     const { data: fixtures, error: fxErr } = await supabase
       .from("fixtures")
@@ -76,7 +73,7 @@ export const getLuckBox = createServerFn({ method: "GET" })
 
     // Group goals by fixture.
     const goalsByFx = new Map<string, Array<{ minute: number; minute_display: string; side: "home" | "away"; scorer: string | null }>>();
-    (goals ?? []).forEach((g) => {
+    (goals ?? []).forEach((g: any) => {
       const arr = goalsByFx.get(g.fixture_id) ?? [];
       arr.push({
         minute: g.minute,
@@ -109,7 +106,7 @@ export const getLuckBox = createServerFn({ method: "GET" })
 
     const fxById = new Map(fxRows.map((f) => [f.id, f]));
     const nameById = new Map<string, string>();
-    (profiles ?? []).forEach((p) => {
+    (profiles ?? []).forEach((p: any) => {
       const row = p as { id: string; display_name: string | null; show_on_leaderboard: boolean | null };
       if (row.show_on_leaderboard === false) return;
       nameById.set(row.id, row.display_name ?? "Player");
@@ -117,7 +114,7 @@ export const getLuckBox = createServerFn({ method: "GET" })
 
     const byUser = new Map<string, LuckPlayer>();
 
-    (preds ?? []).forEach((p) => {
+    (preds ?? []).forEach((p: any) => {
       const f = fxById.get(p.fixture_id);
       if (!f) return;
       const name = nameById.get(p.user_id);

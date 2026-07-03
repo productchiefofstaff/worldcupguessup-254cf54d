@@ -2,7 +2,8 @@ import { useEffect, useRef, useState } from "react";
 import { db as supabase } from "@/lib/db";
 import confetti from "canvas-confetti";
 import { Button } from "@/components/ui/button";
-import { Lock, ChevronDown, Radio, Check, Eye, ArrowLeft } from "lucide-react";
+import { Lock, ChevronDown, Radio, Check, Eye, ArrowLeft, LogIn } from "lucide-react";
+import { Link } from "@tanstack/react-router";
 import { Switch } from "@/components/ui/switch";
 import { toast } from "sonner";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
@@ -367,7 +368,7 @@ export function FixtureCard({
 }: {
   fixture: Fixture;
   prediction: Prediction | null;
-  userId: string;
+  userId?: string;
   homeForm: FormMatch[];
   awayForm: FormMatch[];
   avatarUrl?: string | null;
@@ -527,7 +528,8 @@ export function FixtureCard({
   const liveLabel = displayLiveLabel(fixture.live_status_label ?? null, fixture.live_updated_at, now);
   const extraTimeLabel = isExtraTime ? liveLabel : null;
   const userLocked = Boolean(prediction?.locked_at);
-  const editable = !locked && !userLocked;
+  const isSignedIn = Boolean(userId);
+  const editable = !locked && !userLocked && isSignedIn;
   const canSeeOthers = locked || userLocked;
   const pts = prediction ? pointsFor(prediction, fixture) : null;
   const showStatusRow = !locked || !hasResult || Boolean(prediction);
@@ -739,6 +741,15 @@ export function FixtureCard({
         {showStatusRow && (
           <div className="mt-3 flex items-center justify-between gap-2 min-h-[2rem]">
             {!locked ? (
+              !isSignedIn ? (
+                <Link
+                  to="/auth"
+                  className="inline-flex items-center gap-1.5 text-xs font-semibold text-primary hover:underline"
+                >
+                  <LogIn className="h-3 w-3" />
+                  Sign in to predict
+                </Link>
+              ) : (
               <>
                 {prediction ? (
                   <label className={"inline-flex items-center gap-1.5 text-xs font-semibold " + (userLocked ? "text-muted-foreground" : "text-muted-foreground")}>
@@ -769,6 +780,7 @@ export function FixtureCard({
                   </div>
                 )}
               </>
+              )
             ) : (
               <>
                 {!hasResult && !isLive && (

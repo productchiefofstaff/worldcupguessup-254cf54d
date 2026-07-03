@@ -34,7 +34,7 @@ function markWhatsNewDismissed() {
   }
 }
 
-export const Route = createFileRoute("/_authenticated/")({
+export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
       { title: "Fixtures – World Cup 2026 Predictor" },
@@ -175,8 +175,6 @@ function FixturesPage() {
     return entries;
   }, [filtered, tab]);
 
-  if (!user) return null;
-
   return (
     <main className="max-w-3xl mx-auto px-4 py-4 sm:py-6">
       <div className="mb-4 flex items-start justify-between gap-3">
@@ -230,8 +228,8 @@ function FixturesPage() {
                   key={f.id}
                   fixture={f}
                   prediction={predByFixture.get(f.id) ?? null}
-                  userId={user.id}
-                  avatarUrl={user.user_metadata?.avatar_url ?? user.user_metadata?.picture ?? null}
+                  userId={user?.id}
+                  avatarUrl={user?.user_metadata?.avatar_url ?? user?.user_metadata?.picture ?? null}
                   homeForm={formQ.data?.get(f.team_home) ?? []}
                   awayForm={formQ.data?.get(f.team_away) ?? []}
                 />

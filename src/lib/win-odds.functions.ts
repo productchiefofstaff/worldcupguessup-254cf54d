@@ -1,5 +1,5 @@
 import { createServerFn } from "@tanstack/react-start";
-import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import { db as supabase } from "@/lib/db";
 
 export type WinOdds = {
   players: { user_id: string; name: string; current: number; winPct: number; topPct: number }[];
@@ -15,12 +15,10 @@ function pointsFor(ph: number, pa: number, fh: number, fa: number): number {
 }
 
 export const getWinOdds = createServerFn({ method: "GET" })
-  .middleware([requireSupabaseAuth])
   .inputValidator(
     (input?: { userIds?: string[]; fromKickoff?: string }) => input ?? {},
   )
-  .handler(async ({ context, data }) => {
-    const { supabase } = context;
+  .handler(async ({ data }) => {
     const filterUserIds = data?.userIds;
     const fromKickoff = data?.fromKickoff;
     const [{ data: fixtures }, { data: preds }, { data: profiles }] = await Promise.all([
