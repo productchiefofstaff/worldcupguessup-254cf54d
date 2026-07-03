@@ -7,6 +7,7 @@ import { Trophy, Crown, ChevronDown, TrendingUp, Triangle } from "lucide-react";
 import { useServerFn } from "@tanstack/react-start";
 import { getLeaderboardHistory } from "@/lib/leaderboard-history.functions";
 import { getWinOdds } from "@/lib/win-odds.functions";
+import { getPnlHistory } from "@/lib/pnl.functions";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import {
   LineChart,
@@ -195,6 +196,7 @@ function OverallLeaderboard({ userId }: { userId?: string }) {
 
         <WinOdds />
         <PointsOverTime />
+        <PnlChart />
     </>
   );
 }
