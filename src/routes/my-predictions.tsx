@@ -7,7 +7,7 @@ import { ClipboardList } from "lucide-react";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { useState } from "react";
 
-export const Route = createFileRoute("/_authenticated/my-predictions")({
+export const Route = createFileRoute("/my-predictions")({
   head: () => ({
     meta: [
       { title: "Predictions – World Cup 2026 Predictor" },
