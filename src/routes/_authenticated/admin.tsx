@@ -242,11 +242,11 @@ function AdminPage() {
     });
 
   const now = Date.now();
-  const editableFixtures = (fixturesQ.data ?? [])
-    .filter((f) => new Date(f.kickoff_at).getTime() <= now)
+  const allFixtures = (fixturesQ.data ?? [])
+    .slice()
     .sort(
       (a, b) =>
-        new Date(b.kickoff_at).getTime() - new Date(a.kickoff_at).getTime(),
+        new Date(a.kickoff_at).getTime() - new Date(b.kickoff_at).getTime(),
     );
 
   function downloadCsv() {
