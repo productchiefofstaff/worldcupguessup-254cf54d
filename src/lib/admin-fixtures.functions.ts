@@ -221,3 +221,41 @@ export const setPredictionLock = createServerFn({ method: "POST" })
     if (error) throw new Error(error.message);
     return { ok: true };
   });
+
+export const updateFixtureOdds = createServerFn({ method: "POST" })
+  .inputValidator(
+    (input: { fixtureId: string; winningOdds: number | null }) => {
+      if (!input || typeof input.fixtureId !== "string") {
+        throw new Error("fixtureId required");
+      }
+      if (
+        input.winningOdds !== null &&
+        (typeof input.winningOdds !== "number" ||
+          !Number.isFinite(input.winningOdds) ||
+          input.winningOdds <= 1 ||
+          input.winningOdds > 10000)
+      ) {
+        throw new Error("winningOdds must be null or a decimal > 1");
+      }
+      return input;
+    },
+  )
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ data, context }) => {
+    const { data: isAdmin, error: roleErr } = await context.supabase.rpc(
+      "has_role",
+      { _user_id: context.userId, _role: "admin" },
+    );
+    if (roleErr) throw new Error(roleErr.message);
+    if (!isAdmin) throw new Error("Forbidden");
+
+    const { supabaseAdmin } = await import(
+      "@/integrations/supabase/client.server"
+    );
+    const { error } = await supabaseAdmin
+      .from("fixtures")
+      .update({ winning_odds: data.winningOdds })
+      .eq("id", data.fixtureId);
+    if (error) throw new Error(error.message);
+    return { ok: true };
+  });

@@ -7,6 +7,7 @@ import { Trophy, Crown, ChevronDown, TrendingUp, Triangle } from "lucide-react";
 import { useServerFn } from "@tanstack/react-start";
 import { getLeaderboardHistory } from "@/lib/leaderboard-history.functions";
 import { getWinOdds } from "@/lib/win-odds.functions";
+import { getPnlHistory } from "@/lib/pnl.functions";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import {
   LineChart,
@@ -195,6 +196,7 @@ function OverallLeaderboard({ userId }: { userId?: string }) {
 
         <WinOdds />
         <PointsOverTime />
+        <PnlChart />
     </>
   );
 }
@@ -701,6 +703,128 @@ function ChartTooltip({
         </div>
       ))}
     </div>
+  );
+}
+
+function PnlChart() {
+  const fetchPnl = useServerFn(getPnlHistory);
+  const { data, isLoading } = useQuery({
+    queryKey: ["pnl-history"],
+    queryFn: () => fetchPnl(),
+    staleTime: 60_000,
+  });
+
+  const chartData = React.useMemo(() => {
+    if (!data) return [];
+    return data.points.map((p) => {
+      const row: Record<string, any> = { label: p.label };
+      data.players.forEach((pl) => {
+        row[pl.user_id] = Number(p[pl.user_id] ?? 0);
+      });
+      return row;
+    });
+  }, [data]);
+
+  const ticks = React.useMemo(() => {
+    if (!chartData.length) return [];
+    const step = Math.max(1, Math.floor(chartData.length / 6));
+    return chartData.filter((_, i) => i % step === 0).map((r) => r.label as string);
+  }, [chartData]);
+
+  const [hidden, setHidden] = React.useState<Record<string, boolean>>({});
+  const toggle = React.useCallback((id: string) => {
+    setHidden((h) => ({ ...h, [id]: !h[id] }));
+  }, []);
+
+  const finals = React.useMemo(() => {
+    if (!data || !chartData.length) return [];
+    const last = chartData[chartData.length - 1];
+    return data.players
+      .map((p) => ({ ...p, pnl: Number(last[p.user_id] ?? 0) }))
+      .sort((a, b) => b.pnl - a.pnl);
+  }, [data, chartData]);
+
+  return (
+    <section className="mt-6">
+      <div className="mb-2 flex items-baseline justify-between">
+        <h2 className="text-sm font-bold text-ink flex items-center gap-1.5">
+          <TrendingUp className="h-4 w-4 text-primary" />
+          Betting P&amp;L
+        </h2>
+        <span className="text-[10px] text-muted-foreground">£1 on every predicted score</span>
+      </div>
+      <div className="bg-card border border-border rounded-xl p-3">
+        {isLoading && (
+          <p className="text-sm text-muted-foreground text-center py-8">Loading…</p>
+        )}
+        {!isLoading && data && data.players.length > 0 && chartData.length > 1 && (
+          <>
+            <div className="h-64 w-full">
+              <ResponsiveContainer width="100%" height="100%">
+                <LineChart data={chartData} margin={{ top: 8, right: 8, left: -8, bottom: 8 }}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                  <XAxis
+                    dataKey="label"
+                    tick={{ fontSize: 10, fill: "hsl(var(--muted-foreground))" }}
+                    ticks={ticks}
+                  />
+                  <YAxis
+                    tick={{ fontSize: 10, fill: "hsl(var(--muted-foreground))" }}
+                    width={44}
+                    tickFormatter={(v) => `£${Math.round(Number(v))}`}
+                  />
+                  <Tooltip
+                    content={<ChartTooltip formatter={(v: number) => `£${Number(v).toFixed(2)}`} />}
+                    cursor={{ stroke: "hsl(var(--muted-foreground))", strokeDasharray: "3 3" }}
+                  />
+                  {data.players.map((p, i) => (
+                    <Line
+                      key={p.user_id}
+                      type="monotone"
+                      dataKey={p.user_id}
+                      name={p.name}
+                      stroke={LINE_COLORS[i % LINE_COLORS.length]}
+                      strokeWidth={1.5}
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      dot={false}
+                      activeDot={{ r: 4 }}
+                      connectNulls
+                      isAnimationActive={false}
+                      hide={hidden[p.user_id]}
+                    />
+                  ))}
+                </LineChart>
+              </ResponsiveContainer>
+            </div>
+            <ChartLegend players={data.players} hidden={hidden} onToggle={toggle} />
+            <div className="mt-2 border-t border-border/60 pt-2 grid grid-cols-2 sm:grid-cols-3 gap-x-3 gap-y-1">
+              {finals.map((p) => (
+                <div key={p.user_id} className="flex justify-between text-[11px]">
+                  <span className="text-muted-foreground truncate">{p.name}</span>
+                  <span
+                    className={
+                      "font-bold tabular-nums " +
+                      (p.pnl > 0 ? "text-success" : p.pnl < 0 ? "text-destructive" : "text-foreground")
+                    }
+                  >
+                    {p.pnl >= 0 ? "+" : "−"}£{Math.abs(p.pnl).toFixed(2)}
+                  </span>
+                </div>
+              ))}
+            </div>
+          </>
+        )}
+        {!isLoading && (!data || chartData.length <= 1) && (
+          <p className="text-sm text-muted-foreground text-center py-8">
+            No settled fixtures with odds yet.
+          </p>
+        )}
+        <p className="text-[10px] text-muted-foreground mt-3 leading-snug">
+          Assumes a £1 bet on every predicted exact scoreline. Win pays £1 × (decimal odds − 1); miss loses £1. Odds come from the BALLDONTLIE historic feed for past matches and admin-entered odds for future ones.
+        </p>
+      </div>
+    </section>
   );
 }
 
