@@ -728,9 +728,10 @@ function AdminPage() {
       {tab === "fixtures" && (
         <div className="bg-card border border-border rounded-md overflow-x-auto">
           <p className="px-3 py-2 text-[11px] text-muted-foreground border-b border-border">
-            Live and completed matches. Scores normally come from the automatic
-            scraper — manual edits here override it and update the leaderboard
-            immediately.
+            Every fixture. Scores are editable once kickoff has passed and
+            override the automatic scraper. Odds are the correct-score decimal
+            odds for the actual final scoreline and feed the leaderboard P&L
+            chart — leave blank if you don't have odds for a game.
           </p>
           <table className="w-full text-sm">
             <thead className="bg-surface text-[10px] uppercase tracking-wider text-muted-foreground">
