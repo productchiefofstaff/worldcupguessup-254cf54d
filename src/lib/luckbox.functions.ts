@@ -1,5 +1,5 @@
 import { createServerFn } from "@tanstack/react-start";
-import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import { db as supabase } from "@/lib/db";
 
 export type LuckGameDetail = {
   fixture_id: string;
@@ -38,10 +38,7 @@ function pointsFor(ph: number, pa: number, fh: number, fa: number): number {
 }
 
 export const getLuckBox = createServerFn({ method: "GET" })
-  .middleware([requireSupabaseAuth])
-  .handler(async ({ context }) => {
-    const { supabase } = context;
-
+  .handler(async () => {
     // Pull settled fixtures (90-min score locked).
     const { data: fixtures, error: fxErr } = await supabase
       .from("fixtures")
