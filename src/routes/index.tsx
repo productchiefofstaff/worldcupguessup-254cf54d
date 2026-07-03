@@ -4,6 +4,7 @@ import { db as supabase } from "@/lib/db";
 import { useAuth } from "@/hooks/use-auth";
 import { FixtureCard, type Fixture, type Prediction } from "@/components/FixtureCard";
 import type { FormMatch } from "@/lib/team-form.functions";
+import { buildTeamStrengths, computeScoreOdds, type ScoreOdds } from "@/lib/score-odds";
 import { useMemo, useState } from "react";
 import {
   Dialog,
@@ -144,6 +145,22 @@ function FixturesPage() {
     return map;
   }, [predsQ.data]);
 
+  const strengths = useMemo(
+    () => (formQ.data ? buildTeamStrengths(formQ.data) : null),
+    [formQ.data],
+  );
+  const oddsByFixture = useMemo(() => {
+    const map = new Map<string, ScoreOdds>();
+    if (!strengths || !fixturesQ.data) return map;
+    fixturesQ.data.forEach((f) => {
+      const hasResult = f.home_score !== null && f.away_score !== null;
+      if (hasResult) return;
+      const o = computeScoreOdds(f.team_home, f.team_away, strengths);
+      if (o) map.set(f.id, o);
+    });
+    return map;
+  }, [strengths, fixturesQ.data]);
+
   const filtered = useMemo(() => {
     const all = fixturesQ.data ?? [];
     return all.filter((f) => {
@@ -232,6 +249,7 @@ function FixturesPage() {
                   avatarUrl={user?.user_metadata?.avatar_url ?? user?.user_metadata?.picture ?? null}
                   homeForm={formQ.data?.get(f.team_home) ?? []}
                   awayForm={formQ.data?.get(f.team_away) ?? []}
+                  scoreOdds={oddsByFixture.get(f.id) ?? null}
                 />
               ))}
             </div>
