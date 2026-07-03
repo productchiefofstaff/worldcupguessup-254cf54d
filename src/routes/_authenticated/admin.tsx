@@ -738,13 +738,16 @@ function AdminPage() {
                 <th className="text-left px-3 py-2">Match</th>
                 <th className="text-right px-3 py-2 whitespace-nowrap">Kickoff</th>
                 <th className="text-right px-3 py-2">Score</th>
+                <th className="text-right px-3 py-2 whitespace-nowrap">Odds</th>
                 <th className="text-right px-3 py-2">Edit</th>
               </tr>
             </thead>
             <tbody>
-              {editableFixtures.map((f) => {
+              {allFixtures.map((f) => {
                 const isEditing = editingId === f.id;
                 const hasScore = f.home_score !== null && f.away_score !== null;
+                const isPast = new Date(f.kickoff_at).getTime() <= now;
+                const isEditingOdds = editingOddsId === f.id;
                 return (
                   <tr key={f.id} className="border-t border-border">
                     <td className="px-3 py-2">
@@ -795,6 +798,51 @@ function AdminPage() {
                         </>
                       )}
                     </td>
+                    <td className="px-3 py-2 text-right text-[11px] whitespace-nowrap">
+                      {isEditingOdds ? (
+                        <span className="inline-flex items-center gap-1 justify-end">
+                          <input
+                            type="number"
+                            step="0.01"
+                            min={1.01}
+                            value={editOdds}
+                            onChange={(e) => setEditOdds(e.target.value)}
+                            className="w-16 text-right border border-border rounded-sm px-1 py-0.5 bg-background"
+                            placeholder="1.00"
+                          />
+                          <button
+                            disabled={oddsMut.isPending}
+                            onClick={() => {
+                              const raw = editOdds.trim();
+                              const val = raw === "" ? null : Number(raw);
+                              if (val !== null && (!Number.isFinite(val) || val <= 1)) return;
+                              oddsMut.mutate({ fixtureId: f.id, winningOdds: val });
+                            }}
+                            className="text-[10px] font-bold bg-primary text-primary-foreground px-1.5 py-0.5 rounded-sm hover:opacity-90 disabled:opacity-50"
+                          >
+                            Save
+                          </button>
+                          <button
+                            disabled={oddsMut.isPending}
+                            onClick={() => setEditingOddsId(null)}
+                            className="text-[10px] font-bold border border-border px-1.5 py-0.5 rounded-sm hover:bg-surface"
+                          >
+                            ×
+                          </button>
+                        </span>
+                      ) : (
+                        <button
+                          onClick={() => {
+                            setEditingOddsId(f.id);
+                            setEditOdds(f.winning_odds != null ? String(f.winning_odds) : "");
+                          }}
+                          className="font-bold text-foreground hover:text-primary"
+                          title="Correct-score decimal odds for the actual final scoreline"
+                        >
+                          {f.winning_odds != null ? Number(f.winning_odds).toFixed(2) : "—"}
+                        </button>
+                      )}
+                    </td>
                     <td className="px-3 py-2 text-right">
                       {isEditing ? (
                         <span className="inline-flex gap-1 justify-end">
@@ -818,7 +866,7 @@ function AdminPage() {
                             Cancel
                           </button>
                         </span>
-                      ) : (
+                      ) : isPast ? (
                         <button
                           onClick={() => {
                             setEditingId(f.id);
@@ -830,23 +878,25 @@ function AdminPage() {
                           <Pencil className="h-3 w-3" />
                           {hasScore ? "Edit" : "Add"}
                         </button>
+                      ) : (
+                        <span className="text-[11px] text-muted-foreground">—</span>
                       )}
                     </td>
                   </tr>
                 );
               })}
-              {editableFixtures.length === 0 && (
+              {allFixtures.length === 0 && (
                 <tr>
-                  <td colSpan={4} className="p-6 text-center text-sm text-muted-foreground">
-                    No live or completed fixtures yet.
+                  <td colSpan={5} className="p-6 text-center text-sm text-muted-foreground">
+                    No fixtures yet.
                   </td>
                 </tr>
               )}
             </tbody>
           </table>
-          {updateMut.isError && (
+          {(updateMut.isError || oddsMut.isError) && (
             <p className="px-3 py-2 text-[11px] text-destructive border-t border-border">
-              {(updateMut.error as Error).message}
+              {((updateMut.error || oddsMut.error) as Error).message}
             </p>
           )}
         </div>
