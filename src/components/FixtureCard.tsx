@@ -844,6 +844,37 @@ export function FixtureCard({
           </div>
         )}
 
+        {scoreOdds && !hasResult && !isLive && (
+          <div className="mt-3 border-t border-border -mx-3 px-3 pt-2">
+            <div className="text-[10px] uppercase tracking-wider font-bold text-muted-foreground mb-1.5">
+              Poisson odds
+            </div>
+            <div className="flex items-center justify-between gap-2 text-xs font-semibold text-ink">
+              <div className="flex items-center gap-1 tabular-nums">
+                <span className="text-muted-foreground">{fixture.team_home.slice(0, 3).toUpperCase()}</span>
+                <span>{Math.round(scoreOdds.homeWin * 100)}%</span>
+                <span className="text-muted-foreground mx-1">·</span>
+                <span className="text-muted-foreground">Draw</span>
+                <span>{Math.round(scoreOdds.draw * 100)}%</span>
+                <span className="text-muted-foreground mx-1">·</span>
+                <span className="text-muted-foreground">{fixture.team_away.slice(0, 3).toUpperCase()}</span>
+                <span>{Math.round(scoreOdds.awayWin * 100)}%</span>
+              </div>
+            </div>
+            <div className="mt-1.5 flex items-center gap-1.5 text-xs">
+              {scoreOdds.topScores.map((s, i) => (
+                <span
+                  key={i}
+                  className="inline-flex items-center gap-1 rounded-sm bg-muted px-1.5 py-0.5 tabular-nums"
+                >
+                  <span className="font-bold text-ink">{s.home}-{s.away}</span>
+                  <span className="text-muted-foreground">{(s.prob * 100).toFixed(1)}%</span>
+                </span>
+              ))}
+            </div>
+          </div>
+        )}
+
         <Collapsible open={open} onOpenChange={setOpen} className="mt-2 border-t border-border -mx-3 -mb-3">
           <CollapsibleTrigger
             disabled={!canSeeOthers || hideScore}
