@@ -367,7 +367,7 @@ export function FixtureCard({
 }: {
   fixture: Fixture;
   prediction: Prediction | null;
-  userId: string;
+  userId?: string;
   homeForm: FormMatch[];
   awayForm: FormMatch[];
   avatarUrl?: string | null;
@@ -527,7 +527,8 @@ export function FixtureCard({
   const liveLabel = displayLiveLabel(fixture.live_status_label ?? null, fixture.live_updated_at, now);
   const extraTimeLabel = isExtraTime ? liveLabel : null;
   const userLocked = Boolean(prediction?.locked_at);
-  const editable = !locked && !userLocked;
+  const isSignedIn = Boolean(userId);
+  const editable = !locked && !userLocked && isSignedIn;
   const canSeeOthers = locked || userLocked;
   const pts = prediction ? pointsFor(prediction, fixture) : null;
   const showStatusRow = !locked || !hasResult || Boolean(prediction);
