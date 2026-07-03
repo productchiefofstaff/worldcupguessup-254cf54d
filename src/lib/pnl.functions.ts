@@ -86,14 +86,15 @@ export const getPnlHistory = createServerFn({ method: "GET" }).handler(async () 
 
   (fixtures ?? []).forEach((fx: any) => {
     const odds = pickOdds(fx, (historic ?? []) as any[]);
+    // Skip fixtures we have no odds for — otherwise misses show as -£1 while
+    // correct scores can't be paid out, which reads as "nobody ever wins".
+    if (!odds) return;
     players.forEach((pl) => {
       const pred = predByKey.get(`${pl.user_id}|${fx.id}`);
       if (!pred) return; // no bet, no change
       const isExact = pred.home === fx.home_score && pred.away === fx.away_score;
-      if (isExact && odds) {
+      if (isExact) {
         totals.set(pl.user_id, (totals.get(pl.user_id) ?? 0) + (odds - 1));
-      } else if (isExact && !odds) {
-        // exact hit but no odds available — treat as break-even to avoid punishing missing data
       } else {
         totals.set(pl.user_id, (totals.get(pl.user_id) ?? 0) - 1);
       }
