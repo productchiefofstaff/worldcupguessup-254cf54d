@@ -11,6 +11,7 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/component
 import { flagFor } from "@/lib/flags";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import type { FormMatch } from "@/lib/team-form.functions";
+import type { ScoreOdds } from "@/lib/score-odds";
 
 export type Fixture = {
   id: string;
@@ -365,6 +366,7 @@ export function FixtureCard({
   homeForm,
   awayForm,
   avatarUrl,
+  scoreOdds,
 }: {
   fixture: Fixture;
   prediction: Prediction | null;
@@ -372,6 +374,7 @@ export function FixtureCard({
   homeForm: FormMatch[];
   awayForm: FormMatch[];
   avatarUrl?: string | null;
+  scoreOdds?: ScoreOdds | null;
 }) {
   const queryClient = useQueryClient();
   const [home, setHome] = useState<string>(prediction ? String(prediction.home_score) : "");
