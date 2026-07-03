@@ -7,7 +7,6 @@ import {
   deleteUser,
   upsertPredictionForUser,
   setPredictionLock,
-  updateFixtureOdds,
 } from "@/lib/admin-fixtures.functions";
 import { db as supabase } from "@/lib/db";
 import { useAuth } from "@/hooks/use-auth";
@@ -41,7 +40,6 @@ type Fixture = {
   kickoff_at: string;
   home_score: number | null;
   away_score: number | null;
-  winning_odds: number | null;
 };
 type Profile = { id: string; display_name: string; created_at?: string; show_on_leaderboard?: boolean; last_visit_at?: string | null };
 
@@ -54,12 +52,9 @@ function AdminPage() {
   const deleteUserFn = useServerFn(deleteUser);
   const upsertPredFn = useServerFn(upsertPredictionForUser);
   const setLockFn = useServerFn(setPredictionLock);
-  const updateOddsFn = useServerFn(updateFixtureOdds);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editHome, setEditHome] = useState<string>("");
   const [editAway, setEditAway] = useState<string>("");
-  const [editingOddsId, setEditingOddsId] = useState<string | null>(null);
-  const [editOdds, setEditOdds] = useState<string>("");
   const [addUserId, setAddUserId] = useState<string>("");
   const [addFixtureId, setAddFixtureId] = useState<string>("");
   const [addHome, setAddHome] = useState<string>("");
@@ -122,16 +117,6 @@ function AdminPage() {
     },
   });
 
-  const oddsMut = useMutation({
-    mutationFn: (vars: { fixtureId: string; winningOdds: number | null }) =>
-      updateOddsFn({ data: vars }),
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ["fixtures-admin"] });
-      qc.invalidateQueries({ queryKey: ["pnl-history"] });
-      setEditingOddsId(null);
-    },
-  });
-
   const roleQ = useQuery({
     queryKey: ["my-role", user?.id],
     enabled: !!user,
@@ -163,7 +148,7 @@ function AdminPage() {
     queryFn: async () => {
       const { data } = await supabase
         .from("fixtures")
-        .select("id, match_number, stage, team_home, team_away, kickoff_at, home_score, away_score, winning_odds");
+        .select("id, match_number, stage, team_home, team_away, kickoff_at, home_score, away_score");
       return (data ?? []) as Fixture[];
     },
   });
@@ -242,11 +227,11 @@ function AdminPage() {
     });
 
   const now = Date.now();
-  const allFixtures = (fixturesQ.data ?? [])
-    .slice()
+  const editableFixtures = (fixturesQ.data ?? [])
+    .filter((f) => new Date(f.kickoff_at).getTime() <= now)
     .sort(
       (a, b) =>
-        new Date(a.kickoff_at).getTime() - new Date(b.kickoff_at).getTime(),
+        new Date(b.kickoff_at).getTime() - new Date(a.kickoff_at).getTime(),
     );
 
   function downloadCsv() {
@@ -728,10 +713,9 @@ function AdminPage() {
       {tab === "fixtures" && (
         <div className="bg-card border border-border rounded-md overflow-x-auto">
           <p className="px-3 py-2 text-[11px] text-muted-foreground border-b border-border">
-            Every fixture. Scores are editable once kickoff has passed and
-            override the automatic scraper. Odds are the correct-score decimal
-            odds for the actual final scoreline and feed the leaderboard P&L
-            chart — leave blank if you don't have odds for a game.
+            Live and completed matches. Scores normally come from the automatic
+            scraper — manual edits here override it and update the leaderboard
+            immediately.
           </p>
           <table className="w-full text-sm">
             <thead className="bg-surface text-[10px] uppercase tracking-wider text-muted-foreground">
@@ -739,16 +723,13 @@ function AdminPage() {
                 <th className="text-left px-3 py-2">Match</th>
                 <th className="text-right px-3 py-2 whitespace-nowrap">Kickoff</th>
                 <th className="text-right px-3 py-2">Score</th>
-                <th className="text-right px-3 py-2 whitespace-nowrap">Odds</th>
                 <th className="text-right px-3 py-2">Edit</th>
               </tr>
             </thead>
             <tbody>
-              {allFixtures.map((f) => {
+              {editableFixtures.map((f) => {
                 const isEditing = editingId === f.id;
                 const hasScore = f.home_score !== null && f.away_score !== null;
-                const isPast = new Date(f.kickoff_at).getTime() <= now;
-                const isEditingOdds = editingOddsId === f.id;
                 return (
                   <tr key={f.id} className="border-t border-border">
                     <td className="px-3 py-2">
@@ -799,51 +780,6 @@ function AdminPage() {
                         </>
                       )}
                     </td>
-                    <td className="px-3 py-2 text-right text-[11px] whitespace-nowrap">
-                      {isEditingOdds ? (
-                        <span className="inline-flex items-center gap-1 justify-end">
-                          <input
-                            type="number"
-                            step="0.01"
-                            min={1.01}
-                            value={editOdds}
-                            onChange={(e) => setEditOdds(e.target.value)}
-                            className="w-16 text-right border border-border rounded-sm px-1 py-0.5 bg-background"
-                            placeholder="1.00"
-                          />
-                          <button
-                            disabled={oddsMut.isPending}
-                            onClick={() => {
-                              const raw = editOdds.trim();
-                              const val = raw === "" ? null : Number(raw);
-                              if (val !== null && (!Number.isFinite(val) || val <= 1)) return;
-                              oddsMut.mutate({ fixtureId: f.id, winningOdds: val });
-                            }}
-                            className="text-[10px] font-bold bg-primary text-primary-foreground px-1.5 py-0.5 rounded-sm hover:opacity-90 disabled:opacity-50"
-                          >
-                            Save
-                          </button>
-                          <button
-                            disabled={oddsMut.isPending}
-                            onClick={() => setEditingOddsId(null)}
-                            className="text-[10px] font-bold border border-border px-1.5 py-0.5 rounded-sm hover:bg-surface"
-                          >
-                            ×
-                          </button>
-                        </span>
-                      ) : (
-                        <button
-                          onClick={() => {
-                            setEditingOddsId(f.id);
-                            setEditOdds(f.winning_odds != null ? String(f.winning_odds) : "");
-                          }}
-                          className="font-bold text-foreground hover:text-primary"
-                          title="Correct-score decimal odds for the actual final scoreline"
-                        >
-                          {f.winning_odds != null ? Number(f.winning_odds).toFixed(2) : "—"}
-                        </button>
-                      )}
-                    </td>
                     <td className="px-3 py-2 text-right">
                       {isEditing ? (
                         <span className="inline-flex gap-1 justify-end">
@@ -867,7 +803,7 @@ function AdminPage() {
                             Cancel
                           </button>
                         </span>
-                      ) : isPast ? (
+                      ) : (
                         <button
                           onClick={() => {
                             setEditingId(f.id);
@@ -879,25 +815,23 @@ function AdminPage() {
                           <Pencil className="h-3 w-3" />
                           {hasScore ? "Edit" : "Add"}
                         </button>
-                      ) : (
-                        <span className="text-[11px] text-muted-foreground">—</span>
                       )}
                     </td>
                   </tr>
                 );
               })}
-              {allFixtures.length === 0 && (
+              {editableFixtures.length === 0 && (
                 <tr>
-                  <td colSpan={5} className="p-6 text-center text-sm text-muted-foreground">
-                    No fixtures yet.
+                  <td colSpan={4} className="p-6 text-center text-sm text-muted-foreground">
+                    No live or completed fixtures yet.
                   </td>
                 </tr>
               )}
             </tbody>
           </table>
-          {(updateMut.isError || oddsMut.isError) && (
+          {updateMut.isError && (
             <p className="px-3 py-2 text-[11px] text-destructive border-t border-border">
-              {((updateMut.error || oddsMut.error) as Error).message}
+              {(updateMut.error as Error).message}
             </p>
           )}
         </div>

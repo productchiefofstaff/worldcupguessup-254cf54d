@@ -85,7 +85,6 @@ export type Database = {
           team_away: string
           team_home: string
           winner_team: string | null
-          winning_odds: number | null
         }
         Insert: {
           away_1x2?: number | null
@@ -116,7 +115,6 @@ export type Database = {
           team_away: string
           team_home: string
           winner_team?: string | null
-          winning_odds?: number | null
         }
         Update: {
           away_1x2?: number | null
@@ -147,58 +145,6 @@ export type Database = {
           team_away?: string
           team_home?: string
           winner_team?: string | null
-          winning_odds?: number | null
-        }
-        Relationships: []
-      }
-      historic_odds: {
-        Row: {
-          american_odds: number | null
-          away_team: string
-          created_at: string
-          decimal_odds: number | null
-          final_away_score: number | null
-          final_home_score: number | null
-          home_team: string
-          id: string
-          match_date: string
-          match_id: number
-          odds_type: string
-          scoreline: string
-          stage: string | null
-          vendor: string
-        }
-        Insert: {
-          american_odds?: number | null
-          away_team: string
-          created_at?: string
-          decimal_odds?: number | null
-          final_away_score?: number | null
-          final_home_score?: number | null
-          home_team: string
-          id?: string
-          match_date: string
-          match_id: number
-          odds_type: string
-          scoreline: string
-          stage?: string | null
-          vendor: string
-        }
-        Update: {
-          american_odds?: number | null
-          away_team?: string
-          created_at?: string
-          decimal_odds?: number | null
-          final_away_score?: number | null
-          final_home_score?: number | null
-          home_team?: string
-          id?: string
-          match_date?: string
-          match_id?: number
-          odds_type?: string
-          scoreline?: string
-          stage?: string | null
-          vendor?: string
         }
         Relationships: []
       }

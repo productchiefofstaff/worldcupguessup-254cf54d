@@ -18,8 +18,6 @@ import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthenticatedAdminRouteImport } from './routes/_authenticated/admin'
 import { Route as ApiPublicSyncResultsRouteImport } from './routes/api/public/sync-results'
-import { Route as ApiPublicBdlSyncRouteImport } from './routes/api/public/bdl-sync'
-import { Route as ApiPublicBdlProbeRouteImport } from './routes/api/public/bdl-probe'
 import { Route as ApiPublicHooksSyncFixtureGoalsRouteImport } from './routes/api/public/hooks/sync-fixture-goals'
 import { Route as ApiPublicHooksRefreshTeamFormRouteImport } from './routes/api/public/hooks/refresh-team-form'
 import { Route as ApiPublicHooksRefreshHighlightsRouteImport } from './routes/api/public/hooks/refresh-highlights'
@@ -68,16 +66,6 @@ const ApiPublicSyncResultsRoute = ApiPublicSyncResultsRouteImport.update({
   path: '/api/public/sync-results',
   getParentRoute: () => rootRouteImport,
 } as any)
-const ApiPublicBdlSyncRoute = ApiPublicBdlSyncRouteImport.update({
-  id: '/api/public/bdl-sync',
-  path: '/api/public/bdl-sync',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ApiPublicBdlProbeRoute = ApiPublicBdlProbeRouteImport.update({
-  id: '/api/public/bdl-probe',
-  path: '/api/public/bdl-probe',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const ApiPublicHooksSyncFixtureGoalsRoute =
   ApiPublicHooksSyncFixtureGoalsRouteImport.update({
     id: '/api/public/hooks/sync-fixture-goals',
@@ -105,8 +93,6 @@ export interface FileRoutesByFullPath {
   '/my-predictions': typeof MyPredictionsRoute
   '/reset-password': typeof ResetPasswordRoute
   '/admin': typeof AuthenticatedAdminRoute
-  '/api/public/bdl-probe': typeof ApiPublicBdlProbeRoute
-  '/api/public/bdl-sync': typeof ApiPublicBdlSyncRoute
   '/api/public/sync-results': typeof ApiPublicSyncResultsRoute
   '/api/public/hooks/refresh-highlights': typeof ApiPublicHooksRefreshHighlightsRoute
   '/api/public/hooks/refresh-team-form': typeof ApiPublicHooksRefreshTeamFormRoute
@@ -120,8 +106,6 @@ export interface FileRoutesByTo {
   '/my-predictions': typeof MyPredictionsRoute
   '/reset-password': typeof ResetPasswordRoute
   '/admin': typeof AuthenticatedAdminRoute
-  '/api/public/bdl-probe': typeof ApiPublicBdlProbeRoute
-  '/api/public/bdl-sync': typeof ApiPublicBdlSyncRoute
   '/api/public/sync-results': typeof ApiPublicSyncResultsRoute
   '/api/public/hooks/refresh-highlights': typeof ApiPublicHooksRefreshHighlightsRoute
   '/api/public/hooks/refresh-team-form': typeof ApiPublicHooksRefreshTeamFormRoute
@@ -137,8 +121,6 @@ export interface FileRoutesById {
   '/my-predictions': typeof MyPredictionsRoute
   '/reset-password': typeof ResetPasswordRoute
   '/_authenticated/admin': typeof AuthenticatedAdminRoute
-  '/api/public/bdl-probe': typeof ApiPublicBdlProbeRoute
-  '/api/public/bdl-sync': typeof ApiPublicBdlSyncRoute
   '/api/public/sync-results': typeof ApiPublicSyncResultsRoute
   '/api/public/hooks/refresh-highlights': typeof ApiPublicHooksRefreshHighlightsRoute
   '/api/public/hooks/refresh-team-form': typeof ApiPublicHooksRefreshTeamFormRoute
@@ -154,8 +136,6 @@ export interface FileRouteTypes {
     | '/my-predictions'
     | '/reset-password'
     | '/admin'
-    | '/api/public/bdl-probe'
-    | '/api/public/bdl-sync'
     | '/api/public/sync-results'
     | '/api/public/hooks/refresh-highlights'
     | '/api/public/hooks/refresh-team-form'
@@ -169,8 +149,6 @@ export interface FileRouteTypes {
     | '/my-predictions'
     | '/reset-password'
     | '/admin'
-    | '/api/public/bdl-probe'
-    | '/api/public/bdl-sync'
     | '/api/public/sync-results'
     | '/api/public/hooks/refresh-highlights'
     | '/api/public/hooks/refresh-team-form'
@@ -185,8 +163,6 @@ export interface FileRouteTypes {
     | '/my-predictions'
     | '/reset-password'
     | '/_authenticated/admin'
-    | '/api/public/bdl-probe'
-    | '/api/public/bdl-sync'
     | '/api/public/sync-results'
     | '/api/public/hooks/refresh-highlights'
     | '/api/public/hooks/refresh-team-form'
@@ -201,8 +177,6 @@ export interface RootRouteChildren {
   LuckboxRoute: typeof LuckboxRoute
   MyPredictionsRoute: typeof MyPredictionsRoute
   ResetPasswordRoute: typeof ResetPasswordRoute
-  ApiPublicBdlProbeRoute: typeof ApiPublicBdlProbeRoute
-  ApiPublicBdlSyncRoute: typeof ApiPublicBdlSyncRoute
   ApiPublicSyncResultsRoute: typeof ApiPublicSyncResultsRoute
   ApiPublicHooksRefreshHighlightsRoute: typeof ApiPublicHooksRefreshHighlightsRoute
   ApiPublicHooksRefreshTeamFormRoute: typeof ApiPublicHooksRefreshTeamFormRoute
@@ -274,20 +248,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicSyncResultsRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/api/public/bdl-sync': {
-      id: '/api/public/bdl-sync'
-      path: '/api/public/bdl-sync'
-      fullPath: '/api/public/bdl-sync'
-      preLoaderRoute: typeof ApiPublicBdlSyncRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/api/public/bdl-probe': {
-      id: '/api/public/bdl-probe'
-      path: '/api/public/bdl-probe'
-      fullPath: '/api/public/bdl-probe'
-      preLoaderRoute: typeof ApiPublicBdlProbeRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/api/public/hooks/sync-fixture-goals': {
       id: '/api/public/hooks/sync-fixture-goals'
       path: '/api/public/hooks/sync-fixture-goals'
@@ -331,8 +291,6 @@ const rootRouteChildren: RootRouteChildren = {
   LuckboxRoute: LuckboxRoute,
   MyPredictionsRoute: MyPredictionsRoute,
   ResetPasswordRoute: ResetPasswordRoute,
-  ApiPublicBdlProbeRoute: ApiPublicBdlProbeRoute,
-  ApiPublicBdlSyncRoute: ApiPublicBdlSyncRoute,
   ApiPublicSyncResultsRoute: ApiPublicSyncResultsRoute,
   ApiPublicHooksRefreshHighlightsRoute: ApiPublicHooksRefreshHighlightsRoute,
   ApiPublicHooksRefreshTeamFormRoute: ApiPublicHooksRefreshTeamFormRoute,
@@ -341,13 +299,3 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}
