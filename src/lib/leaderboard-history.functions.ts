@@ -1,5 +1,5 @@
 import { createServerFn } from "@tanstack/react-start";
-import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import { db as supabase } from "@/lib/db";
 
 export type HistoryPoint = { date: string } & Record<string, number | string>;
 
@@ -22,10 +22,7 @@ function pointsFor(ph: number, pa: number, fh: number, fa: number): number {
 const START_ISO = "2026-06-15T11:00:00Z";
 
 export const getLeaderboardHistory = createServerFn({ method: "GET" })
-  .middleware([requireSupabaseAuth])
-  .handler(async ({ context }) => {
-    const { supabase } = context;
-
+  .handler(async () => {
     const [{ data: fixtures, error: fxErr }, { data: preds, error: prErr }, { data: profiles, error: pfErr }] =
       await Promise.all([
         supabase
