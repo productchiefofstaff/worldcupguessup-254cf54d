@@ -7,6 +7,7 @@ import {
   deleteUser,
   upsertPredictionForUser,
   setPredictionLock,
+  updateFixtureOdds,
 } from "@/lib/admin-fixtures.functions";
 import { db as supabase } from "@/lib/db";
 import { useAuth } from "@/hooks/use-auth";
@@ -40,6 +41,7 @@ type Fixture = {
   kickoff_at: string;
   home_score: number | null;
   away_score: number | null;
+  winning_odds: number | null;
 };
 type Profile = { id: string; display_name: string; created_at?: string; show_on_leaderboard?: boolean; last_visit_at?: string | null };
 
@@ -52,9 +54,12 @@ function AdminPage() {
   const deleteUserFn = useServerFn(deleteUser);
   const upsertPredFn = useServerFn(upsertPredictionForUser);
   const setLockFn = useServerFn(setPredictionLock);
+  const updateOddsFn = useServerFn(updateFixtureOdds);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editHome, setEditHome] = useState<string>("");
   const [editAway, setEditAway] = useState<string>("");
+  const [editingOddsId, setEditingOddsId] = useState<string | null>(null);
+  const [editOdds, setEditOdds] = useState<string>("");
   const [addUserId, setAddUserId] = useState<string>("");
   const [addFixtureId, setAddFixtureId] = useState<string>("");
   const [addHome, setAddHome] = useState<string>("");
@@ -117,6 +122,16 @@ function AdminPage() {
     },
   });
 
+  const oddsMut = useMutation({
+    mutationFn: (vars: { fixtureId: string; winningOdds: number | null }) =>
+      updateOddsFn({ data: vars }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["fixtures-admin"] });
+      qc.invalidateQueries({ queryKey: ["pnl-history"] });
+      setEditingOddsId(null);
+    },
+  });
+
   const roleQ = useQuery({
     queryKey: ["my-role", user?.id],
     enabled: !!user,
@@ -148,7 +163,7 @@ function AdminPage() {
     queryFn: async () => {
       const { data } = await supabase
         .from("fixtures")
-        .select("id, match_number, stage, team_home, team_away, kickoff_at, home_score, away_score");
+        .select("id, match_number, stage, team_home, team_away, kickoff_at, home_score, away_score, winning_odds");
       return (data ?? []) as Fixture[];
     },
   });
