@@ -583,10 +583,11 @@ const KNOCKOUT_FEEDERS: Record<number, FeederRule> = {
   94: { home: { from: 82, pick: "winner" }, away: { from: 81, pick: "winner" } },
   95: { home: { from: 87, pick: "winner" }, away: { from: 86, pick: "winner" } },
   96: { home: { from: 85, pick: "winner" }, away: { from: 88, pick: "winner" } },
-  // Quarter-finals
+  // Quarter-finals — official bracket crosses (per BBC):
+  // 97 Boston = W89+W90, 98 LA = W93+W94, 99 Miami = W91+W92, 100 KC = W95+W96.
   97: { home: { from: 89, pick: "winner" }, away: { from: 90, pick: "winner" } },
-  98: { home: { from: 91, pick: "winner" }, away: { from: 92, pick: "winner" } },
-  99: { home: { from: 93, pick: "winner" }, away: { from: 94, pick: "winner" } },
+  98: { home: { from: 93, pick: "winner" }, away: { from: 94, pick: "winner" } },
+  99: { home: { from: 91, pick: "winner" }, away: { from: 92, pick: "winner" } },
   100: { home: { from: 95, pick: "winner" }, away: { from: 96, pick: "winner" } },
   // Semi-finals
   101: { home: { from: 97, pick: "winner" }, away: { from: 98, pick: "winner" } },

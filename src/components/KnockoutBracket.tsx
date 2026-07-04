@@ -3,22 +3,23 @@ import { flagFor } from "@/lib/flags";
 import type { Fixture } from "@/components/FixtureCard";
 import { cn } from "@/lib/utils";
 
-// Round-of-32 top-to-bottom order per the official bracket (BBC schedule).
-// Consecutive rows feed the same Last 16 tie:
-//   89 CAN/MAR: 73 (SA/CAN)  + 76 (NED/MAR)
-//   90 PAR/FRA: 75 (GER/PAR) + 78 (FRA/SWE)
-//   91 BRA/NOR: 74 (BRA/JPN) + 77 (CIV/NOR)
-//   92 MEX/ENG: 79 (MEX/ECU) + 80 (ENG/COD)
-//   93 POR/SPA: 84 (POR/CRO) + 83 (SPA/AUT)
-//   94 USA/BEL: 82 (USA/BIH) + 81 (BEL/SEN)
-//   95 ARG/EGY: 87 (ARG/CPV) + 86 (AUS/EGY)
-//   96 SUI/COL: 85 (SUI/ALG) + 88 (COL/GHA)
-// QFs: 97 = W89+W90, 98 = W91+W92, 99 = W93+W94, 100 = W95+W96.
+// Top-to-bottom order copied exactly from the BBC knockout schedule.
+// Last 32 (consecutive rows feed the same Last 16 tie):
+//   75 GER/PAR + 78 FRA/SWE -> 90 PAR/FRA
+//   73 RSA/CAN + 76 NED/MAR -> 89 CAN/MAR
+//   84 POR/CRO + 83 SPA/AUT -> 93 POR/SPA
+//   82 USA/BIH + 81 BEL/SEN -> 94 USA/BEL
+//   74 BRA/JPN + 77 CIV/NOR -> 91 BRA/NOR
+//   79 MEX/ECU + 80 ENG/COD -> 92 MEX/ENG
+//   87 ARG/CPV + 86 AUS/EGY -> 95 ARG/EGY
+//   85 SUI/ALG + 88 COL/GHA -> 96 SUI/COL
+// QFs (official bracket crosses): 97 = W89+W90 (Boston),
+// 98 = W93+W94 (LA), 99 = W91+W92 (Miami), 100 = W95+W96 (Kansas City).
 // SFs: 101 = W97+W98, 102 = W99+W100.
 const R32_NUMBERS = [
-  73, 76, 75, 78, 74, 77, 79, 80, 84, 83, 82, 81, 87, 86, 85, 88,
+  75, 78, 73, 76, 84, 83, 82, 81, 74, 77, 79, 80, 87, 86, 85, 88,
 ];
-const R16_NUMBERS = Array.from({ length: 8 }, (_, i) => 89 + i);
+const R16_NUMBERS = [90, 89, 93, 94, 91, 92, 95, 96];
 const QF_NUMBERS = [97, 98, 99, 100];
 const SF_NUMBERS = [101, 102];
 const FINAL_NUMBER = 104;
