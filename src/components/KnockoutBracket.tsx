@@ -3,19 +3,20 @@ import { flagFor } from "@/lib/flags";
 import type { Fixture } from "@/components/FixtureCard";
 import { cn } from "@/lib/utils";
 
-// Round-of-32 top-to-bottom order requested from the BBC knockout path.
-// Consecutive rows feed the same Last 16 tie.
-// L16 fixture → R32 feeder pair (match_number):
-//   89: 73 + 76   (SA/CAN vs NED/MAR)
-//   90: 75 + 78   (GER/PAR vs FRA/SWE)
-//   91: 74 + 77   (BRA/JPN vs CIV/NOR)
-//   92: 79 + 80   (MEX/ECU vs ENG/COD)
-//   93: 83 + 84   (SPA/AUT vs POR/CRO)
-//   94: 81 + 82   (BEL/SEN vs USA/BIH)
-//   95: 86 + 88   (AUS/EGY vs COL/GHA)
-//   96: 85 + 87   (SUI/ALG vs ARG/CPV)
+// Round-of-32 top-to-bottom order per the official bracket (BBC schedule).
+// Consecutive rows feed the same Last 16 tie:
+//   89 CAN/MAR: 73 (SA/CAN)  + 76 (NED/MAR)
+//   90 PAR/FRA: 75 (GER/PAR) + 78 (FRA/SWE)
+//   91 BRA/NOR: 74 (BRA/JPN) + 77 (CIV/NOR)
+//   92 MEX/ENG: 79 (MEX/ECU) + 80 (ENG/COD)
+//   93 POR/SPA: 84 (POR/CRO) + 83 (SPA/AUT)
+//   94 USA/BEL: 82 (USA/BIH) + 81 (BEL/SEN)
+//   95 ARG/EGY: 87 (ARG/CPV) + 86 (AUS/EGY)
+//   96 SUI/COL: 85 (SUI/ALG) + 88 (COL/GHA)
+// QFs: 97 = W89+W90, 98 = W91+W92, 99 = W93+W94, 100 = W95+W96.
+// SFs: 101 = W97+W98, 102 = W99+W100.
 const R32_NUMBERS = [
-  73, 76, 75, 78, 74, 77, 79, 80, 83, 84, 81, 82, 86, 88, 85, 87,
+  73, 76, 75, 78, 74, 77, 79, 80, 84, 83, 82, 81, 87, 86, 85, 88,
 ];
 const R16_NUMBERS = Array.from({ length: 8 }, (_, i) => 89 + i);
 const QF_NUMBERS = [97, 98, 99, 100];
