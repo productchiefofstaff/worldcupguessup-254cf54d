@@ -422,10 +422,13 @@ export const Route = createFileRoute("/api/public/sync-results")({
             ftLabel === "ft (pens)" ||
             ftLabel === "ft-pens" ||
             /\b(pens|penalties|after penalties|status_final_pen)\b/.test(statusText);
-          const labelConfirmsFinished = labelIs90MinFinal || labelIsAet || labelIsPens;
+          // CRITICAL: only lock 90-minute full-time score from an explicit
+          // FT / "End Regulation" label. When ESPN reports AET or PENS,
+          // `srcHome`/`srcAway` is the extra-time total, NOT the FT score —
+          // writing it here would settle predictions against the ET score.
           if (
             !alreadyHasScore &&
-            labelConfirmsFinished &&
+            labelIs90MinFinal &&
             minutesSinceKickoff >= 110 &&
             Number.isInteger(srcHome) &&
             Number.isInteger(srcAway)
@@ -444,7 +447,18 @@ export const Route = createFileRoute("/api/public/sync-results")({
           } else if (
             !alreadyHasScore &&
             m.status === "finished" &&
-            (!labelConfirmsFinished || minutesSinceKickoff < 110)
+            (labelIsAet || labelIsPens)
+          ) {
+            // FT snapshot was missed by the cron and match has since gone to
+            // ET/PENS. Do NOT settle from the ET total — leave home_score/
+            // away_score null so an admin can enter the correct FT score.
+            console.warn(
+              `[sync-results] match ${fixture.match_number} (${fixture.team_home} v ${fixture.team_away}) finished ${labelIsPens ? "on pens" : "in ET"} without a captured FT score — skipping auto-settle, admin must set FT manually. srcScore=${srcHome}-${srcAway}`,
+            );
+          } else if (
+            !alreadyHasScore &&
+            m.status === "finished" &&
+            (!labelIs90MinFinal || minutesSinceKickoff < 110)
           ) {
             console.warn(
               `[sync-results] rejecting 'finished' for match ${fixture.match_number} (${fixture.team_home} v ${fixture.team_away}) — label='${m.status_label ?? ""}', minsSinceKO=${minutesSinceKickoff.toFixed(0)}`,
