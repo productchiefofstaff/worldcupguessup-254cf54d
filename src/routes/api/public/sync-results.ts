@@ -144,7 +144,9 @@ function isPlaceholderTeam(s: string | null | undefined): boolean {
     /^GROUP [A-Z] (WINNER|2ND PLACE|RUNNER-UP)$/.test(u) ||
     u.startsWith("THIRD PLACE GROUP") ||
     /^ROUND OF 32 \d+ WINNER$/.test(u) ||
-    /^ROUND OF 16 \d+ WINNER$/.test(u)
+    /^ROUND OF 16 \d+ WINNER$/.test(u) ||
+    /^QUARTERFINAL \d+ WINNER$/.test(u) ||
+    /^SEMIFINAL \d+ (WINNER|LOSER)$/.test(u)
   );
 }
 
