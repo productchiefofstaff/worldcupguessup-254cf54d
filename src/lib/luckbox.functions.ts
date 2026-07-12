@@ -90,9 +90,15 @@ export const getLuckBox = createServerFn({ method: "GET" })
     const ninetyByFx = new Map<string, { home: number; away: number; stoppage: typeof goalsByFx extends Map<string, infer V> ? V : never }>();
     fxRows.forEach((f) => {
       const fxGoals = goalsByFx.get(f.id) ?? [];
-      // Only consider regulation goals (≤ 105' covers 2nd-half stoppage).
-      // Anything > 105 is extra-time and already excluded from f.home_score.
-      const stoppage = fxGoals.filter((g) => g.minute > 90 && g.minute <= 105);
+      // The stored home_score/away_score is the 90-minute score (extra-time
+      // goals are excluded from it). If goals with minute ≤ 90 already sum
+      // to the FT score, any minute > 90 goal in fixture_goals is actually
+      // extra time (e.g. an ET goal recorded as 93') — ignore it.
+      const leHome = fxGoals.filter((g) => g.minute <= 90 && g.side === "home").length;
+      const leAway = fxGoals.filter((g) => g.minute <= 90 && g.side === "away").length;
+      const candidates = fxGoals.filter((g) => g.minute > 90 && g.minute <= 105);
+      const alreadyMatches = leHome === f.home_score && leAway === f.away_score;
+      const stoppage = alreadyMatches ? [] : candidates;
       let nineHome = f.home_score;
       let nineAway = f.away_score;
       stoppage.forEach((g) => {
