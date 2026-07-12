@@ -9,6 +9,7 @@ import { toast } from "sonner";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { flagFor } from "@/lib/flags";
+import { stageLabel } from "@/lib/stage-label";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import type { FormMatch } from "@/lib/team-form.functions";
 
@@ -621,7 +622,7 @@ export function FixtureCard({
     >
       <div className="flex items-center justify-between px-3 py-1.5 bg-surface text-xs text-muted-foreground border-b border-border">
         <span className="font-semibold">
-          {fixture.group_name ? "Group stage" : fixture.stage}
+          {fixture.group_name ? "Group stage" : stageLabel(fixture.stage)}
         </span>
         <span className="font-semibold">Match {fixture.match_number}/104</span>
         <span>{kickoffLabel(fixture.kickoff_at)}</span>
