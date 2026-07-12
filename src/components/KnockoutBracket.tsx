@@ -250,27 +250,27 @@ export function KnockoutBracket({ fixtures }: { fixtures: Fixture[] }) {
             ))}
           </svg>
           <Column
-            title="R32"
+            title="Last 32"
             fixtures={byNumber}
             numbers={R32_NUMBERS}
             pitch={R32_PITCH}
           />
           <Column
-            title="R16"
+            title="Last 16"
             fixtures={byNumber}
             numbers={R16_NUMBERS}
             pitch={R16_PITCH}
             offset={R16_OFFSET}
           />
           <Column
-            title="QF"
+            title="Quarter-finals"
             fixtures={byNumber}
             numbers={QF_NUMBERS}
             pitch={QF_PITCH}
             offset={QF_OFFSET}
           />
           <Column
-            title="SF"
+            title="Semi-finals"
             fixtures={byNumber}
             numbers={SF_NUMBERS}
             pitch={SF_PITCH}
