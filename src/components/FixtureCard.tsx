@@ -9,6 +9,7 @@ import { toast } from "sonner";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { flagFor } from "@/lib/flags";
+import { stageLabel } from "@/lib/stage-label";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import type { FormMatch } from "@/lib/team-form.functions";
 
