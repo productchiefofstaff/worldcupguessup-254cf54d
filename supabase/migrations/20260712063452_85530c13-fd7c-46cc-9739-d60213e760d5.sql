@@ -1,0 +1,1 @@
+DELETE FROM public.team_form_cache WHERE team_name IN ('France','Spain','Argentina','England');
