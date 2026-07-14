@@ -106,8 +106,15 @@ function normalizeTeamName(name: string): string {
   return TEAM_NAME_ALIASES[key] ?? key;
 }
 
-function utcDay(iso: string): string {
-  return new Date(iso).toISOString().slice(0, 10);
+function ukDay(iso: string): string {
+  // Reconcile ESPN (often US-local date) with fixture kickoff_at by
+  // normalising both to the UK calendar day.
+  return new Intl.DateTimeFormat("en-CA", {
+    timeZone: "Europe/London",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).format(new Date(iso));
 }
 
 function resultFor(scoreFor: number, scoreAgainst: number): "W" | "D" | "L" {
@@ -148,9 +155,16 @@ export function mergeTeamFormMatches(
   const merged: FormMatch[] = [];
   const seen = new Set<string>();
   const add = (match: FormMatch) => {
-    const key = `${utcDay(match.date)}:${normalizeTeamName(match.opponent)}`;
-    if (seen.has(key)) return;
-    seen.add(key);
+    const oppKey = normalizeTeamName(match.opponent);
+    const day = ukDay(match.date);
+    // Same opponent within ±1 UK day = same match (US vs UK timezone drift).
+    const dayNum = Date.parse(day + "T00:00:00Z");
+    for (const k of seen) {
+      const [kDay, kOpp] = k.split("|");
+      if (kOpp !== oppKey) continue;
+      if (Math.abs(Date.parse(kDay + "T00:00:00Z") - dayNum) <= 86400000) return;
+    }
+    seen.add(`${day}|${oppKey}`);
     merged.push(match);
   };
 
