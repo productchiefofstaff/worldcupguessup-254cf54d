@@ -15,6 +15,7 @@ import {
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Lightbulb, CalendarDays, Info } from "lucide-react";
 import { KnockoutBracket } from "@/components/KnockoutBracket";
+import spainChampions from "@/assets/spain-champions.webp.asset.json";
 
 const WHATS_NEW_KEY = "wcg-whats-new-dismissed-v2-lock";
 
@@ -238,7 +239,14 @@ function FixturesPage() {
           </section>
         ))}
         {!fixturesQ.isLoading && grouped.length === 0 && (
-          <p className="text-sm text-muted-foreground">No fixtures match this filter.</p>
+          <div className="flex flex-col items-center text-center gap-3 py-4">
+            <img
+              src={spainChampions.url}
+              alt="Spain lifting the World Cup trophy"
+              className="w-full max-w-md rounded-lg shadow-md"
+            />
+            <p className="text-sm text-muted-foreground">No fixtures match this filter.</p>
+          </div>
         )}
       </div>
       )}
