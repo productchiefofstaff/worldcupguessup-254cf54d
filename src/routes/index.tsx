@@ -245,7 +245,7 @@ function FixturesPage() {
               alt="Spain lifting the World Cup trophy"
               className="w-full max-w-md rounded-lg shadow-md"
             />
-            <p className="text-sm text-muted-foreground">No fixtures match this filter.</p>
+            <p className="text-sm text-muted-foreground">See you next time!</p>
           </div>
         )}
       </div>
